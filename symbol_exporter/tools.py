@@ -57,8 +57,9 @@ def executor(kind: str, max_workers: int, daemon=True):
             with distributed.LocalCluster(
                 n_workers=max_workers,
                 processes=processes,
+                # silence_logs='error'
             ) as cluster:
-                with distributed.Client(cluster, silence_logs='error') as client:
+                with distributed.Client(cluster) as client:
                     yield ClientExecutor(client)
     else:
         raise NotImplementedError("That kind is not implemented")
