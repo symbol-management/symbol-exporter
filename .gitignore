@@ -1,0 +1,23 @@
+build/
+*.egg-info
+dist/
+*.pyx
+*.pyc
+__pycache__
+*.swp
+
+# editors
+.vscode
+.idea/
+
+# Sphinx documentation
+docs/_build/
+
+# mypy
+.mypy_cache/
+
+# coverage files
+.coverage
+
+coverage.xml
+.coverage.*
