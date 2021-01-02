@@ -69,7 +69,7 @@ def write_out_maps(gn, import_map):
     try:
         with open(f"symbol_table/{gn}.json", "r") as f:
             old_map = load(f)
-    except FileNotFoundError:
+    except (FileNotFoundError, json.decoder.JSONDecodeError):
         old_map = import_map
     else:
         for k in list(import_map):
@@ -103,6 +103,7 @@ if __name__ == "__main__":
 
     os.makedirs("symbol_table", exist_ok=True)
     sorted_imports = sorted(symbol_table.keys(), key=lambda x: x.lower())
+
     with tpe as pool:
         for gn, keys in tqdm(groupby(sorted_imports, lambda x: x[:2].lower())):
             sub_import_map = {k: symbol_table.pop(k) for k in keys}

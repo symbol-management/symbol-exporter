@@ -139,32 +139,13 @@ def fetch_and_run(path, pkg, dst, src_url, progess_callback=None):
     filelike.close()
 
 
-def reap(path, known_bad_packages=(), reap_function=reap_imports, number_to_reap=1000,
-         ):
+def reap(path, known_bad_packages=(), number_to_reap=1000,):
     if not os.path.exists(path):
         os.makedirs(path)
     sorted_files = list(diff(path))
     print(f"TOTAL OUTSTANDING ARTIFACTS: {len(sorted_files)}")
     sorted_files = sorted_files[:number_to_reap]
-    # progress = tqdm(total=len(sorted_files))
 
-    # with ThreadPoolExecutor(max_workers=20) as pool:
-    #     futures = {pool.submit(fetch_artifact, src_url): (package, dst, src_url)
-    #                for package, dst, src_url in sorted_files
-    #                if (src_url not in known_bad_packages)}
-    #     for f in as_completed(futures):
-    #         try:
-    #             initial = psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2
-    #             package, dst, src_url = futures.pop(f)
-    #             reap_function(path, package, dst, src_url, f.result(),
-    #                           progress_callback=progress.update,
-    #                           )
-    #             del f
-    #             print(initial, psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
-    #         except ReapFailure as e:
-    #             print(f"FAILURE {e.args}")
-    #         except Exception:
-    #             pass
 
     with executor(max_workers=5, kind='dask') as pool:
         futures = {pool.submit(fetch_and_run, path, package, dst, src_url,
@@ -180,18 +161,6 @@ def reap(path, known_bad_packages=(), reap_function=reap_imports, number_to_reap
             except Exception:
                 pass
 
-    # for package, dst, src_url in sorted_files:
-    #     if (src_url in known_bad_packages):
-    #         continue
-    #     f = fetch_artifact(src_url)
-    #     try:
-    #         reap_function(path, package, dst, src_url, f,
-    #                       progress_callback=progress.update,
-    #                       )
-    #     except ReapFailure as e:
-    #         print(f"FAILURE {e.args}")
-    #     except Exception:
-    #         pass
 
 if __name__ == "__main__":
     import argparse
@@ -210,4 +179,4 @@ if __name__ == "__main__":
             known_bad_packages = set(json.load(fo))
     else:
         known_bad_packages = set()
-    reap(args.root_path, known_bad_packages, reap_imports, number_to_reap=200)
+    reap(args.root_path, known_bad_packages, number_to_reap=200)
