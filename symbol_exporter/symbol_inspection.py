@@ -134,11 +134,9 @@ def fetch_artifact(src_url):
 
 
 def fetch_and_run(path, pkg, dst, src_url, progess_callback=None):
-    print(f'starting {pkg}')
     filelike = fetch_artifact(src_url)
     reap_imports(path, pkg, dst, src_url, filelike, progress_callback=progess_callback)
     filelike.close()
-    print(f'reaped {pkg}')
 
 
 def reap(path, known_bad_packages=(), reap_function=reap_imports, number_to_reap=1000,
