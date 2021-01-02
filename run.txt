@@ -2,3 +2,4 @@ dask
 requests
 tqdm
 distributed
+jedi
