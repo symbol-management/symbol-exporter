@@ -179,4 +179,4 @@ if __name__ == "__main__":
             known_bad_packages = set(json.load(fo))
     else:
         known_bad_packages = set()
-    reap(args.root_path, known_bad_packages, number_to_reap=200)
+    reap(args.root_path, known_bad_packages, number_to_reap=500)
