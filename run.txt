@@ -3,3 +3,4 @@ requests
 tqdm
 distributed
 jedi
+conda
