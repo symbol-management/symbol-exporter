@@ -51,12 +51,6 @@ def get_data(file):
         return set()
 
 
-def write_sharded_dict(import_map):
-    for k, v in groupby(import_map, lambda x: x[:2]):
-        with open(f"symbol_table/{k}.json", "w") as f:
-            dump({sk: import_map[sk] for sk in v}, f)
-
-
 def read_sharded_dict():
     d = {}
     for file in os.listdir("symbol_table"):
@@ -92,22 +86,33 @@ if __name__ == "__main__":
     all_files = set(glob.glob("symbols/**/*.json", recursive=True))
     new_files = all_files - indexed_files
 
+
     for file in new_files:
         artifact_name = Path(file).name.rsplit(".", 1)[0]
-        futures[tpe.submit(get_data, file)] = artifact_name
+        for symbol in get_data(file):
+            symbol_table[symbol].add(file)
 
-    for future in tqdm(as_completed(futures), total=len(futures)):
-        f = futures.pop(future)
-        for symbol in future.result():
-            symbol_table[symbol].add(f)
+    # for file in new_files:
+    #     artifact_name = Path(file).name.rsplit(".", 1)[0]
+    #     futures[tpe.submit(get_data, file)] = artifact_name
+    #
+    # for future in tqdm(as_completed(futures), total=len(futures)):
+    #     f = futures.pop(future)
+    #     for symbol in future.result():
+    #         symbol_table[symbol].add(f)
 
     os.makedirs("symbol_table", exist_ok=True)
     sorted_imports = sorted(symbol_table.keys(), key=lambda x: x.lower())
 
-    with tpe as pool:
-        for gn, keys in tqdm(groupby(sorted_imports, lambda x: x[:2].lower())):
-            sub_import_map = {k: symbol_table.pop(k) for k in keys}
-            pool.submit(write_out_maps, gn, sub_import_map)
+    # with tpe as pool:
+    #     for gn, keys in tqdm(groupby(sorted_imports, lambda x: x[:2].lower())):
+    #         sub_import_map = {k: symbol_table.pop(k) for k in keys}
+    #         pool.submit(write_out_maps, gn, sub_import_map)
+
+    for gn, keys in tqdm(groupby(sorted_imports, lambda x: x[:2].lower())):
+        sub_import_map = {k: symbol_table.pop(k) for k in keys}
+        write_out_maps(gn, sub_import_map)
+
     with open(".indexed_files", "a") as f:
         for file in new_files:
             f.write(f"{file}\n")
