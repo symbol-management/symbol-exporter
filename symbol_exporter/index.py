@@ -90,7 +90,7 @@ if __name__ == "__main__":
     for file in new_files:
         artifact_name = Path(file).name.rsplit(".", 1)[0]
         for symbol in get_data(file):
-            symbol_table[symbol].add(file)
+            symbol_table[symbol].add(artifact_name)
 
     # for file in new_files:
     #     artifact_name = Path(file).name.rsplit(".", 1)[0]
