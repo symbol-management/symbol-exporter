@@ -12,7 +12,7 @@ def get_data(file):
     with open(file) as f:
         data = json.load(f)
     if data:
-        return set(data['symbols'])
+        return set(data["symbols"])
     else:
         return set()
 
@@ -22,44 +22,47 @@ def compute_symbol_compat_table(pkg):
     symbols_by_ver_arch = defaultdict(dict)
     for file in all_files:
         _, pkg, channel, arch, name = file.split(os.sep)
-        _pkg, ver, build = name.replace('.json', '').rsplit('-', 2)
+        _pkg, ver, build = name.replace(".json", "").rsplit("-", 2)
         with open(file) as f:
             j = json.load(f)
-        if not j or 'symbols' not in j:
+        if not j or "symbols" not in j:
             continue
-        symbols_by_ver_arch[arch][ver] = set(j['symbols'])
+        symbols_by_ver_arch[arch][ver] = set(j["symbols"])
     arch_csv_data = {}
     for arch in symbols_by_ver_arch:
         csv_data = []
         for ver in sorted(symbols_by_ver_arch[arch], key=VersionOrder):
             symbols = symbols_by_ver_arch[arch][ver]
-            data = {'version': ver, 'number of symbols': len(symbols),
-                    'symbols': symbols}
+            data = {
+                "version": ver,
+                "number of symbols": len(symbols),
+                "symbols": symbols,
+            }
             if len(csv_data) == 0:
-                data.update(
-                    {
-                        'added symbols': None,
-                        'removed symbols': None
-                    }
-                )
+                data.update({"added symbols": None, "removed symbols": None})
             else:
-                previous_symbols = csv_data[-1]['symbols']
+                previous_symbols = csv_data[-1]["symbols"]
                 data.update(
                     {
-                        'added symbols': len(symbols - previous_symbols),
-                        'removed symbols': len(previous_symbols - symbols)
+                        "added symbols": len(symbols - previous_symbols),
+                        "removed symbols": len(previous_symbols - symbols),
                     }
                 )
             csv_data.append(data)
-        os.makedirs(f'symbol_counts/{pkg}', exist_ok=True)
-        with open(f'symbol_counts/{pkg}/{arch}.csv', 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=['version',
-                                                         'number of symbols',
-                                                         'added symbols',
-                                                         'removed symbols'])
+        os.makedirs(f"symbol_counts/{pkg}", exist_ok=True)
+        with open(f"symbol_counts/{pkg}/{arch}.csv", "w") as csvfile:
+            writer = csv.DictWriter(
+                csvfile,
+                fieldnames=[
+                    "version",
+                    "number of symbols",
+                    "added symbols",
+                    "removed symbols",
+                ],
+            )
             writer.writeheader()
             for data in reversed(csv_data):
-                data.pop('symbols')
+                data.pop("symbols")
                 writer.writerow(data)
         arch_csv_data[arch] = csv_data
     return arch_csv_data

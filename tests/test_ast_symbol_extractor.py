@@ -13,9 +13,9 @@ def f():
     tree = ast.parse(code)
     z = SymbolFinder()
     z.visit(tree)
-    assert z.aliases == {'xyz': 'abc.xyz'}
-    assert z.imported_symbols == ['abc.xyz']
-    assert z.used_symbols == {'abc.xyz.i'}
+    assert z.aliases == {"xyz": "abc.xyz"}
+    assert z.imported_symbols == ["abc.xyz"]
+    assert z.used_symbols == {"abc.xyz.i"}
 
 
 def test_alias_import():
@@ -28,9 +28,9 @@ def f():
     tree = ast.parse(code)
     z = SymbolFinder()
     z.visit(tree)
-    assert z.aliases == {'xyz': 'abc.xyz', 'l': 'xyz'}
-    assert z.imported_symbols == ['abc.xyz']
-    assert z.used_symbols == {'abc.xyz.i'}
+    assert z.aliases == {"xyz": "abc.xyz", "l": "xyz"}
+    assert z.imported_symbols == ["abc.xyz"]
+    assert z.used_symbols == {"abc.xyz.i"}
 
 
 def test_calls():
@@ -43,6 +43,6 @@ def f():
     tree = ast.parse(code)
     z = SymbolFinder()
     z.visit(tree)
-    assert z.aliases == {'np': 'numpy'}
-    assert z.imported_symbols == ['numpy']
-    assert z.used_symbols == {'numpy.ones', 'numpy.twos'}
+    assert z.aliases == {"np": "numpy"}
+    assert z.imported_symbols == ["numpy"]
+    assert z.used_symbols == {"numpy.ones", "numpy.twos"}

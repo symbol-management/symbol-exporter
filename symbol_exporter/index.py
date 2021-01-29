@@ -46,7 +46,7 @@ def get_data(file):
     with open(file) as f:
         data = json.load(f)
     if data:
-        return set(data['symbols'])
+        return set(data["symbols"])
     else:
         return set()
 
@@ -85,7 +85,6 @@ if __name__ == "__main__":
     tpe = ThreadPoolExecutor()
     all_files = set(glob.glob("symbols/**/*.json", recursive=True))
     new_files = all_files - indexed_files
-
 
     for file in new_files:
         artifact_name = Path(file).name.rsplit(".", 1)[0]
