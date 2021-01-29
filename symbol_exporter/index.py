@@ -33,13 +33,12 @@ import glob
 import json
 import os
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
+from itertools import groupby
 from pathlib import Path
 
-from tqdm import tqdm
-
 from libcflib.jsonutils import dump, load
-from concurrent.futures import as_completed, ThreadPoolExecutor
-from itertools import groupby
+from tqdm import tqdm
 
 
 def get_data(file):
