@@ -83,7 +83,7 @@ def test_class():
 import numpy as np
 
 class ABC():
-    a = np.ones(5)        
+    a = np.ones(5)
     """
     tree = ast.parse(code)
     z = SymbolFinder()
@@ -102,9 +102,9 @@ import numpy as np
 
 class ABC():
     a = np.ones(5)
-    
+
     def xyz(self):
-        return np.twos(10)        
+        return np.twos(10)
     """
     tree = ast.parse(code)
     z = SymbolFinder()
