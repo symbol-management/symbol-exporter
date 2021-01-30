@@ -7,7 +7,11 @@ class SymbolFinder(ast.NodeVisitor):
         if module_name:
             self.current_symbol_stack = [module_name]
             self.symbols = {
-                module_name: {"type": "module", "lineno": None, "symbols_in_volume": []}
+                module_name: {
+                    "type": "module",
+                    "lineno": None,
+                    "symbols_in_volume": set(),
+                }
             }
         else:
             self.current_symbol_stack = []
@@ -52,7 +56,7 @@ class SymbolFinder(ast.NodeVisitor):
                     self.symbols[target.id] = {
                         "type": "constant",
                         "lineno": node.lineno,
-                        "symbols_in_volume": [],
+                        "symbols_in_volume": set(),
                     }
             self._recurse_visit(node)
             self.current_symbol_stack.pop(-1)
@@ -77,7 +81,7 @@ class SymbolFinder(ast.NodeVisitor):
         self.symbols[self._symbol_stack_to_symbol_name()] = {
             "type": "function",
             "lineno": node.lineno,
-            "symbols_in_volume": [],
+            "symbols_in_volume": set(),
         }
         self._recurse_visit(node)
         self.current_symbol_stack.pop(-1)
@@ -87,7 +91,7 @@ class SymbolFinder(ast.NodeVisitor):
         self.symbols[self._symbol_stack_to_symbol_name()] = {
             "type": "class",
             "lineno": node.lineno,
-            "symbols_in_volume": [],
+            "symbols_in_volume": set(),
         }
         # self.aliases["self"] = node.name
         self._recurse_visit(node)
@@ -101,9 +105,9 @@ class SymbolFinder(ast.NodeVisitor):
         if name in self.imported_symbols:
             symbol_name = ".".join([name] + list(reversed(self.attr_stack)))
             self.used_symbols.add(symbol_name)
-            self.symbols[self._symbol_stack_to_symbol_name()][
-                "symbols_in_volume"
-            ].append(symbol_name)
+            self.symbols[self._symbol_stack_to_symbol_name()]["symbols_in_volume"].add(
+                symbol_name
+            )
         self._recurse_visit(node)
 
 

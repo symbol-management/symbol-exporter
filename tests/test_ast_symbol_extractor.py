@@ -16,6 +16,9 @@ def f():
     assert z.aliases == {"xyz": "abc.xyz"}
     assert z.imported_symbols == ["abc.xyz"]
     assert z.used_symbols == {"abc.xyz.i"}
+    assert z.symbols == {
+        "f": {"lineno": 4, "symbols_in_volume": {"abc.xyz.i"}, "type": "function"}
+    }
 
 
 def test_alias_import():
@@ -31,6 +34,9 @@ def f():
     assert z.aliases == {"xyz": "abc.xyz", "l": "xyz"}
     assert z.imported_symbols == ["abc.xyz"]
     assert z.used_symbols == {"abc.xyz.i"}
+    assert z.symbols == {
+        "f": {"lineno": 4, "symbols_in_volume": {"abc.xyz.i"}, "type": "function"}
+    }
 
 
 def test_calls():
@@ -49,7 +55,7 @@ def f():
     assert z.symbols == {
         "f": {
             "lineno": 4,
-            "symbols_in_volume": ["numpy.ones", "numpy.twos"],
+            "symbols_in_volume": {"numpy.ones", "numpy.twos"},
             "type": "function",
         }
     }
@@ -68,7 +74,7 @@ z = np.ones(5)
     assert z.imported_symbols == ["numpy"]
     assert z.used_symbols == {"numpy.ones"}
     assert z.symbols == {
-        "z": {"lineno": 4, "symbols_in_volume": ["numpy.ones"], "type": "constant"}
+        "z": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "constant"}
     }
 
 
@@ -86,7 +92,7 @@ class ABC():
     assert z.imported_symbols == ["numpy"]
     assert z.used_symbols == {"numpy.ones"}
     assert z.symbols == {
-        "ABC": {"lineno": 4, "symbols_in_volume": ["numpy.ones"], "type": "class"}
+        "ABC": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "class"}
     }
 
 
@@ -107,10 +113,10 @@ class ABC():
     assert z.imported_symbols == ["numpy"]
     assert z.used_symbols == {"numpy.ones", "numpy.twos"}
     assert z.symbols == {
-        "ABC": {"lineno": 4, "symbols_in_volume": ["numpy.ones"], "type": "class"},
+        "ABC": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "class"},
         "ABC.xyz": {
             "lineno": 7,
-            "symbols_in_volume": ["numpy.twos"],
+            "symbols_in_volume": {"numpy.twos"},
             "type": "function",
         },
     }
