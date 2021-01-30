@@ -33,20 +33,19 @@ import glob
 import json
 import os
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
+from itertools import groupby
 from pathlib import Path
 
-from tqdm import tqdm
-
 from libcflib.jsonutils import dump, load
-from concurrent.futures import as_completed, ThreadPoolExecutor
-from itertools import groupby
+from tqdm import tqdm
 
 
 def get_data(file):
     with open(file) as f:
         data = json.load(f)
     if data:
-        return set(data['symbols'])
+        return set(data["symbols"])
     else:
         return set()
 
@@ -85,7 +84,6 @@ if __name__ == "__main__":
     tpe = ThreadPoolExecutor()
     all_files = set(glob.glob("symbols/**/*.json", recursive=True))
     new_files = all_files - indexed_files
-
 
     for file in new_files:
         artifact_name = Path(file).name.rsplit(".", 1)[0]

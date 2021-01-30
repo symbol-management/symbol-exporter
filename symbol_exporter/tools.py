@@ -34,6 +34,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
 
+
 @contextlib.contextmanager
 def executor(kind: str, max_workers: int, daemon=True):
     """General purpose utility to get an executor with its as_completed handler

@@ -1,28 +1,5 @@
 import ast
-from pprint import pprint
 from typing import Any
-
-a = """
-import numpy as np
-
-def f():
-    return np.ones(np.twos().three)
-
-"""
-
-b = """
-from abc import xyz
-
-def f():
-    return xyz.i
-"""
-
-c = """
-from abc import xyz as l
-
-def f():
-    return l.i
-"""
 
 
 class SymbolFinder(ast.NodeVisitor):
@@ -74,19 +51,6 @@ class SymbolFinder(ast.NodeVisitor):
             self.used_symbols.add(".".join([name] + list(reversed(self.attr_stack))))
         self.recurse_visit(node)
 
-
-with open(__file__) as f:
-    code = f.read()
-code = "\n".join([line for line in code.split("\n") if not line.startswith("%")])
-
-tree = ast.parse(code)
-z = SymbolFinder()
-z.visit(tree)
-pprint(z.aliases)
-pprint(z.imported_symbols)
-pprint(z.used_symbols)
-
-# print(dict(get_imported_libs(a).total_imports))
 
 # 1. get all the imports and their aliases (which includes imported things)
 # 2. walk the ast find all usages of those aliases and log all the names and attributes used
