@@ -31,7 +31,7 @@ def f():
     tree = ast.parse(code)
     z = SymbolFinder()
     z.visit(tree)
-    assert z.aliases == {"xyz": "abc.xyz", "l": "xyz"}
+    assert z.aliases == {"xyz": "abc.xyz", "l": "abc.xyz"}
     assert z.imported_symbols == ["abc.xyz"]
     assert z.used_symbols == {"abc.xyz.i"}
     assert z.symbols == {

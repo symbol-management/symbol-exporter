@@ -38,7 +38,7 @@ class SymbolFinder(ast.NodeVisitor):
 
     def visit_alias(self, node: ast.alias) -> Any:
         if node.asname:
-            self.aliases[node.asname] = node.name
+            self.aliases[node.asname] = self.aliases.get(node.name, node.name)
 
     def visit_Attribute(self, node: ast.Attribute) -> Any:
         self.attr_stack.append(node.attr)
@@ -100,8 +100,6 @@ class SymbolFinder(ast.NodeVisitor):
 
     def visit_Name(self, node: ast.Name) -> Any:
         name = self.aliases.get(node.id, node.id)
-        while name in self.aliases:
-            name = self.aliases.get(name, node.id)
         if name in self.imported_symbols:
             symbol_name = ".".join([name] + list(reversed(self.attr_stack)))
             self.used_symbols.add(symbol_name)
