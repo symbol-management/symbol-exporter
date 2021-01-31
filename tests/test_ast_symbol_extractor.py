@@ -16,6 +16,9 @@ def f():
     assert z.aliases == {"xyz": "abc.xyz"}
     assert z.imported_symbols == ["abc.xyz"]
     assert z.used_symbols == {"abc.xyz.i"}
+    assert z.symbols == {
+        "f": {"lineno": 4, "symbols_in_volume": {"abc.xyz.i"}, "type": "function"}
+    }
 
 
 def test_alias_import():
@@ -28,9 +31,12 @@ def f():
     tree = ast.parse(code)
     z = SymbolFinder()
     z.visit(tree)
-    assert z.aliases == {"xyz": "abc.xyz", "l": "xyz"}
+    assert z.aliases == {"xyz": "abc.xyz", "l": "abc.xyz"}
     assert z.imported_symbols == ["abc.xyz"]
     assert z.used_symbols == {"abc.xyz.i"}
+    assert z.symbols == {
+        "f": {"lineno": 4, "symbols_in_volume": {"abc.xyz.i"}, "type": "function"}
+    }
 
 
 def test_calls():
@@ -46,3 +52,71 @@ def f():
     assert z.aliases == {"np": "numpy"}
     assert z.imported_symbols == ["numpy"]
     assert z.used_symbols == {"numpy.ones", "numpy.twos"}
+    assert z.symbols == {
+        "f": {
+            "lineno": 4,
+            "symbols_in_volume": {"numpy.ones", "numpy.twos"},
+            "type": "function",
+        }
+    }
+
+
+def test_constant():
+    code = """
+import numpy as np
+
+z = np.ones(5)
+    """
+    tree = ast.parse(code)
+    z = SymbolFinder()
+    z.visit(tree)
+    assert z.aliases == {"np": "numpy"}
+    assert z.imported_symbols == ["numpy"]
+    assert z.used_symbols == {"numpy.ones"}
+    assert z.symbols == {
+        "z": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "constant"}
+    }
+
+
+def test_class():
+    code = """
+import numpy as np
+
+class ABC():
+    a = np.ones(5)
+    """
+    tree = ast.parse(code)
+    z = SymbolFinder()
+    z.visit(tree)
+    assert z.aliases == {"np": "numpy"}
+    assert z.imported_symbols == ["numpy"]
+    assert z.used_symbols == {"numpy.ones"}
+    assert z.symbols == {
+        "ABC": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "class"}
+    }
+
+
+def test_class_method():
+    code = """
+import numpy as np
+
+class ABC():
+    a = np.ones(5)
+
+    def xyz(self):
+        return np.twos(10)
+    """
+    tree = ast.parse(code)
+    z = SymbolFinder()
+    z.visit(tree)
+    assert z.aliases == {"np": "numpy"}
+    assert z.imported_symbols == ["numpy"]
+    assert z.used_symbols == {"numpy.ones", "numpy.twos"}
+    assert z.symbols == {
+        "ABC": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "class"},
+        "ABC.xyz": {
+            "lineno": 7,
+            "symbols_in_volume": {"numpy.twos"},
+            "type": "function",
+        },
+    }
