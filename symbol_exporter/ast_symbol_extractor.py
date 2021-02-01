@@ -23,6 +23,7 @@ class SymbolFinder(ast.NodeVisitor):
         self.attr_stack = []
         self.used_symbols = set()
         self.aliases = {}
+        self.undeclared_symbols = set()
         self.star_imports = set()
 
     def visit(self, node: ast.AST) -> Any:
@@ -74,6 +75,8 @@ class SymbolFinder(ast.NodeVisitor):
         return ".".join(self.current_symbol_stack)
 
     def visit_Call(self, node: ast.Call) -> Any:
+        if hasattr(node.func, "id"):
+            self.undeclared_symbols.add(node.func.id)
         tmp_stack = self.attr_stack.copy()
         self.attr_stack.clear()
         self.generic_visit(node)
@@ -103,7 +106,7 @@ class SymbolFinder(ast.NodeVisitor):
 
     def visit_Name(self, node: ast.Name) -> Any:
         name = self.aliases.get(node.id, node.id)
-        if name in self.imported_symbols:
+        if name in self.imported_symbols or name in self.undeclared_symbols:
             symbol_name = ".".join([name] + list(reversed(self.attr_stack)))
             self.used_symbols.add(symbol_name)
             self.symbols[self._symbol_stack_to_symbol_name()]["symbols_in_volume"].add(

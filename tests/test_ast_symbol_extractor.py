@@ -135,3 +135,33 @@ from abc import *
     assert z.used_symbols == set()
     assert z.star_imports == {"abc"}
     assert z.symbols == {}
+
+
+def test_undeclared_symbols():
+    code = """
+import numpy as np
+
+from abc import *
+from xyz import *
+
+
+a = np.ones(5)
+b = twos(10)
+    """
+    tree = ast.parse(code)
+    z = SymbolFinder()
+    z.visit(tree)
+    assert z.aliases == {"np": "numpy"}
+    assert z.imported_symbols == ["numpy"]
+    assert z.used_symbols == {"numpy.ones", "twos"}
+    assert z.undeclared_symbols == {"twos"}
+    assert z.symbols == {
+        "a": {
+            "lineno": 8,
+            "symbols_in_volume": {"numpy.ones"},
+            "type": "constant"},
+        "b": {
+            "lineno": 9,
+            "symbols_in_volume": {"twos"},
+            "type": "constant"},
+    }
