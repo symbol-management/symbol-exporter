@@ -23,6 +23,7 @@ class SymbolFinder(ast.NodeVisitor):
         self.attr_stack = []
         self.used_symbols = set()
         self.aliases = {}
+        self.star_imports = set()
 
     def visit(self, node: ast.AST) -> Any:
         super().visit(node)
@@ -34,9 +35,12 @@ class SymbolFinder(ast.NodeVisitor):
     def visit_ImportFrom(self, node: ast.ImportFrom) -> Any:
         if node.module and node.level == 0:
             for k in node.names:
-                module_name = f"{node.module}.{k.name}"
-                self.aliases[k.name] = module_name
-                self.imported_symbols.append(module_name)
+                if k.name != "*":
+                    module_name = f"{node.module}.{k.name}"
+                    self.aliases[k.name] = module_name
+                    self.imported_symbols.append(module_name)
+                else:
+                    self.star_imports.add(node.module)
         self.generic_visit(node)
 
     def visit_alias(self, node: ast.alias) -> Any:

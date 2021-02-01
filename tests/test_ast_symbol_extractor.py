@@ -120,3 +120,18 @@ class ABC():
             "type": "function",
         },
     }
+
+
+def test_star_import():
+    code = """
+import numpy as np
+from abc import *
+    """
+    tree = ast.parse(code)
+    z = SymbolFinder()
+    z.visit(tree)
+    assert z.aliases == {"np": "numpy"}
+    assert z.imported_symbols == ["numpy"]
+    assert z.used_symbols == set()
+    assert z.star_imports == {"abc"}
+    assert z.symbols == {}
