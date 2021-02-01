@@ -132,9 +132,9 @@ from abc import *
     z.visit(tree)
     assert z.aliases == {"np": "numpy"}
     assert z.imported_symbols == ["numpy"]
-    assert z.used_symbols == set()
+    assert not z.used_symbols
     assert z.star_imports == {"abc"}
-    assert z.symbols == {}
+    assert not z.symbols
 
 
 def test_undeclared_symbols():
@@ -183,4 +183,4 @@ b = twos(10)
     assert z.symbols == {
         "b": {"lineno": 4, "symbols_in_volume": {"abc.twos"}, "type": "constant"}
     }
-    assert z.undeclared_symbols == set()
+    assert not z.undeclared_symbols
