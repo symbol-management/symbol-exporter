@@ -1,6 +1,9 @@
 import ast
 from typing import Any
 
+# Increment when we need the database to be rebuilt (eg adding a new feature)
+version = "0"
+
 
 class SymbolFinder(ast.NodeVisitor):
     def __init__(self, module_name=None):
