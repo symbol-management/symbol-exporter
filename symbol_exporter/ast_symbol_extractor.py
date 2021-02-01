@@ -75,7 +75,7 @@ class SymbolFinder(ast.NodeVisitor):
         return ".".join(self.current_symbol_stack)
 
     def visit_Call(self, node: ast.Call) -> Any:
-        if hasattr(node.func, "id"):
+        if hasattr(node.func, "id") and node.func.id not in self.aliases:
             self.undeclared_symbols.add(node.func.id)
         tmp_stack = self.attr_stack.copy()
         self.attr_stack.clear()

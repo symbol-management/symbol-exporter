@@ -155,6 +155,7 @@ b = twos(10)
     assert z.imported_symbols == ["numpy"]
     assert z.used_symbols == {"numpy.ones", "twos"}
     assert z.undeclared_symbols == {"twos"}
+    assert z.star_imports == {"abc", "xyz"}
     assert z.symbols == {
         "a": {
             "lineno": 8,
@@ -165,3 +166,21 @@ b = twos(10)
             "symbols_in_volume": {"twos"},
             "type": "constant"},
     }
+
+
+def test_imported_symbols_not_treated_as_undeclared():
+    code = """
+from abc import twos
+
+b = twos(10)
+    """
+    tree = ast.parse(code)
+    z = SymbolFinder()
+    z.visit(tree)
+    assert z.aliases == {"twos": "abc.twos"}
+    assert z.imported_symbols == ["abc.twos"]
+    assert z.used_symbols == {"abc.twos"}
+    assert z.symbols == {
+        "b": {"lineno": 4, "symbols_in_volume": {"abc.twos"}, "type": "constant"}
+    }
+    assert z.undeclared_symbols == set()
