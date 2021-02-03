@@ -1,3 +1,6 @@
 libcflib
 tqdm
 conda
+# added because conda keeps installing latest xonsh for libcflib, which needs a release
+# with the new pin but that rever to be fixed
+xonsh=0.9.24
