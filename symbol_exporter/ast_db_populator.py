@@ -133,7 +133,7 @@ def reap(path, known_bad_packages=(), number_to_reap=1000, single_thread=False):
         with open(os.path.join(path, "_inspection_version.txt")) as f:
             db_version = f.read()
     else:
-        db_version = ''
+        db_version = ""
     if db_version != version and os.path.exists(path):
         shutil.rmtree(path)
     if not os.path.exists(path):
@@ -204,9 +204,7 @@ if __name__ == "__main__":
         help="run without dask for debugging/speed testing",
     )
     parser.add_argument(
-        "--n_artifacts",
-        help="number of artifacts to inspect",
-        default=5000
+        "--n_artifacts", help="number of artifacts to inspect", default=5000
     )
 
     args = parser.parse_args()

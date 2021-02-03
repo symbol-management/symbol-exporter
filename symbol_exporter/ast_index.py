@@ -107,7 +107,9 @@ if __name__ == "__main__":
     #         sub_import_map = {k: symbol_table.pop(k) for k in keys}
     #         pool.submit(write_out_maps, gn, sub_import_map)
 
-    for gn, keys in tqdm(groupby(sorted_imports, lambda x: x.partition('.')[0].lower())):
+    for gn, keys in tqdm(
+        groupby(sorted_imports, lambda x: x.partition(".")[0].lower())
+    ):
         sub_import_map = {k: symbol_table.pop(k) for k in keys}
         write_out_maps(gn, sub_import_map)
 
