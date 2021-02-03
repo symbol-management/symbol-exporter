@@ -168,7 +168,6 @@ def reap(path, known_bad_packages=(), number_to_reap=1000, single_thread=False):
             if (src_url not in known_bad_packages)
         }
     else:
-
         with executor(max_workers=5, kind="dask") as pool:
             futures = {
                 pool.submit(
@@ -204,6 +203,11 @@ if __name__ == "__main__":
         "--debug",
         help="run without dask for debugging/speed testing",
     )
+    parser.add_argument(
+        "--n_artifacts",
+        help="number of artifacts to inspect",
+        default=5000
+    )
 
     args = parser.parse_args()
     print(args)
@@ -216,6 +220,6 @@ if __name__ == "__main__":
     reap(
         args.root_path,
         known_bad_packages,
-        number_to_reap=10000,
+        number_to_reap=int(args.n_artifacts),
         single_thread=bool(args.debug),
     )
