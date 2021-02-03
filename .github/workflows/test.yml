@@ -24,6 +24,7 @@ jobs:
         run: |
           conda config --set always_yes True
           conda install --file requirements/run.txt --file requirements/tests.txt pip
+          conda uninstall --force libcflib
           python -m pip install git+https://github.com/regro/libcflib.git
           python -m pip install --no-deps -e .
 
