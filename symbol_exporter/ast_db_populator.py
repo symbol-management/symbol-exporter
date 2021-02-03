@@ -134,7 +134,7 @@ def reap(path, known_bad_packages=(), number_to_reap=1000, single_thread=False):
             db_version = f.read()
     else:
         db_version = ''
-    if db_version != version:
+    if db_version != version and os.path.exists(path):
         shutil.rmtree(path)
     if not os.path.exists(path):
         os.makedirs(path)
