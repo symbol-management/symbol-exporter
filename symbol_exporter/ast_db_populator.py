@@ -214,6 +214,6 @@ if __name__ == "__main__":
     reap(
         args.root_path,
         known_bad_packages,
-        number_to_reap=1000,
+        number_to_reap=10000,
         single_thread=bool(args.debug),
     )
