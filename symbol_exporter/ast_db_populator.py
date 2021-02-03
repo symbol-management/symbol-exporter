@@ -132,6 +132,8 @@ def reap(path, known_bad_packages=(), number_to_reap=1000, single_thread=False):
     if os.path.exists(os.path.join(path, "_inspection_version.txt")):
         with open(os.path.join(path, "_inspection_version.txt")) as f:
             db_version = f.read()
+    else:
+        db_version = ''
     if db_version != version:
         shutil.rmtree(path)
     if not os.path.exists(path):
