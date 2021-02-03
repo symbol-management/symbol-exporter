@@ -204,6 +204,10 @@ if __name__ == "__main__":
         "--debug",
         help="run without dask for debugging/speed testing",
     )
+    parser.add_argument(
+        "--n_artifacts",
+        help="number of artifacts to inspect"
+    )
 
     args = parser.parse_args()
     print(args)
@@ -216,6 +220,6 @@ if __name__ == "__main__":
     reap(
         args.root_path,
         known_bad_packages,
-        number_to_reap=10000,
+        number_to_reap=int(args.n_artifacts),
         single_thread=bool(args.debug),
     )
