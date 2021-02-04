@@ -29,7 +29,7 @@ class SymbolFinder(ast.NodeVisitor):
 
     def visit_Import(self, node: ast.Import) -> Any:
         self.imported_symbols.extend(k.name for k in node.names)
-        self._recurse_visit(node)
+        self.generic_visit(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> Any:
         if node.module and node.level == 0:
@@ -37,7 +37,7 @@ class SymbolFinder(ast.NodeVisitor):
                 module_name = f"{node.module}.{k.name}"
                 self.aliases[k.name] = module_name
                 self.imported_symbols.append(module_name)
-        self._recurse_visit(node)
+        self.generic_visit(node)
 
     def visit_alias(self, node: ast.alias) -> Any:
         if node.asname:
@@ -45,7 +45,7 @@ class SymbolFinder(ast.NodeVisitor):
 
     def visit_Attribute(self, node: ast.Attribute) -> Any:
         self.attr_stack.append(node.attr)
-        self._recurse_visit(node)
+        self.generic_visit(node)
         self.attr_stack.pop(-1)
 
     def visit_Assign(self, node: ast.Assign) -> Any:
@@ -61,10 +61,10 @@ class SymbolFinder(ast.NodeVisitor):
                         "lineno": node.lineno,
                         "symbols_in_volume": set(),
                     }
-            self._recurse_visit(node)
+            self.generic_visit(node)
             self.current_symbol_stack.pop(-1)
         else:
-            self._recurse_visit(node)
+            self.generic_visit(node)
 
     def _symbol_stack_to_symbol_name(self):
         return ".".join(self.current_symbol_stack)
@@ -72,12 +72,8 @@ class SymbolFinder(ast.NodeVisitor):
     def visit_Call(self, node: ast.Call) -> Any:
         tmp_stack = self.attr_stack.copy()
         self.attr_stack.clear()
-        self._recurse_visit(node)
+        self.generic_visit(node)
         self.attr_stack = tmp_stack
-
-    def _recurse_visit(self, node):
-        for k in ast.iter_child_nodes(node):
-            self.visit(k)
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
         self.current_symbol_stack.append(node.name)
@@ -86,7 +82,7 @@ class SymbolFinder(ast.NodeVisitor):
             "lineno": node.lineno,
             "symbols_in_volume": set(),
         }
-        self._recurse_visit(node)
+        self.generic_visit(node)
         self.current_symbol_stack.pop(-1)
 
     def visit_ClassDef(self, node: ast.ClassDef) -> Any:
@@ -97,7 +93,7 @@ class SymbolFinder(ast.NodeVisitor):
             "symbols_in_volume": set(),
         }
         # self.aliases["self"] = node.name
-        self._recurse_visit(node)
+        self.generic_visit(node)
         self.current_symbol_stack.pop(-1)
         # self.aliases.pop("self")
 
@@ -109,7 +105,7 @@ class SymbolFinder(ast.NodeVisitor):
             self.symbols[self._symbol_stack_to_symbol_name()]["symbols_in_volume"].add(
                 symbol_name
             )
-        self._recurse_visit(node)
+        self.generic_visit(node)
 
 
 # 1. get all the imports and their aliases (which includes imported things)
