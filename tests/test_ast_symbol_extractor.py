@@ -184,3 +184,45 @@ b = twos(10)
         "b": {"lineno": 4, "symbols_in_volume": {"abc.twos"}, "type": "constant"}
     }
     assert not z.undeclared_symbols
+
+
+def test_builtin_symbols_not_treated_as_undeclared():
+    code = """
+from abc import twos
+
+b = len([])
+    """
+    tree = ast.parse(code)
+    z = SymbolFinder()
+    z.visit(tree)
+    assert z.aliases == {"twos": "abc.twos"}
+    assert z.imported_symbols == ["abc.twos"]
+    assert z.used_symbols == {"len"}
+    assert z.used_builtins == {"len"}
+    assert z.symbols == {
+        "b": {"lineno": 4, "symbols_in_volume": {"len"}, "type": "constant"}
+    }
+    assert not z.undeclared_symbols
+
+
+def test_functions_not_treated_as_undeclared():
+    code = """
+from abc import twos
+
+def f():
+    return 1
+    
+g = f()
+    """
+    tree = ast.parse(code)
+    z = SymbolFinder()
+    z.visit(tree)
+    assert z.aliases == {"twos": "abc.twos"}
+    assert z.imported_symbols == ["abc.twos"]
+    assert z.used_symbols == {"f"}
+    assert not z.used_builtins
+    assert z.symbols == {
+        "f": {"lineno": 4, "symbols_in_volume": set(), "type": "function"},
+        'g': {'lineno': 7, 'symbols_in_volume': {'f'}, 'type': 'constant'}
+    }
+    assert not z.undeclared_symbols
