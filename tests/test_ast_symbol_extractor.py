@@ -211,7 +211,7 @@ from abc import twos
 
 def f():
     return 1
-    
+
 g = f()
     """
     tree = ast.parse(code)
