@@ -1,9 +1,9 @@
 import requests
 from libcflib.jsonutils import loads
 
-FILE_LISTING_URL = 'https://raw.githubusercontent.com/symbol-management/ast-symbol-table/master/.file_listing.json'
+FILE_LISTING_URL = "https://raw.githubusercontent.com/symbol-management/ast-symbol-table/master/.file_listing.json"
 
-RAW_URL_TEMPLATE = 'https://raw.githubusercontent.com/symbol-management/ast-symbol-table/master/{}.json'
+RAW_URL_TEMPLATE = "https://raw.githubusercontent.com/symbol-management/ast-symbol-table/master/{}.json"
 
 
 def get_symbol_table(top_level_import):
@@ -18,7 +18,7 @@ def find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table):
 
     # TODO: handle with groupby
     for v_symbol in volume:
-        top_level_import = v_symbol.partition('.')[0]
+        top_level_import = v_symbol.partition(".")[0]
         symbol_by_top_level.setdefault(top_level_import, set()).add(v_symbol)
 
     for top_level_import, v_symbols in symbol_by_top_level.items():
