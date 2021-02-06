@@ -13,7 +13,7 @@ def get_symbol_table(top_level_import):
 
 
 def find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table):
-    supplying_versions = []
+    supplying_versions = {}
     symbol_by_top_level = {}
 
     # TODO: handle with groupby
@@ -26,7 +26,7 @@ def find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table):
         # TODO: handle star imports recursion here?
         for v_symbol in v_symbols:
             supply = symbol_table.get(v_symbol)
-            if not supply:
-                return set()
-            supplying_versions.append(supply)
-    return set.intersection(*supplying_versions)
+            supplying_versions.setdefault(top_level_import, list()).append(supply)
+    # TODO: handle the case where multiple pkgs export the same symbols?
+    #  In that case we may want to merge thsoe together somehow
+    return [set.intersection(*v) for v in supplying_versions.values()]
