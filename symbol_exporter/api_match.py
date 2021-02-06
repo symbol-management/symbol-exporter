@@ -6,11 +6,13 @@ FILE_LISTING_URL = 'https://raw.githubusercontent.com/symbol-management/ast-symb
 RAW_URL_TEMPLATE = 'https://raw.githubusercontent.com/symbol-management/ast-symbol-table/master/{}.json'
 
 
-def find_supplying_version_set(symbols):
-    volume = set()
-    for k, v in symbols.items():
-        volume.update(v['symbols_in_volume'])
+def get_symbol_table(top_level_import):
+    url = RAW_URL_TEMPLATE.format(top_level_import)
+    # TODO: pull io up/out? Or run in parallel or cache?
+    return loads(requests.get(url).text)
 
+
+def find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table):
     supplying_versions = []
     symbol_by_top_level = {}
 
@@ -20,10 +22,7 @@ def find_supplying_version_set(symbols):
         symbol_by_top_level.setdefault(top_level_import, set()).add(v_symbol)
 
     for top_level_import, v_symbols in symbol_by_top_level.items():
-        url = RAW_URL_TEMPLATE.format(top_level_import)
-        # TODO: pull io up/out? Or run in parallel
-        symbol_table = loads(requests.get(url).text)
-
+        symbol_table = get_symbol_table_func(top_level_import)
         # TODO: handle star imports recursion here?
         for v_symbol in v_symbols:
             supply = symbol_table.get(v_symbol)
