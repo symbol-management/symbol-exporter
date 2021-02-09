@@ -1,8 +1,10 @@
 import ast
+import builtins
 from typing import Any
 
 # Increment when we need the database to be rebuilt (eg adding a new feature)
 version = "0"
+builtin_symbols = set(dir(builtins))
 
 
 class SymbolFinder(ast.NodeVisitor):
@@ -23,6 +25,9 @@ class SymbolFinder(ast.NodeVisitor):
         self.attr_stack = []
         self.used_symbols = set()
         self.aliases = {}
+        self.undeclared_symbols = set()
+        self.star_imports = set()
+        self.used_builtins = set()
 
     def visit(self, node: ast.AST) -> Any:
         super().visit(node)
@@ -34,9 +39,12 @@ class SymbolFinder(ast.NodeVisitor):
     def visit_ImportFrom(self, node: ast.ImportFrom) -> Any:
         if node.module and node.level == 0:
             for k in node.names:
-                module_name = f"{node.module}.{k.name}"
-                self.aliases[k.name] = module_name
-                self.imported_symbols.append(module_name)
+                if k.name != "*":
+                    module_name = f"{node.module}.{k.name}"
+                    self.aliases[k.name] = module_name
+                    self.imported_symbols.append(module_name)
+                else:
+                    self.star_imports.add(node.module)
         self.generic_visit(node)
 
     def visit_alias(self, node: ast.alias) -> Any:
@@ -70,6 +78,11 @@ class SymbolFinder(ast.NodeVisitor):
         return ".".join(self.current_symbol_stack)
 
     def visit_Call(self, node: ast.Call) -> Any:
+        if (hasattr(node.func, "id")
+                and node.func.id not in self.aliases
+                and node.func.id not in builtin_symbols
+                and node.func.id not in self.symbols):
+            self.undeclared_symbols.add(node.func.id)
         tmp_stack = self.attr_stack.copy()
         self.attr_stack.clear()
         self.generic_visit(node)
@@ -99,14 +112,25 @@ class SymbolFinder(ast.NodeVisitor):
 
     def visit_Name(self, node: ast.Name) -> Any:
         name = self.aliases.get(node.id, node.id)
-        if name in self.imported_symbols:
+        if name in builtin_symbols:
+            self.used_builtins.add(name)
+        if self._symbol_previously_seen(name):
             symbol_name = ".".join([name] + list(reversed(self.attr_stack)))
-            self.used_symbols.add(symbol_name)
-            self.symbols[self._symbol_stack_to_symbol_name()]["symbols_in_volume"].add(
-                symbol_name
-            )
+            # Hack for now until we remove constants from the symbols dict.
+            # Can remove if statement once https://github.com/symbol-management/symbol-exporter/issues/26 is resolved
+            if not self.symbols.get(symbol_name, {}).get("type") == "constant":
+                self.used_symbols.add(symbol_name)
+            # Do not add myself to my own volume.
+            # A previously declared symbol in the module is being referenced.
+            if symbol_name != self._symbol_stack_to_symbol_name():
+                self.symbols[self._symbol_stack_to_symbol_name()]["symbols_in_volume"].add(
+                    symbol_name
+                )
         self.generic_visit(node)
 
+    def _symbol_previously_seen(self, symbol):
+        return (symbol in self.imported_symbols or symbol in self.undeclared_symbols
+                or symbol in builtin_symbols or symbol in self.symbols)
 
 # 1. get all the imports and their aliases (which includes imported things)
 # 2. walk the ast find all usages of those aliases and log all the names and attributes used
