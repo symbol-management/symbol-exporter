@@ -1,3 +1,5 @@
+from itertools import groupby
+
 import requests
 from libcflib.jsonutils import loads
 
@@ -14,14 +16,10 @@ def get_symbol_table(top_level_import):
 
 def find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table):
     supplying_versions = {}
-    symbol_by_top_level = {}
 
-    # TODO: handle with groupby
-    for v_symbol in volume:
-        top_level_import = v_symbol.partition(".")[0]
-        symbol_by_top_level.setdefault(top_level_import, set()).add(v_symbol)
+    symbol_by_top_level = groupby(volume, key=lambda x: x.partition(".")[0])
 
-    for top_level_import, v_symbols in symbol_by_top_level.items():
+    for top_level_import, v_symbols in symbol_by_top_level:
         symbol_table = get_symbol_table_func(top_level_import)
         # TODO: handle star imports recursion here?
         for v_symbol in v_symbols:
