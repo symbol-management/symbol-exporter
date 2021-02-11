@@ -129,22 +129,21 @@ class ABC():
 def test_import_adds_symbols():
     # np should be a symbol in the surface area since it could be
     # imported from this code issue #23
-    code = '''
+    code = """
     import numpy as np
     from abc import xyz as l
     from abc import xyz
     
     z = np.ones(5)
-    '''
+    """
     tree = ast.parse(dedent(code))
     z = SymbolFinder()
     z.visit(tree)
     # TODO: should we add a key in the metadata to say that a symbol is
     #  a reference to another symbol?
     assert z.symbols == {
-        'np': {},
-        'xyz': {},
-        'l': {},
-        'z': {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "constant"},
-
+        "np": {},
+        "xyz": {},
+        "l": {},
+        "z": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "constant"},
     }
