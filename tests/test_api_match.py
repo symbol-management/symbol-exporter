@@ -32,7 +32,7 @@ SAMPLE_TABLE = {
 def test_find_supplying_version_set():
     volume = {"academic.cli", "academic.cli.AcademicError"}
 
-    intersection = find_supplying_version_set(
+    intersection, bad = find_supplying_version_set(
         volume, get_symbol_table_func=lambda x: SAMPLE_TABLE
     )
     assert intersection == [
@@ -48,7 +48,7 @@ def test_find_supplying_version_set():
 def test_find_supplying_version_multi_pkg_set():
     volume = {"academic.cli", "academic.cli.AcademicError", "zappy"}
 
-    intersection = find_supplying_version_set(
+    intersection, bad = find_supplying_version_set(
         volume, get_symbol_table_func=lambda x: SAMPLE_TABLE
     )
     assert sorted(intersection) == sorted(
@@ -71,7 +71,7 @@ def test_find_supplying_version_null_set():
         "academic.cli.clean_bibtex_authors",
     }
 
-    intersection = find_supplying_version_set(
+    intersection, bad = find_supplying_version_set(
         volume, get_symbol_table_func=lambda x: SAMPLE_TABLE
     )
     assert intersection == [set()]
