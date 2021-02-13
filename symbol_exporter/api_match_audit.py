@@ -11,7 +11,7 @@ from symbol_exporter.ast_db_populator import sort_arch_ordering
 from random import shuffle
 
 
-def main(n_to_pull=100):
+def main(n_to_pull=1000):
     if not os.path.exists("audit"):
         os.makedirs("audit")
     existing_artifacts = glob.glob("audit/**/*.json", recursive=True)
