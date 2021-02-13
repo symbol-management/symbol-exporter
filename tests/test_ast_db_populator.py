@@ -1,9 +1,11 @@
 import json
+import pytest
 from pathlib import Path
 
 from symbol_exporter.ast_db_populator import fetch_and_run
 
 
+@pytest.mark.skip(reason="output data model not yet stable")
 def test_fetch_and_run(tmpdir):
     pkg, dst, src_url = (
         "botocore",
