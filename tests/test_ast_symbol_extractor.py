@@ -133,7 +133,7 @@ def test_import_adds_symbols():
     import numpy as np
     from abc import xyz as l
     from abc import xyz
-    
+
     z = np.ones(5)
     """
     tree = ast.parse(dedent(code))
@@ -148,7 +148,7 @@ def test_import_adds_symbols():
         "z": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "constant"},
     }
 
-    
+
 def test_star_import():
     code = """
 import numpy as np
