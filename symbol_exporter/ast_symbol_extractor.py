@@ -8,19 +8,16 @@ builtin_symbols = set(dir(builtins))
 
 
 class SymbolFinder(ast.NodeVisitor):
-    def __init__(self, module_name=None):
-        if module_name:
-            self.current_symbol_stack = [module_name]
-            self.symbols = {
-                module_name: {
-                    "type": "module",
-                    "lineno": None,
-                    "symbols_in_volume": set(),
-                }
+    def __init__(self, module_name):
+        self._module_name = module_name
+        self.current_symbol_stack = [module_name]
+        self.symbols = {
+            module_name: {
+                "type": "module",
+                "lineno": None,
+                "symbols_in_volume": set(),
             }
-        else:
-            self.current_symbol_stack = []
-            self.symbols = {}
+        }
         self.imported_symbols = []
         self.attr_stack = []
         self.used_symbols = set()
@@ -60,11 +57,11 @@ class SymbolFinder(ast.NodeVisitor):
         # TODO: handle multiple assignments
         # TODO: handle inside class
         # TODO: handle self?
-        if len(node.targets) == 1 and len(self.current_symbol_stack) == 0:
+        if len(node.targets) == 1 and len(self.current_symbol_stack) == 1:
             for target in node.targets:
                 if hasattr(target, "id"):
                     self.current_symbol_stack.append(target.id)
-                    self.symbols[target.id] = {
+                    self.symbols[self._symbol_stack_to_symbol_name()] = {
                         "type": "constant",
                         "lineno": node.lineno,
                         "symbols_in_volume": set(),
@@ -81,7 +78,7 @@ class SymbolFinder(ast.NodeVisitor):
         if (hasattr(node.func, "id")
                 and node.func.id not in self.aliases
                 and node.func.id not in builtin_symbols
-                and node.func.id not in self.symbols):
+                and not self._symbol_in_volume(node.func.id)):
             self.undeclared_symbols.add(node.func.id)
         tmp_stack = self.attr_stack.copy()
         self.attr_stack.clear()
@@ -111,11 +108,14 @@ class SymbolFinder(ast.NodeVisitor):
         # self.aliases.pop("self")
 
     def visit_Name(self, node: ast.Name) -> Any:
+        def get_symbol_name(name):
+            return self._symbol_in_volume(name) or ".".join([name] + list(reversed(self.attr_stack)))
+
         name = self.aliases.get(node.id, node.id)
         if name in builtin_symbols:
             self.used_builtins.add(name)
         if self._symbol_previously_seen(name):
-            symbol_name = ".".join([name] + list(reversed(self.attr_stack)))
+            symbol_name = get_symbol_name(name)
             # Hack for now until we remove constants from the symbols dict.
             # Can remove if statement once https://github.com/symbol-management/symbol-exporter/issues/26 is resolved
             if not self.symbols.get(symbol_name, {}).get("type") == "constant":
@@ -130,7 +130,14 @@ class SymbolFinder(ast.NodeVisitor):
 
     def _symbol_previously_seen(self, symbol):
         return (symbol in self.imported_symbols or symbol in self.undeclared_symbols
-                or symbol in builtin_symbols or symbol in self.symbols)
+                or symbol in builtin_symbols or self._symbol_in_volume(symbol))
+
+    def _symbol_in_volume(self, symbol):
+        fully_qualified_symbol_name = f"{self._module_name}.{symbol}"
+        if fully_qualified_symbol_name in self.symbols:
+            return fully_qualified_symbol_name
+        else:
+            return None
 
 # 1. get all the imports and their aliases (which includes imported things)
 # 2. walk the ast find all usages of those aliases and log all the names and attributes used
