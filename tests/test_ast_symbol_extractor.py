@@ -14,13 +14,14 @@ def f():
     return xyz.i
 """
     tree = ast.parse(code)
-    z = SymbolFinder()
+    z = SymbolFinder(module_name="mm")
     z.visit(tree)
     assert z.aliases == {"xyz": "abc.xyz"}
     assert z.imported_symbols == ["abc.xyz"]
     assert z.used_symbols == {"abc.xyz.i"}
     assert z.symbols == {
-        "f": {"lineno": 4, "symbols_in_volume": {"abc.xyz.i"}, "type": "function"}
+        'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
+        "mm.f": {"lineno": 4, "symbols_in_volume": {"abc.xyz.i"}, "type": "function"}
     }
 
 
@@ -32,13 +33,14 @@ def f():
     return l.i
 """
     tree = ast.parse(code)
-    z = SymbolFinder()
+    z = SymbolFinder(module_name="mm")
     z.visit(tree)
     assert z.aliases == {"xyz": "abc.xyz", "l": "abc.xyz"}
     assert z.imported_symbols == ["abc.xyz"]
     assert z.used_symbols == {"abc.xyz.i"}
     assert z.symbols == {
-        "f": {"lineno": 4, "symbols_in_volume": {"abc.xyz.i"}, "type": "function"}
+        'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
+        "mm.f": {"lineno": 4, "symbols_in_volume": {"abc.xyz.i"}, "type": "function"}
     }
 
 
@@ -50,13 +52,14 @@ def f():
     return np.ones(np.twos().three)
 """
     tree = ast.parse(code)
-    z = SymbolFinder()
+    z = SymbolFinder(module_name="mm")
     z.visit(tree)
     assert z.aliases == {"np": "numpy"}
     assert z.imported_symbols == ["numpy"]
     assert z.used_symbols == {"numpy.ones", "numpy.twos"}
     assert z.symbols == {
-        "f": {
+        'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
+        "mm.f": {
             "lineno": 4,
             "symbols_in_volume": {"numpy.ones", "numpy.twos"},
             "type": "function",
@@ -71,13 +74,14 @@ import numpy as np
 z = np.ones(5)
     """
     tree = ast.parse(code)
-    z = SymbolFinder()
+    z = SymbolFinder(module_name="mm")
     z.visit(tree)
     assert z.aliases == {"np": "numpy"}
     assert z.imported_symbols == ["numpy"]
     assert z.used_symbols == {"numpy.ones"}
     assert z.symbols == {
-        "z": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "constant"}
+        'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
+        "mm.z": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "constant"}
     }
 
 
@@ -89,13 +93,14 @@ class ABC():
     a = np.ones(5)
     """
     tree = ast.parse(code)
-    z = SymbolFinder()
+    z = SymbolFinder(module_name="mm")
     z.visit(tree)
     assert z.aliases == {"np": "numpy"}
     assert z.imported_symbols == ["numpy"]
     assert z.used_symbols == {"numpy.ones"}
     assert z.symbols == {
-        "ABC": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "class"}
+        'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
+        "mm.ABC": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "class"}
     }
 
 
@@ -110,14 +115,15 @@ class ABC():
         return np.twos(10)
     """
     tree = ast.parse(code)
-    z = SymbolFinder()
+    z = SymbolFinder(module_name="mm")
     z.visit(tree)
     assert z.aliases == {"np": "numpy"}
     assert z.imported_symbols == ["numpy"]
     assert z.used_symbols == {"numpy.ones", "numpy.twos"}
     assert z.symbols == {
-        "ABC": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "class"},
-        "ABC.xyz": {
+        'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
+        "mm.ABC": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "class"},
+        "mm.ABC.xyz": {
             "lineno": 7,
             "symbols_in_volume": {"numpy.twos"},
             "type": "function",
@@ -137,15 +143,16 @@ def test_import_adds_symbols():
     z = np.ones(5)
     """
     tree = ast.parse(dedent(code))
-    z = SymbolFinder()
+    z = SymbolFinder(module_name="mm")
     z.visit(tree)
     # TODO: should we add a key in the metadata to say that a symbol is
     #  a reference to another symbol?
     assert z.symbols == {
-        "np": {},
-        "xyz": {},
-        "l": {},
-        "z": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "constant"},
+        "mm.np": {},
+        "mm.xyz": {},
+        "mm.l": {},
+        'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
+        "mm.z": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "constant"},
     }
 
 
@@ -155,13 +162,15 @@ import numpy as np
 from abc import *
     """
     tree = ast.parse(code)
-    z = SymbolFinder()
+    z = SymbolFinder(module_name="mm")
     z.visit(tree)
     assert z.aliases == {"np": "numpy"}
     assert z.imported_symbols == ["numpy"]
     assert not z.used_symbols
     assert z.star_imports == {"abc"}
-    assert not z.symbols
+    assert z.symbols == {
+        'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'}
+    }
 
 
 def test_undeclared_symbols():
@@ -176,7 +185,7 @@ a = np.ones(5)
 b = twos(10)
     """
     tree = ast.parse(code)
-    z = SymbolFinder()
+    z = SymbolFinder(module_name="mm")
     z.visit(tree)
     assert z.aliases == {"np": "numpy"}
     assert z.imported_symbols == ["numpy"]
@@ -184,11 +193,12 @@ b = twos(10)
     assert z.undeclared_symbols == {"twos"}
     assert z.star_imports == {"abc", "xyz"}
     assert z.symbols == {
-        "a": {
+        'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
+        "mm.a": {
             "lineno": 8,
             "symbols_in_volume": {"numpy.ones"},
             "type": "constant"},
-        "b": {
+        "mm.b": {
             "lineno": 9,
             "symbols_in_volume": {"twos"},
             "type": "constant"},
@@ -202,13 +212,14 @@ from abc import twos
 b = twos(10)
     """
     tree = ast.parse(code)
-    z = SymbolFinder()
+    z = SymbolFinder(module_name="mm")
     z.visit(tree)
     assert z.aliases == {"twos": "abc.twos"}
     assert z.imported_symbols == ["abc.twos"]
     assert z.used_symbols == {"abc.twos"}
     assert z.symbols == {
-        "b": {"lineno": 4, "symbols_in_volume": {"abc.twos"}, "type": "constant"}
+        'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
+        "mm.b": {"lineno": 4, "symbols_in_volume": {"abc.twos"}, "type": "constant"}
     }
     assert not z.undeclared_symbols
 
@@ -220,14 +231,15 @@ from abc import twos
 b = len([])
     """
     tree = ast.parse(code)
-    z = SymbolFinder()
+    z = SymbolFinder(module_name="mm")
     z.visit(tree)
     assert z.aliases == {"twos": "abc.twos"}
     assert z.imported_symbols == ["abc.twos"]
     assert z.used_symbols == {"len"}
     assert z.used_builtins == {"len"}
     assert z.symbols == {
-        "b": {"lineno": 4, "symbols_in_volume": {"len"}, "type": "constant"}
+        'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
+        "mm.b": {"lineno": 4, "symbols_in_volume": {"len"}, "type": "constant"}
     }
     assert not z.undeclared_symbols
 
@@ -242,14 +254,15 @@ def f():
 g = f()
     """
     tree = ast.parse(code)
-    z = SymbolFinder()
+    z = SymbolFinder(module_name="mm")
     z.visit(tree)
     assert z.aliases == {"twos": "abc.twos"}
     assert z.imported_symbols == ["abc.twos"]
-    assert z.used_symbols == {"f"}
+    assert z.used_symbols == {"mm.f"}
     assert not z.used_builtins
     assert z.symbols == {
-        "f": {"lineno": 4, "symbols_in_volume": set(), "type": "function"},
-        'g': {'lineno': 7, 'symbols_in_volume': {'f'}, 'type': 'constant'}
+        'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
+        "mm.f": {"lineno": 4, "symbols_in_volume": set(), "type": "function"},
+        'mm.g': {'lineno': 7, 'symbols_in_volume': {'mm.f'}, 'type': 'constant'}
     }
     assert not z.undeclared_symbols
