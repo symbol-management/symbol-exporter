@@ -46,7 +46,13 @@ class SymbolFinder(ast.NodeVisitor):
 
     def visit_alias(self, node: ast.alias) -> Any:
         if node.asname:
-            self.aliases[node.asname] = self.aliases.get(node.name, node.name)
+            alias_name = self.aliases.get(node.name, node.name)
+            self.aliases[node.asname] = alias_name
+            self.symbols[f"{self._module_name}.{node.asname}"] = {
+                "type": "import",
+                "lineno": None,
+                "aliases": alias_name,
+            }
 
     def visit_Attribute(self, node: ast.Attribute) -> Any:
         self.attr_stack.append(node.attr)
