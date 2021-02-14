@@ -1,8 +1,6 @@
 import ast
 from textwrap import dedent
 
-import pytest
-
 from symbol_exporter.ast_symbol_extractor import SymbolFinder
 
 
@@ -21,6 +19,7 @@ def f():
     assert z.used_symbols == {"abc.xyz.i"}
     assert z.symbols == {
         'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
+        "mm.xyz": {"lineno": None, "shadows": "abc.xyz", "type": "import"},
         "mm.f": {"lineno": 4, "symbols_in_volume": {"abc.xyz.i"}, "type": "function"}
     }
 
@@ -40,7 +39,7 @@ def f():
     assert z.used_symbols == {"abc.xyz.i"}
     assert z.symbols == {
         'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
-        "mm.l": {"lineno": None, "type": "import", "aliases": "abc.xyz"},
+        "mm.l": {"lineno": None, "type": "import", "shadows": "abc.xyz"},
         "mm.f": {"lineno": 4, "symbols_in_volume": {"abc.xyz.i"}, "type": "function"}
     }
 
@@ -62,7 +61,8 @@ def f():
     assert z.symbols == {
         "mm": {"lineno": None, "symbols_in_volume": set(), "type": "module"},
         "mm.f": {"lineno": 5, "symbols_in_volume": {"abc.xyz.i"}, "type": "function"},
-        "mm.l": {"lineno": None, "type": "import", "aliases": "abc.xyz"}
+        "mm.xyz": {"lineno": None, "type": "import", "shadows": "abc.xyz"},
+        "mm.l": {"lineno": None, "type": "import", "shadows": "abc.xyz"}
     }
 
 
@@ -86,7 +86,7 @@ def f():
             "symbols_in_volume": {"numpy.ones", "numpy.twos"},
             "type": "function",
         },
-        "mm.np": {"aliases": "numpy", "lineno": None, "type": "import"}
+        "mm.np": {"shadows": "numpy", "lineno": None, "type": "import"}
     }
 
 
@@ -104,7 +104,7 @@ z = np.ones(5)
     assert z.used_symbols == {"numpy.ones"}
     assert z.symbols == {
         'mm': {'lineno': None, 'symbols_in_volume': {"numpy.ones"}, 'type': 'module'},
-        "mm.np": {"aliases": "numpy", "lineno": None, "type": "import"},
+        "mm.np": {"shadows": "numpy", "lineno": None, "type": "import"},
         "mm.z": {"lineno": 4, "symbols_in_volume": set(), "type": "constant"}
     }
 
@@ -124,7 +124,7 @@ class ABC():
     assert z.used_symbols == {"numpy.ones"}
     assert z.symbols == {
         'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
-        "mm.np": {"aliases": "numpy", "lineno": None, "type": "import"},
+        "mm.np": {"shadows": "numpy", "lineno": None, "type": "import"},
         "mm.ABC": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "class"}
     }
 
@@ -153,14 +153,11 @@ class ABC():
             "symbols_in_volume": {"numpy.twos"},
             "type": "function",
         },
-        "mm.np": {"aliases": "numpy", "lineno": None, "type": "import"}
+        "mm.np": {"shadows": "numpy", "lineno": None, "type": "import"}
     }
 
 
-@pytest.mark.xfail()
 def test_import_adds_symbols():
-    # np should be a symbol in the surface area since it could be
-    # imported from this code issue #23
     code = """
     import numpy as np
     from abc import xyz as l
@@ -172,15 +169,12 @@ def test_import_adds_symbols():
     tree = ast.parse(dedent(code))
     z = SymbolFinder(module_name="mm")
     z.visit(tree)
-    # assert z.aliases == {'l': 'abc.xyz', 'np': 'numpy'}
-    # TODO: should we add a key in the metadata to say that a symbol is
-    #  a reference to another symbol?
     assert z.symbols == {
-        "mm.np": {'aliases': 'numpy', 'lineno': None, 'type': 'import'},
-        "mm.l": {'aliases': 'abc.xyz', 'lineno': None, 'type': 'import'},
-        "mm.efg": {'aliases': 'ggg.efg', 'lineno': None, 'type': 'import'},
-        "mm.ghi": {'aliases': 'ghi', 'lineno': None, 'type': 'import'},
-        "mm": {'lineno': None, 'symbols_in_volume': {"numpy.ones"}, 'type': 'module'},
+        "mm.np": {"shadows": "numpy", "lineno": None, "type": "import"},
+        "mm.l": {"shadows": "abc.xyz", "lineno": None, "type": "import"},
+        "mm.efg": {"shadows": "ggg.efg", "lineno": None, "type": "import"},
+        "mm.ghi": {"shadows": "ghi", "lineno": None, "type": "import"},
+        "mm": {"lineno": None, "symbols_in_volume": {"numpy.ones"}, "type": "module"},
         "mm.z": {"lineno": 7, "symbols_in_volume": set(), "type": "constant"},
     }
 
@@ -198,7 +192,7 @@ from abc import *
     assert not z.used_symbols
     assert z.star_imports == {"abc"}
     assert z.symbols == {
-        "mm.np": {"aliases": "numpy", "lineno": None, "type": "import"},
+        "mm.np": {"shadows": "numpy", "lineno": None, "type": "import"},
         'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'}
     }
 
@@ -235,7 +229,7 @@ b = twos(10)
             "lineno": 9,
             "symbols_in_volume": set(),
             "type": "constant"},
-        "mm.np": {"aliases": "numpy", "lineno": None, "type": "import"}
+        "mm.np": {"shadows": "numpy", "lineno": None, "type": "import"}
     }
 
 
@@ -253,6 +247,7 @@ b = twos(10)
     assert z.used_symbols == {"abc.twos"}
     assert z.symbols == {
         'mm': {'lineno': None, 'symbols_in_volume': {"abc.twos"}, 'type': 'module'},
+        "mm.twos": {"lineno": None, "shadows": "abc.twos", "type": "import"},
         "mm.b": {"lineno": 4, "symbols_in_volume": set(), "type": "constant"}
     }
     assert not z.undeclared_symbols
@@ -273,6 +268,7 @@ b = len([])
     assert z.used_builtins == {"len"}
     assert z.symbols == {
         'mm': {'lineno': None, 'symbols_in_volume': {"len"}, 'type': 'module'},
+        "mm.twos": {"lineno": None, "shadows": "abc.twos", "type": "import"},
         "mm.b": {"lineno": 4, "symbols_in_volume": set(), "type": "constant"}
     }
     assert not z.undeclared_symbols
@@ -297,6 +293,7 @@ g = f()
     assert z.symbols == {
         'mm': {'lineno': None, 'symbols_in_volume': {'mm.f'}, 'type': 'module'},
         "mm.f": {"lineno": 4, "symbols_in_volume": set(), "type": "function"},
+        "mm.twos": {"lineno": None, "shadows": "abc.twos", "type": "import"},
         'mm.g': {'lineno': 7, 'symbols_in_volume': set(), 'type': 'constant'}
     }
     assert not z.undeclared_symbols
