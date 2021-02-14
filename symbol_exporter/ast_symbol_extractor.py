@@ -116,17 +116,22 @@ class SymbolFinder(ast.NodeVisitor):
             self.used_builtins.add(name)
         if self._symbol_previously_seen(name):
             symbol_name = get_symbol_name(name)
-            # Hack for now until we remove constants from the symbols dict.
-            # Can remove if statement once https://github.com/symbol-management/symbol-exporter/issues/26 is resolved
-            if not self.symbols.get(symbol_name, {}).get("type") == "constant":
+            if not self._is_constant(symbol_name):
                 self.used_symbols.add(symbol_name)
             # Do not add myself to my own volume.
             # A previously declared symbol in the module is being referenced.
-            if symbol_name != self._symbol_stack_to_symbol_name():
-                self.symbols[self._symbol_stack_to_symbol_name()]["symbols_in_volume"].add(
-                    symbol_name
-                )
+            surface_symbol = self._symbol_stack_to_symbol_name()
+            if symbol_name != surface_symbol:
+                if self._is_constant(surface_symbol):
+                    self.symbols[self._module_name]["symbols_in_volume"].add(symbol_name)
+                else:
+                    self.symbols[surface_symbol]["symbols_in_volume"].add(
+                        symbol_name
+                    )
         self.generic_visit(node)
+
+    def _is_constant(self, symbol_name):
+        return self.symbols.get(symbol_name, {}).get("type") == "constant"
 
     def _symbol_previously_seen(self, symbol):
         return (symbol in self.imported_symbols or symbol in self.undeclared_symbols

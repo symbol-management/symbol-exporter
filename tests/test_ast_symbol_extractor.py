@@ -80,8 +80,8 @@ z = np.ones(5)
     assert z.imported_symbols == ["numpy"]
     assert z.used_symbols == {"numpy.ones"}
     assert z.symbols == {
-        'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
-        "mm.z": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}, "type": "constant"}
+        'mm': {'lineno': None, 'symbols_in_volume': {"numpy.ones"}, 'type': 'module'},
+        "mm.z": {"lineno": 4, "symbols_in_volume": set(), "type": "constant"}
     }
 
 
@@ -193,14 +193,17 @@ b = twos(10)
     assert z.undeclared_symbols == {"twos"}
     assert z.star_imports == {"abc", "xyz"}
     assert z.symbols == {
-        'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
+        'mm': {
+            'lineno': None,
+            'symbols_in_volume': {"numpy.ones", "twos"},
+            'type': 'module'},
         "mm.a": {
             "lineno": 8,
-            "symbols_in_volume": {"numpy.ones"},
+            "symbols_in_volume": set(),
             "type": "constant"},
         "mm.b": {
             "lineno": 9,
-            "symbols_in_volume": {"twos"},
+            "symbols_in_volume": set(),
             "type": "constant"},
     }
 
@@ -218,8 +221,8 @@ b = twos(10)
     assert z.imported_symbols == ["abc.twos"]
     assert z.used_symbols == {"abc.twos"}
     assert z.symbols == {
-        'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
-        "mm.b": {"lineno": 4, "symbols_in_volume": {"abc.twos"}, "type": "constant"}
+        'mm': {'lineno': None, 'symbols_in_volume': {"abc.twos"}, 'type': 'module'},
+        "mm.b": {"lineno": 4, "symbols_in_volume": set(), "type": "constant"}
     }
     assert not z.undeclared_symbols
 
@@ -238,8 +241,8 @@ b = len([])
     assert z.used_symbols == {"len"}
     assert z.used_builtins == {"len"}
     assert z.symbols == {
-        'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
-        "mm.b": {"lineno": 4, "symbols_in_volume": {"len"}, "type": "constant"}
+        'mm': {'lineno': None, 'symbols_in_volume': {"len"}, 'type': 'module'},
+        "mm.b": {"lineno": 4, "symbols_in_volume": set(), "type": "constant"}
     }
     assert not z.undeclared_symbols
 
@@ -261,8 +264,8 @@ g = f()
     assert z.used_symbols == {"mm.f"}
     assert not z.used_builtins
     assert z.symbols == {
-        'mm': {'lineno': None, 'symbols_in_volume': set(), 'type': 'module'},
+        'mm': {'lineno': None, 'symbols_in_volume': {'mm.f'}, 'type': 'module'},
         "mm.f": {"lineno": 4, "symbols_in_volume": set(), "type": "function"},
-        'mm.g': {'lineno': 7, 'symbols_in_volume': {'mm.f'}, 'type': 'constant'}
+        'mm.g': {'lineno': 7, 'symbols_in_volume': set(), 'type': 'constant'}
     }
     assert not z.undeclared_symbols
