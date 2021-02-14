@@ -78,7 +78,7 @@ class SymbolFinder(ast.NodeVisitor):
         if (hasattr(node.func, "id")
                 and node.func.id not in self.aliases
                 and node.func.id not in builtin_symbols
-                and not self._symbol_in_volume(node.func.id)):
+                and not self._symbol_in_surface_area(node.func.id)):
             self.undeclared_symbols.add(node.func.id)
         tmp_stack = self.attr_stack.copy()
         self.attr_stack.clear()
@@ -109,7 +109,7 @@ class SymbolFinder(ast.NodeVisitor):
 
     def visit_Name(self, node: ast.Name) -> Any:
         def get_symbol_name(name):
-            return self._symbol_in_volume(name) or ".".join([name] + list(reversed(self.attr_stack)))
+            return self._symbol_in_surface_area(name) or ".".join([name] + list(reversed(self.attr_stack)))
 
         name = self.aliases.get(node.id, node.id)
         if name in builtin_symbols:
@@ -130,9 +130,9 @@ class SymbolFinder(ast.NodeVisitor):
 
     def _symbol_previously_seen(self, symbol):
         return (symbol in self.imported_symbols or symbol in self.undeclared_symbols
-                or symbol in builtin_symbols or self._symbol_in_volume(symbol))
+                or symbol in builtin_symbols or self._symbol_in_surface_area(symbol))
 
-    def _symbol_in_volume(self, symbol):
+    def _symbol_in_surface_area(self, symbol):
         fully_qualified_symbol_name = f"{self._module_name}.{symbol}"
         if fully_qualified_symbol_name in self.symbols:
             return fully_qualified_symbol_name
