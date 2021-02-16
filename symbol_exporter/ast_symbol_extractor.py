@@ -1,10 +1,19 @@
 import ast
 import builtins
 from typing import Any
+from enum import Enum, IntEnum
 
 # Increment when we need the database to be rebuilt (eg adding a new feature)
 version = "0"
 builtin_symbols = set(dir(builtins))
+
+
+class SymbolType(str, Enum):
+    MODULE = "module"
+    IMPORT = "import"
+    FUNCTION = "function"
+    CONSTANT = "constant"
+    CLASS = "class"
 
 
 class SymbolFinder(ast.NodeVisitor):
@@ -13,7 +22,7 @@ class SymbolFinder(ast.NodeVisitor):
         self.current_symbol_stack = [module_name]
         self.symbols = {
             module_name: {
-                "type": "module",
+                "type": SymbolType.MODULE,
                 "data": {"lineno": None, "symbols_in_volume": set()},
             }
         }
@@ -70,7 +79,7 @@ class SymbolFinder(ast.NodeVisitor):
                 if hasattr(target, "id"):
                     self.current_symbol_stack.append(target.id)
                     self.symbols[self._symbol_stack_to_symbol_name()] = dict(
-                        type="constant",
+                        type=SymbolType.CONSTANT,
                         data={"lineno": node.lineno, "symbols_in_volume": set()},
                     )
             self.generic_visit(node)
@@ -83,10 +92,10 @@ class SymbolFinder(ast.NodeVisitor):
 
     def visit_Call(self, node: ast.Call) -> Any:
         if (
-            hasattr(node.func, "id")
-            and node.func.id not in self.aliases
-            and node.func.id not in builtin_symbols
-            and not self._symbol_in_surface_area(node.func.id)
+                hasattr(node.func, "id")
+                and node.func.id not in self.aliases
+                and node.func.id not in builtin_symbols
+                and not self._symbol_in_surface_area(node.func.id)
         ):
             self.undeclared_symbols.add(node.func.id)
         tmp_stack = self.attr_stack.copy()
@@ -97,7 +106,7 @@ class SymbolFinder(ast.NodeVisitor):
     def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
         self.current_symbol_stack.append(node.name)
         self.symbols[self._symbol_stack_to_symbol_name()] = dict(
-            type="function", data={"lineno": node.lineno, "symbols_in_volume": set()}
+            type=SymbolType.FUNCTION, data={"lineno": node.lineno, "symbols_in_volume": set()}
         )
         self.generic_visit(node)
         self.current_symbol_stack.pop(-1)
@@ -105,7 +114,7 @@ class SymbolFinder(ast.NodeVisitor):
     def visit_ClassDef(self, node: ast.ClassDef) -> Any:
         self.current_symbol_stack.append(node.name)
         self.symbols[self._symbol_stack_to_symbol_name()] = dict(
-            type="class", data={"lineno": node.lineno, "symbols_in_volume": set()}
+            type=SymbolType.CLASS, data={"lineno": node.lineno, "symbols_in_volume": set()}
         )
         # self.aliases["self"] = node.name
         self.generic_visit(node)
@@ -140,14 +149,14 @@ class SymbolFinder(ast.NodeVisitor):
         self.generic_visit(node)
 
     def _is_constant(self, symbol_name):
-        return self.symbols.get(symbol_name, {}).get("type") == "constant"
+        return self.symbols.get(symbol_name, {}).get("type") == SymbolType.CONSTANT
 
     def _symbol_previously_seen(self, symbol):
         return (
-            symbol in self.imported_symbols
-            or symbol in self.undeclared_symbols
-            or symbol in builtin_symbols
-            or self._symbol_in_surface_area(symbol)
+                symbol in self.imported_symbols
+                or symbol in self.undeclared_symbols
+                or symbol in builtin_symbols
+                or self._symbol_in_surface_area(symbol)
         )
 
     def _symbol_in_surface_area(self, symbol):
@@ -160,9 +169,8 @@ class SymbolFinder(ast.NodeVisitor):
     def _add_import_to_surface_area(self, symbol, shadows):
         full_symbol_name = f"{self._module_name}.{symbol}"
         self.symbols[full_symbol_name] = dict(
-            type="import", data={"lineno": None, "shadows": shadows}
+            type=SymbolType.IMPORT, data={"lineno": None, "shadows": shadows}
         )
-
 
 # 1. get all the imports and their aliases (which includes imported things)
 # 2. walk the ast find all usages of those aliases and log all the names and attributes used
