@@ -272,8 +272,11 @@ from abc import *
     assert z.aliases == {"np": "numpy"}
     assert z.imported_symbols == ["numpy"]
     assert not z.used_symbols
-    assert z.star_imports == {"abc"}
     assert z.symbols == {
+        "*": {
+            "type": "star-import",
+            "data": {"imports": {"abc"}},
+        },
         "mm.np": {
             "type": "import",
             "data": {"shadows": "numpy"},
@@ -303,8 +306,11 @@ b = twos(10)
     assert z.imported_symbols == ["numpy"]
     assert z.used_symbols == {"numpy.ones", "twos"}
     assert z.undeclared_symbols == {"twos"}
-    assert z.star_imports == {"abc", "xyz"}
     assert z.symbols == {
+        "*": {
+            "type": "star-import",
+            "data": {"imports": {"abc", "xyz"}},
+        },
         "mm": {
             "type": "module",
             "data": {

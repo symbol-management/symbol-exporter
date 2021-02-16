@@ -14,6 +14,7 @@ class SymbolType(str, Enum):
     FUNCTION = "function"
     CONSTANT = "constant"
     CLASS = "class"
+    STAR_IMPORT = "star-import"
 
 
 class SymbolFinder(ast.NodeVisitor):
@@ -31,7 +32,6 @@ class SymbolFinder(ast.NodeVisitor):
         self.used_symbols = set()
         self.aliases = {}
         self.undeclared_symbols = set()
-        self.star_imports = set()
         self.used_builtins = set()
 
     def visit(self, node: ast.AST) -> Any:
@@ -58,7 +58,7 @@ class SymbolFinder(ast.NodeVisitor):
                             SymbolType.IMPORT, symbol=k.name, shadows=module_name
                         )
                 else:
-                    self.star_imports.add(node.module)
+                    self._add_symbol_to_star_imports(node.module)
         self.generic_visit(node)
 
     def visit_alias(self, node: ast.alias) -> Any:
@@ -187,6 +187,10 @@ class SymbolFinder(ast.NodeVisitor):
     def _add_symbol_to_volume(self, surface_symbol, volume_symbol):
         data = self.symbols[surface_symbol]["data"]
         data.setdefault("symbols_in_volume", set()).add(volume_symbol)
+
+    def _add_symbol_to_star_imports(self, imported_symbol):
+        default = dict(type=SymbolType.STAR_IMPORT, data=dict(imports=set()))
+        self.symbols.setdefault("*", default)["data"]["imports"].add(imported_symbol)
 
 
 # 1. get all the imports and their aliases (which includes imported things)
