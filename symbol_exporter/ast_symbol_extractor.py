@@ -4,7 +4,7 @@ from typing import Any
 from enum import Enum
 
 # Increment when we need the database to be rebuilt (eg adding a new feature)
-version = "0"
+version = "1"
 builtin_symbols = set(dir(builtins))
 
 
