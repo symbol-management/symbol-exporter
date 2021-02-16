@@ -23,7 +23,7 @@ class SymbolFinder(ast.NodeVisitor):
         self.symbols = {
             module_name: {
                 "type": SymbolType.MODULE,
-                "data": {"lineno": None},
+                "data": {},
             }
         }
         self.imported_symbols = []
