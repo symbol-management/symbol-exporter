@@ -176,11 +176,9 @@ class SymbolFinder(ast.NodeVisitor):
         else:
             return None
 
-    def _add_import_to_surface_area(self, symbol, shadows):
+    def _add_import_to_surface_area(self, symbol, **kwargs):
         full_symbol_name = f"{self._module_name}.{symbol}"
-        self.symbols[full_symbol_name] = dict(
-            type=SymbolType.IMPORT, data={"lineno": None, "shadows": shadows}
-        )
+        self.symbols[full_symbol_name] = dict(type=SymbolType.IMPORT, data=kwargs)
 
     def _add_symbol_to_surface_area(self, symbol_type: SymbolType, symbol, **kwargs):
         if symbol_type is SymbolType.IMPORT:

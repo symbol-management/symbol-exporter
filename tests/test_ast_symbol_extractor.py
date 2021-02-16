@@ -24,7 +24,7 @@ def f():
         },
         "mm.xyz": {
             "type": "import",
-            "data": {"lineno": None, "shadows": "abc.xyz"},
+            "data": {"shadows": "abc.xyz"},
         },
         "mm.f": {
             "type": "function",
@@ -53,7 +53,7 @@ def f():
         },
         "mm.l": {
             "type": "import",
-            "data": {"lineno": None, "shadows": "abc.xyz"},
+            "data": {"shadows": "abc.xyz"},
         },
         "mm.f": {
             "type": "function",
@@ -87,11 +87,11 @@ def f():
         },
         "mm.xyz": {
             "type": "import",
-            "data": {"lineno": None, "shadows": "abc.xyz"},
+            "data": {"shadows": "abc.xyz"},
         },
         "mm.l": {
             "type": "import",
-            "data": {"lineno": None, "shadows": "abc.xyz"},
+            "data": {"shadows": "abc.xyz"},
         },
     }
 
@@ -120,7 +120,7 @@ def f():
         },
         "mm.np": {
             "type": "import",
-            "data": {"shadows": "numpy", "lineno": None},
+            "data": {"shadows": "numpy"},
         },
     }
 
@@ -144,7 +144,7 @@ z = np.ones(5)
         },
         "mm.np": {
             "type": "import",
-            "data": {"shadows": "numpy", "lineno": None},
+            "data": {"shadows": "numpy"},
         },
         "mm.z": {
             "type": "constant",
@@ -173,7 +173,7 @@ class ABC():
         },
         "mm.np": {
             "type": "import",
-            "data": {"shadows": "numpy", "lineno": None},
+            "data": {"shadows": "numpy"},
         },
         "mm.ABC": {
             "type": "class",
@@ -216,7 +216,7 @@ class ABC():
         },
         "mm.np": {
             "type": "import",
-            "data": {"shadows": "numpy", "lineno": None},
+            "data": {"shadows": "numpy"},
         },
     }
 
@@ -236,19 +236,19 @@ def test_import_adds_symbols():
     assert z.symbols == {
         "mm.np": {
             "type": "import",
-            "data": {"shadows": "numpy", "lineno": None},
+            "data": {"shadows": "numpy"},
         },
         "mm.l": {
             "type": "import",
-            "data": {"shadows": "abc.xyz", "lineno": None},
+            "data": {"shadows": "abc.xyz"},
         },
         "mm.efg": {
             "type": "import",
-            "data": {"shadows": "ggg.efg", "lineno": None},
+            "data": {"shadows": "ggg.efg"},
         },
         "mm.ghi": {
             "type": "import",
-            "data": {"shadows": "ghi", "lineno": None},
+            "data": {"shadows": "ghi"},
         },
         "mm": {
             "type": "module",
@@ -276,7 +276,7 @@ from abc import *
     assert z.symbols == {
         "mm.np": {
             "type": "import",
-            "data": {"shadows": "numpy", "lineno": None},
+            "data": {"shadows": "numpy"},
         },
         "mm": {
             "type": "module",
@@ -321,7 +321,7 @@ b = twos(10)
         },
         "mm.np": {
             "type": "import",
-            "data": {"shadows": "numpy", "lineno": None},
+            "data": {"shadows": "numpy"},
         },
     }
 
@@ -345,7 +345,7 @@ b = twos(10)
         },
         "mm.twos": {
             "type": "import",
-            "data": {"lineno": None, "shadows": "abc.twos"},
+            "data": {"shadows": "abc.twos"},
         },
         "mm.b": {
             "type": "constant",
@@ -375,7 +375,7 @@ b = len([])
         },
         "mm.twos": {
             "type": "import",
-            "data": {"lineno": None, "shadows": "abc.twos"},
+            "data": {"shadows": "abc.twos"},
         },
         "mm.b": {
             "type": "constant",
@@ -412,7 +412,7 @@ g = f()
         },
         "mm.twos": {
             "type": "import",
-            "data": {"lineno": None, "shadows": "abc.twos"},
+            "data": {"shadows": "abc.twos"},
         },
         "mm.g": {
             "type": "constant",
