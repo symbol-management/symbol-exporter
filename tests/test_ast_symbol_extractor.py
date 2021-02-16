@@ -20,7 +20,7 @@ def f():
     assert z.symbols == {
         "mm": {
             "type": "module",
-            "data": {"lineno": None, "symbols_in_volume": set()},
+            "data": {"lineno": None},
         },
         "mm.xyz": {
             "type": "import",
@@ -49,7 +49,7 @@ def f():
     assert z.symbols == {
         "mm": {
             "type": "module",
-            "data": {"lineno": None, "symbols_in_volume": set()},
+            "data": {"lineno": None},
         },
         "mm.l": {
             "type": "import",
@@ -79,7 +79,7 @@ def f():
     assert z.symbols == {
         "mm": {
             "type": "module",
-            "data": {"lineno": None, "symbols_in_volume": set()},
+            "data": {"lineno": None},
         },
         "mm.f": {
             "type": "function",
@@ -112,7 +112,7 @@ def f():
     assert z.symbols == {
         "mm": {
             "type": "module",
-            "data": {"lineno": None, "symbols_in_volume": set()},
+            "data": {"lineno": None},
         },
         "mm.f": {
             "type": "function",
@@ -148,7 +148,7 @@ z = np.ones(5)
         },
         "mm.z": {
             "type": "constant",
-            "data": {"lineno": 4, "symbols_in_volume": set()},
+            "data": {"lineno": 4},
         },
     }
 
@@ -169,7 +169,7 @@ class ABC():
     assert z.symbols == {
         "mm": {
             "type": "module",
-            "data": {"lineno": None, "symbols_in_volume": set()},
+            "data": {"lineno": None},
         },
         "mm.np": {
             "type": "import",
@@ -201,7 +201,7 @@ class ABC():
     assert z.symbols == {
         "mm": {
             "type": "module",
-            "data": {"lineno": None, "symbols_in_volume": set()},
+            "data": {"lineno": None},
         },
         "mm.ABC": {
             "type": "class",
@@ -256,7 +256,7 @@ def test_import_adds_symbols():
         },
         "mm.z": {
             "type": "constant",
-            "data": {"lineno": 7, "symbols_in_volume": set()},
+            "data": {"lineno": 7},
         },
     }
 
@@ -280,7 +280,7 @@ from abc import *
         },
         "mm": {
             "type": "module",
-            "data": {"lineno": None, "symbols_in_volume": set()},
+            "data": {"lineno": None},
         },
     }
 
@@ -314,11 +314,11 @@ b = twos(10)
         },
         "mm.a": {
             "type": "constant",
-            "data": {"lineno": 8, "symbols_in_volume": set()},
+            "data": {"lineno": 8},
         },
         "mm.b": {
             "type": "constant",
-            "data": {"lineno": 9, "symbols_in_volume": set()},
+            "data": {"lineno": 9},
         },
         "mm.np": {
             "type": "import",
@@ -350,7 +350,7 @@ b = twos(10)
         },
         "mm.b": {
             "type": "constant",
-            "data": {"lineno": 4, "symbols_in_volume": set()},
+            "data": {"lineno": 4},
         },
     }
     assert not z.undeclared_symbols
@@ -380,7 +380,7 @@ b = len([])
         },
         "mm.b": {
             "type": "constant",
-            "data": {"lineno": 4, "symbols_in_volume": set()},
+            "data": {"lineno": 4},
         },
     }
     assert not z.undeclared_symbols
@@ -409,7 +409,7 @@ g = f()
         },
         "mm.f": {
             "type": "function",
-            "data": {"lineno": 4, "symbols_in_volume": set()},
+            "data": {"lineno": 4},
         },
         "mm.twos": {
             "type": "import",
@@ -417,7 +417,7 @@ g = f()
         },
         "mm.g": {
             "type": "constant",
-            "data": {"lineno": 7, "symbols_in_volume": set()},
+            "data": {"lineno": 7},
         },
     }
     assert not z.undeclared_symbols

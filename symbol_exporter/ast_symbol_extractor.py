@@ -23,7 +23,7 @@ class SymbolFinder(ast.NodeVisitor):
         self.symbols = {
             module_name: {
                 "type": SymbolType.MODULE,
-                "data": {"lineno": None, "symbols_in_volume": set()},
+                "data": {"lineno": None},
             }
         }
         self.imported_symbols = []
@@ -82,11 +82,11 @@ class SymbolFinder(ast.NodeVisitor):
             for target in node.targets:
                 if hasattr(target, "id"):
                     self.current_symbol_stack.append(target.id)
+                    symbol_name = self._symbol_stack_to_symbol_name()
                     self._add_symbol_to_surface_area(
                         SymbolType.CONSTANT,
-                        self._symbol_stack_to_symbol_name(),
+                        symbol_name,
                         lineno=node.lineno,
-                        symbols_in_volume=set(),
                     )
             self.generic_visit(node)
             self.current_symbol_stack.pop(-1)
@@ -116,7 +116,6 @@ class SymbolFinder(ast.NodeVisitor):
             SymbolType.FUNCTION,
             symbol_name,
             lineno=node.lineno,
-            symbols_in_volume=set(),
         )
         self.generic_visit(node)
         self.current_symbol_stack.pop(-1)
@@ -125,7 +124,7 @@ class SymbolFinder(ast.NodeVisitor):
         self.current_symbol_stack.append(node.name)
         symbol_name = self._symbol_stack_to_symbol_name()
         self._add_symbol_to_surface_area(
-            SymbolType.CLASS, symbol_name, lineno=node.lineno, symbols_in_volume=set()
+            SymbolType.CLASS, symbol_name, lineno=node.lineno
         )
         # self.aliases["self"] = node.name
         self.generic_visit(node)
@@ -150,12 +149,12 @@ class SymbolFinder(ast.NodeVisitor):
             surface_symbol = self._symbol_stack_to_symbol_name()
             if symbol_name != surface_symbol:
                 if self._is_constant(surface_symbol):
-                    self.symbols[self._module_name]["data"]["symbols_in_volume"].add(
-                        symbol_name
+                    self._add_symbol_to_volume(
+                        surface_symbol=self._module_name, volume_symbol=symbol_name
                     )
                 else:
-                    self.symbols[surface_symbol]["data"]["symbols_in_volume"].add(
-                        symbol_name
+                    self._add_symbol_to_volume(
+                        surface_symbol=surface_symbol, volume_symbol=symbol_name
                     )
         self.generic_visit(node)
 
@@ -188,6 +187,10 @@ class SymbolFinder(ast.NodeVisitor):
             return self._add_import_to_surface_area(symbol, **kwargs)
         else:
             self.symbols[symbol] = dict(type=symbol_type, data=kwargs)
+
+    def _add_symbol_to_volume(self, surface_symbol, volume_symbol):
+        data = self.symbols[surface_symbol]["data"]
+        data.setdefault("symbols_in_volume", set()).add(volume_symbol)
 
 # 1. get all the imports and their aliases (which includes imported things)
 # 2. walk the ast find all usages of those aliases and log all the names and attributes used
