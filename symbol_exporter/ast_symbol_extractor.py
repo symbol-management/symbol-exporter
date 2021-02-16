@@ -1,10 +1,20 @@
 import ast
 import builtins
 from typing import Any
+from enum import Enum
 
 # Increment when we need the database to be rebuilt (eg adding a new feature)
 version = "0"
 builtin_symbols = set(dir(builtins))
+
+
+class SymbolType(str, Enum):
+    MODULE = "module"
+    IMPORT = "import"
+    FUNCTION = "function"
+    CONSTANT = "constant"
+    CLASS = "class"
+    STAR_IMPORT = "star-import"
 
 
 class SymbolFinder(ast.NodeVisitor):
@@ -13,9 +23,8 @@ class SymbolFinder(ast.NodeVisitor):
         self.current_symbol_stack = [module_name]
         self.symbols = {
             module_name: {
-                "type": "module",
-                "lineno": None,
-                "symbols_in_volume": set(),
+                "type": SymbolType.MODULE,
+                "data": {},
             }
         }
         self.imported_symbols = []
@@ -23,7 +32,6 @@ class SymbolFinder(ast.NodeVisitor):
         self.used_symbols = set()
         self.aliases = {}
         self.undeclared_symbols = set()
-        self.star_imports = set()
         self.used_builtins = set()
 
     def visit(self, node: ast.AST) -> Any:
@@ -33,7 +41,9 @@ class SymbolFinder(ast.NodeVisitor):
         self.imported_symbols.extend(k.name for k in node.names)
         for k in node.names:
             if not k.asname:
-                self._add_import_to_surface_area(symbol=k.name, shadows=k.name)
+                self._add_symbol_to_surface_area(
+                    SymbolType.IMPORT, symbol=k.name, shadows=k.name
+                )
         self.generic_visit(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> Any:
@@ -44,18 +54,20 @@ class SymbolFinder(ast.NodeVisitor):
                     self.aliases[k.name] = module_name
                     self.imported_symbols.append(module_name)
                     if not k.asname:
-                        self._add_import_to_surface_area(
-                            symbol=k.name, shadows=module_name
+                        self._add_symbol_to_surface_area(
+                            SymbolType.IMPORT, symbol=k.name, shadows=module_name
                         )
                 else:
-                    self.star_imports.add(node.module)
+                    self._add_symbol_to_star_imports(node.module)
         self.generic_visit(node)
 
     def visit_alias(self, node: ast.alias) -> Any:
         if node.asname:
             alias_name = self.aliases.get(node.name, node.name)
             self.aliases[node.asname] = alias_name
-            self._add_import_to_surface_area(symbol=node.asname, shadows=alias_name)
+            self._add_symbol_to_surface_area(
+                SymbolType.IMPORT, symbol=node.asname, shadows=alias_name
+            )
 
     def visit_Attribute(self, node: ast.Attribute) -> Any:
         self.attr_stack.append(node.attr)
@@ -70,11 +82,12 @@ class SymbolFinder(ast.NodeVisitor):
             for target in node.targets:
                 if hasattr(target, "id"):
                     self.current_symbol_stack.append(target.id)
-                    self.symbols[self._symbol_stack_to_symbol_name()] = {
-                        "type": "constant",
-                        "lineno": node.lineno,
-                        "symbols_in_volume": set(),
-                    }
+                    symbol_name = self._symbol_stack_to_symbol_name()
+                    self._add_symbol_to_surface_area(
+                        SymbolType.CONSTANT,
+                        symbol_name,
+                        lineno=node.lineno,
+                    )
             self.generic_visit(node)
             self.current_symbol_stack.pop(-1)
         else:
@@ -98,21 +111,21 @@ class SymbolFinder(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
         self.current_symbol_stack.append(node.name)
-        self.symbols[self._symbol_stack_to_symbol_name()] = {
-            "type": "function",
-            "lineno": node.lineno,
-            "symbols_in_volume": set(),
-        }
+        symbol_name = self._symbol_stack_to_symbol_name()
+        self._add_symbol_to_surface_area(
+            SymbolType.FUNCTION,
+            symbol_name,
+            lineno=node.lineno,
+        )
         self.generic_visit(node)
         self.current_symbol_stack.pop(-1)
 
     def visit_ClassDef(self, node: ast.ClassDef) -> Any:
         self.current_symbol_stack.append(node.name)
-        self.symbols[self._symbol_stack_to_symbol_name()] = {
-            "type": "class",
-            "lineno": node.lineno,
-            "symbols_in_volume": set(),
-        }
+        symbol_name = self._symbol_stack_to_symbol_name()
+        self._add_symbol_to_surface_area(
+            SymbolType.CLASS, symbol_name, lineno=node.lineno
+        )
         # self.aliases["self"] = node.name
         self.generic_visit(node)
         self.current_symbol_stack.pop(-1)
@@ -136,15 +149,17 @@ class SymbolFinder(ast.NodeVisitor):
             surface_symbol = self._symbol_stack_to_symbol_name()
             if symbol_name != surface_symbol:
                 if self._is_constant(surface_symbol):
-                    self.symbols[self._module_name]["symbols_in_volume"].add(
-                        symbol_name
+                    self._add_symbol_to_volume(
+                        surface_symbol=self._module_name, volume_symbol=symbol_name
                     )
                 else:
-                    self.symbols[surface_symbol]["symbols_in_volume"].add(symbol_name)
+                    self._add_symbol_to_volume(
+                        surface_symbol=surface_symbol, volume_symbol=symbol_name
+                    )
         self.generic_visit(node)
 
     def _is_constant(self, symbol_name):
-        return self.symbols.get(symbol_name, {}).get("type") == "constant"
+        return self.symbols.get(symbol_name, {}).get("type") == SymbolType.CONSTANT
 
     def _symbol_previously_seen(self, symbol):
         return (
@@ -161,12 +176,21 @@ class SymbolFinder(ast.NodeVisitor):
         else:
             return None
 
-    def _add_import_to_surface_area(self, symbol, shadows):
-        self.symbols[f"{self._module_name}.{symbol}"] = {
-            "type": "import",
-            "lineno": None,
-            "shadows": shadows,
-        }
+    def _add_symbol_to_surface_area(self, symbol_type: SymbolType, symbol, **kwargs):
+        full_symbol_name = (
+            f"{self._module_name}.{symbol}"
+            if symbol_type is SymbolType.IMPORT
+            else symbol
+        )
+        self.symbols[full_symbol_name] = dict(type=symbol_type, data=kwargs)
+
+    def _add_symbol_to_volume(self, surface_symbol, volume_symbol):
+        data = self.symbols[surface_symbol]["data"]
+        data.setdefault("symbols_in_volume", set()).add(volume_symbol)
+
+    def _add_symbol_to_star_imports(self, imported_symbol):
+        default = dict(type=SymbolType.STAR_IMPORT, data=dict(imports=set()))
+        self.symbols.setdefault("*", default)["data"]["imports"].add(imported_symbol)
 
 
 # 1. get all the imports and their aliases (which includes imported things)
