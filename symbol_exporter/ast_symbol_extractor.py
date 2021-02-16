@@ -98,10 +98,10 @@ class SymbolFinder(ast.NodeVisitor):
 
     def visit_Call(self, node: ast.Call) -> Any:
         if (
-                hasattr(node.func, "id")
-                and node.func.id not in self.aliases
-                and node.func.id not in builtin_symbols
-                and not self._symbol_in_surface_area(node.func.id)
+            hasattr(node.func, "id")
+            and node.func.id not in self.aliases
+            and node.func.id not in builtin_symbols
+            and not self._symbol_in_surface_area(node.func.id)
         ):
             self.undeclared_symbols.add(node.func.id)
         tmp_stack = self.attr_stack.copy()
@@ -163,10 +163,10 @@ class SymbolFinder(ast.NodeVisitor):
 
     def _symbol_previously_seen(self, symbol):
         return (
-                symbol in self.imported_symbols
-                or symbol in self.undeclared_symbols
-                or symbol in builtin_symbols
-                or self._symbol_in_surface_area(symbol)
+            symbol in self.imported_symbols
+            or symbol in self.undeclared_symbols
+            or symbol in builtin_symbols
+            or self._symbol_in_surface_area(symbol)
         )
 
     def _symbol_in_surface_area(self, symbol):
@@ -187,6 +187,7 @@ class SymbolFinder(ast.NodeVisitor):
     def _add_symbol_to_volume(self, surface_symbol, volume_symbol):
         data = self.symbols[surface_symbol]["data"]
         data.setdefault("symbols_in_volume", set()).add(volume_symbol)
+
 
 # 1. get all the imports and their aliases (which includes imported things)
 # 2. walk the ast find all usages of those aliases and log all the names and attributes used
