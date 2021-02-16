@@ -44,7 +44,9 @@ class SymbolFinder(ast.NodeVisitor):
                     self.aliases[k.name] = module_name
                     self.imported_symbols.append(module_name)
                     if not k.asname:
-                        self._add_import_to_surface_area(symbol=k.name, shadows=module_name)
+                        self._add_import_to_surface_area(
+                            symbol=k.name, shadows=module_name
+                        )
                 else:
                     self.star_imports.add(node.module)
         self.generic_visit(node)
@@ -82,10 +84,12 @@ class SymbolFinder(ast.NodeVisitor):
         return ".".join(self.current_symbol_stack)
 
     def visit_Call(self, node: ast.Call) -> Any:
-        if (hasattr(node.func, "id")
-                and node.func.id not in self.aliases
-                and node.func.id not in builtin_symbols
-                and not self._symbol_in_surface_area(node.func.id)):
+        if (
+            hasattr(node.func, "id")
+            and node.func.id not in self.aliases
+            and node.func.id not in builtin_symbols
+            and not self._symbol_in_surface_area(node.func.id)
+        ):
             self.undeclared_symbols.add(node.func.id)
         tmp_stack = self.attr_stack.copy()
         self.attr_stack.clear()
@@ -116,7 +120,9 @@ class SymbolFinder(ast.NodeVisitor):
 
     def visit_Name(self, node: ast.Name) -> Any:
         def get_symbol_name(name):
-            return self._symbol_in_surface_area(name) or ".".join([name] + list(reversed(self.attr_stack)))
+            return self._symbol_in_surface_area(name) or ".".join(
+                [name] + list(reversed(self.attr_stack))
+            )
 
         name = self.aliases.get(node.id, node.id)
         if name in builtin_symbols:
@@ -130,19 +136,23 @@ class SymbolFinder(ast.NodeVisitor):
             surface_symbol = self._symbol_stack_to_symbol_name()
             if symbol_name != surface_symbol:
                 if self._is_constant(surface_symbol):
-                    self.symbols[self._module_name]["symbols_in_volume"].add(symbol_name)
-                else:
-                    self.symbols[surface_symbol]["symbols_in_volume"].add(
+                    self.symbols[self._module_name]["symbols_in_volume"].add(
                         symbol_name
                     )
+                else:
+                    self.symbols[surface_symbol]["symbols_in_volume"].add(symbol_name)
         self.generic_visit(node)
 
     def _is_constant(self, symbol_name):
         return self.symbols.get(symbol_name, {}).get("type") == "constant"
 
     def _symbol_previously_seen(self, symbol):
-        return (symbol in self.imported_symbols or symbol in self.undeclared_symbols
-                or symbol in builtin_symbols or self._symbol_in_surface_area(symbol))
+        return (
+            symbol in self.imported_symbols
+            or symbol in self.undeclared_symbols
+            or symbol in builtin_symbols
+            or self._symbol_in_surface_area(symbol)
+        )
 
     def _symbol_in_surface_area(self, symbol):
         fully_qualified_symbol_name = f"{self._module_name}.{symbol}"
@@ -157,6 +167,7 @@ class SymbolFinder(ast.NodeVisitor):
             "lineno": None,
             "shadows": shadows,
         }
+
 
 # 1. get all the imports and their aliases (which includes imported things)
 # 2. walk the ast find all usages of those aliases and log all the names and attributes used
