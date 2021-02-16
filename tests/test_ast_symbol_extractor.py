@@ -426,3 +426,22 @@ g = f()
         },
     }
     assert not z.undeclared_symbols
+
+
+def test_attr_assignment():
+    code = """
+from abc import twos
+
+twos.three = '*'
+twos.four = None
+    """
+    tree = ast.parse(code)
+    z = SymbolFinder(module_name="mm")
+    z.visit(tree)
+    assert z.symbols == {
+        "mm": {
+            "data": {"symbols_in_volume": {"abc.twos.three", "abc.twos.four"}},
+            "type": "module",
+        },
+        "mm.twos": {"data": {"shadows": "abc.twos"}, "type": "import"},
+    }

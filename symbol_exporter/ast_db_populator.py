@@ -17,6 +17,12 @@ from symbol_exporter.ast_symbol_extractor import SymbolFinder, version
 from symbol_exporter.tools import executor
 
 
+def make_json_friendly(data):
+    if isinstance(data, set):
+        return list(sorted(data))
+    return data
+
+
 def file_path_to_import(file_path: str):
     return file_path.replace("/__init__.py", "").replace(".py", "").replace("/", ".")
 
@@ -90,15 +96,12 @@ def reap_imports(
         progress_callback()
     try:
         harvested_data = harvest_imports(filelike)
-        if harvested_data:
-            for k in harvested_data:
-                harvested_data[k]["symbols_in_volume"] = sorted(
-                    list(harvested_data[k]["symbols_in_volume"])
-                )
         with open(
             expand_file_and_mkdirs(os.path.join(root_path, package, dst_path)), "w"
         ) as fo:
-            json.dump(harvested_data, fo, indent=1, sort_keys=True)
+            json.dump(
+                harvested_data, fo, indent=1, sort_keys=True, default=make_json_friendly
+            )
         del harvested_data
     except Exception as e:
         raise ReapFailure(package, src_url, str(e))
