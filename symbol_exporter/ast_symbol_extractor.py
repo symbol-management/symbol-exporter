@@ -31,6 +31,9 @@ class SymbolFinder(ast.NodeVisitor):
 
     def visit_Import(self, node: ast.Import) -> Any:
         self.imported_symbols.extend(k.name for k in node.names)
+        for k in node.names:
+            if not k.asname:
+                self._add_import_to_surface_area(symbol=k.name, shadows=k.name)
         self.generic_visit(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> Any:
@@ -40,13 +43,17 @@ class SymbolFinder(ast.NodeVisitor):
                     module_name = f"{node.module}.{k.name}"
                     self.aliases[k.name] = module_name
                     self.imported_symbols.append(module_name)
+                    if not k.asname:
+                        self._add_import_to_surface_area(symbol=k.name, shadows=module_name)
                 else:
                     self.star_imports.add(node.module)
         self.generic_visit(node)
 
     def visit_alias(self, node: ast.alias) -> Any:
         if node.asname:
-            self.aliases[node.asname] = self.aliases.get(node.name, node.name)
+            alias_name = self.aliases.get(node.name, node.name)
+            self.aliases[node.asname] = alias_name
+            self._add_import_to_surface_area(symbol=node.asname, shadows=alias_name)
 
     def visit_Attribute(self, node: ast.Attribute) -> Any:
         self.attr_stack.append(node.attr)
@@ -143,6 +150,13 @@ class SymbolFinder(ast.NodeVisitor):
             return fully_qualified_symbol_name
         else:
             return None
+
+    def _add_import_to_surface_area(self, symbol, shadows):
+        self.symbols[f"{self._module_name}.{symbol}"] = {
+            "type": "import",
+            "lineno": None,
+            "shadows": shadows,
+        }
 
 # 1. get all the imports and their aliases (which includes imported things)
 # 2. walk the ast find all usages of those aliases and log all the names and attributes used
