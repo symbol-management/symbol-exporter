@@ -4,7 +4,7 @@ from typing import Any
 from enum import Enum
 
 # Increment when we need the database to be rebuilt (eg adding a new feature)
-version = "1"
+version = "1.1"
 builtin_symbols = set(dir(builtins))
 
 
@@ -79,17 +79,18 @@ class SymbolFinder(ast.NodeVisitor):
         # TODO: handle inside class
         # TODO: handle self?
         if len(node.targets) == 1 and len(self.current_symbol_stack) == 1:
-            for target in node.targets:
-                if hasattr(target, "id"):
-                    self.current_symbol_stack.append(target.id)
-                    symbol_name = self._symbol_stack_to_symbol_name()
-                    self._add_symbol_to_surface_area(
-                        SymbolType.CONSTANT,
-                        symbol_name,
-                        lineno=node.lineno,
-                    )
+            target = next(iter(node.targets))
+            if hasattr(target, "id"):
+                self.current_symbol_stack.append(target.id)
+                symbol_name = self._symbol_stack_to_symbol_name()
+                self._add_symbol_to_surface_area(
+                    SymbolType.CONSTANT,
+                    symbol_name,
+                    lineno=node.lineno,
+                )
             self.generic_visit(node)
-            self.current_symbol_stack.pop(-1)
+            if hasattr(target, "id"):
+                self.current_symbol_stack.pop(-1)
         else:
             self.generic_visit(node)
 
