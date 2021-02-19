@@ -451,6 +451,7 @@ def test_out_of_order_func_def():
     code = """
     def a():
         return b()
+
     def b():
         return 1
     """
