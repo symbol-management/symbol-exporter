@@ -196,11 +196,14 @@ class SymbolFinder(ast.NodeVisitor):
         self.symbols.setdefault("*", default)["data"]["imports"].add(imported_symbol)
 
     def post_process_symbols(self):
-        stripped_names = {k.split(f'{self._module_name}.')[1]: k for k in self.symbols
-                          if k != self._module_name}
+        stripped_names = {
+            k.split(f"{self._module_name}.")[1]: k
+            for k in self.symbols
+            if k != self._module_name
+        }
         output_symbols = self.symbols
         for k, v in output_symbols.items():
-            volume = v['data'].get('symbols_in_volume')
+            volume = v["data"].get("symbols_in_volume")
             if volume:
                 for bad_func_name in volume & set(stripped_names):
                     volume.remove(bad_func_name)
