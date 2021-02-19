@@ -16,6 +16,8 @@ class SymbolType(str, Enum):
     CLASS = "class"
     STAR_IMPORT = "star-import"
 
+    BOUNDING_SURFACE_SYMBOL_TYPES = {MODULE, FUNCTION, CLASS}
+
 
 class SymbolFinder(ast.NodeVisitor):
     def __init__(self, module_name):
@@ -192,6 +194,18 @@ class SymbolFinder(ast.NodeVisitor):
     def _add_symbol_to_star_imports(self, imported_symbol):
         default = dict(type=SymbolType.STAR_IMPORT, data=dict(imports=set()))
         self.symbols.setdefault("*", default)["data"]["imports"].add(imported_symbol)
+
+    def post_process_symbols(self):
+        stripped_names = {k.split(f'{self._module_name}.')[1]: k for k in self.symbols
+                          if k != self._module_name}
+        output_symbols = self.symbols
+        for k, v in output_symbols.items():
+            volume = v['data'].get('symbols_in_volume')
+            if volume:
+                for bad_func_name in volume & set(stripped_names):
+                    volume.remove(bad_func_name)
+                    volume.add(stripped_names[bad_func_name])
+        return output_symbols
 
 
 # 1. get all the imports and their aliases (which includes imported things)

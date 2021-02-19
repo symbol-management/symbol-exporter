@@ -445,3 +445,20 @@ twos.four = None
         },
         "mm.twos": {"data": {"shadows": "abc.twos"}, "type": "import"},
     }
+
+
+def test_out_of_order_func_def():
+    code = """
+    def a():
+        return b()
+    
+    def b():
+        return 1
+    """
+    tree = ast.parse(dedent(code))
+    z = SymbolFinder(module_name="mm")
+    z.visit(tree)
+    assert z.post_process_symbols() == {'mm': {'data': {}, 'type': 'module'},
+                                        'mm.a': {'data': {'lineno': 2, 'symbols_in_volume': {'mm.b'}},
+                                                 'type': 'function'},
+                                        'mm.b': {'data': {'lineno': 5}, 'type': 'function'}}
