@@ -4,7 +4,7 @@ from typing import Any
 from enum import Enum
 
 # Increment when we need the database to be rebuilt (eg adding a new feature)
-version = "1.1"
+version = "1.2"
 builtin_symbols = set(dir(builtins))
 
 
@@ -21,7 +21,7 @@ class SymbolFinder(ast.NodeVisitor):
     def __init__(self, module_name):
         self._module_name = module_name
         self.current_symbol_stack = [module_name]
-        self.symbols = {
+        self._symbols = {
             module_name: {
                 "type": SymbolType.MODULE,
                 "data": {},
@@ -33,6 +33,10 @@ class SymbolFinder(ast.NodeVisitor):
         self.aliases = {}
         self.undeclared_symbols = set()
         self.used_builtins = set()
+
+    @property
+    def symbols(self):
+        return self.post_process_symbols()
 
     def visit(self, node: ast.AST) -> Any:
         super().visit(node)
@@ -160,7 +164,7 @@ class SymbolFinder(ast.NodeVisitor):
         self.generic_visit(node)
 
     def _is_constant(self, symbol_name):
-        return self.symbols.get(symbol_name, {}).get("type") == SymbolType.CONSTANT
+        return self._symbols.get(symbol_name, {}).get("type") == SymbolType.CONSTANT
 
     def _symbol_previously_seen(self, symbol):
         return (
@@ -172,7 +176,7 @@ class SymbolFinder(ast.NodeVisitor):
 
     def _symbol_in_surface_area(self, symbol):
         fully_qualified_symbol_name = f"{self._module_name}.{symbol}"
-        if fully_qualified_symbol_name in self.symbols:
+        if fully_qualified_symbol_name in self._symbols:
             return fully_qualified_symbol_name
         else:
             return None
@@ -183,15 +187,31 @@ class SymbolFinder(ast.NodeVisitor):
             if symbol_type is SymbolType.IMPORT
             else symbol
         )
-        self.symbols[full_symbol_name] = dict(type=symbol_type, data=kwargs)
+        self._symbols[full_symbol_name] = dict(type=symbol_type, data=kwargs)
 
     def _add_symbol_to_volume(self, surface_symbol, volume_symbol):
-        data = self.symbols[surface_symbol]["data"]
+        data = self._symbols[surface_symbol]["data"]
         data.setdefault("symbols_in_volume", set()).add(volume_symbol)
 
     def _add_symbol_to_star_imports(self, imported_symbol):
         default = dict(type=SymbolType.STAR_IMPORT, data=dict(imports=set()))
-        self.symbols.setdefault("*", default)["data"]["imports"].add(imported_symbol)
+        self._symbols.setdefault("*", default)["data"]["imports"].add(imported_symbol)
+
+    def post_process_symbols(self):
+        stripped_names = {
+            k.split(f"{self._module_name}.")[1]: k
+            for k in self._symbols
+            if k != self._module_name and k != '*'
+        }
+        output_symbols = self._symbols
+        for k, v in output_symbols.items():
+            volume = v["data"].get("symbols_in_volume")
+            if volume:
+                for bad_func_name in volume & set(stripped_names):
+                    volume.remove(bad_func_name)
+                    volume.add(stripped_names[bad_func_name])
+                    self.undeclared_symbols.remove(bad_func_name)
+        return output_symbols
 
 
 # 1. get all the imports and their aliases (which includes imported things)

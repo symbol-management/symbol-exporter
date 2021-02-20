@@ -34,7 +34,7 @@ def parse_code(code, module_name):
         return {}
     z = SymbolFinder(module_name)
     z.visit(tree)
-    return z.symbols
+    return z.post_process_symbols()
 
 
 def single_file_extraction(python_file, top_dir):
