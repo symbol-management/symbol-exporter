@@ -74,10 +74,7 @@ def write_out_maps(gn, import_map):
         dump(old_map, f)
 
 
-if __name__ == "__main__":
-    symbol_table = defaultdict(set)
-    path = "symbol_table"
-
+def check_if_table_is_current(path):
     if os.path.exists(os.path.join(path, "_inspection_version.txt")):
         with open(os.path.join(path, "_inspection_version.txt")) as f:
             db_version = f.read()
@@ -91,6 +88,13 @@ if __name__ == "__main__":
         os.makedirs(path)
         with open(os.path.join(path, "_inspection_version.txt"), "w") as f:
             f.write(version)
+
+
+if __name__ == "__main__":
+    symbol_table = defaultdict(set)
+    path = "symbol_table"
+
+    check_if_table_is_current(path)
 
     try:
         with open(".indexed_files", "r") as f:

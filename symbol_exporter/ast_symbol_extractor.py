@@ -201,7 +201,7 @@ class SymbolFinder(ast.NodeVisitor):
         stripped_names = {
             k.split(f"{self._module_name}.")[1]: k
             for k in self._symbols
-            if k != self._module_name and k != '*'
+            if k != self._module_name and k != "*"
         }
         output_symbols = self._symbols
         for k, v in output_symbols.items():
