@@ -18,13 +18,16 @@ class SymbolType(str, Enum):
 
 
 class SymbolFinder(ast.NodeVisitor):
-    def __init__(self, module_name):
+    def __init__(self, module_name, filename=None):
         self._module_name = module_name
         self.current_symbol_stack = [module_name]
+        module_metadata = {}
+        if filename:
+            module_metadata['filename'] = filename
         self._symbols = {
             module_name: {
                 "type": SymbolType.MODULE,
-                "data": {},
+                "data": module_metadata,
             }
         }
         self.imported_symbols = []
@@ -156,11 +159,15 @@ class SymbolFinder(ast.NodeVisitor):
                 lineno = node.lineno
                 if self._is_constant(surface_symbol):
                     self._add_symbol_to_volume(
-                        surface_symbol=self._module_name, volume_symbol=symbol_name, lineno=lineno
+                        surface_symbol=self._module_name,
+                        volume_symbol=symbol_name,
+                        lineno=lineno,
                     )
                 else:
                     self._add_symbol_to_volume(
-                        surface_symbol=surface_symbol, volume_symbol=symbol_name, lineno=lineno
+                        surface_symbol=surface_symbol,
+                        volume_symbol=symbol_name,
+                        lineno=lineno,
                     )
         self.generic_visit(node)
 
@@ -192,7 +199,11 @@ class SymbolFinder(ast.NodeVisitor):
 
     def _add_symbol_to_volume(self, surface_symbol, volume_symbol, lineno):
         data = self._symbols[surface_symbol]["data"]
-        data.setdefault("symbols_in_volume", {}).update({volume_symbol: {'line number': lineno}})
+        symbols_in_volume = data.setdefault("symbols_in_volume", {})
+        symbol_in_volume_metadata = symbols_in_volume.setdefault(volume_symbol, {})
+        symbol_in_volume_metadata.setdefault("line number", []).append(
+            lineno
+        )
 
     def _add_symbol_to_star_imports(self, imported_symbol):
         default = dict(type=SymbolType.STAR_IMPORT, data=dict(imports=set()))
@@ -202,7 +213,7 @@ class SymbolFinder(ast.NodeVisitor):
         stripped_names = {
             k.split(f"{self._module_name}.")[1]: k
             for k in self._symbols
-            if k != self._module_name and k != '*'
+            if k != self._module_name and k != "*"
         }
         output_symbols = self._symbols
         for k, v in output_symbols.items():

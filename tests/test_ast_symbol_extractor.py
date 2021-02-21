@@ -33,7 +33,10 @@ def test_from_import_attr_access():
         },
         "mm.f": {
             "type": "function",
-            "data": {"lineno": 4, "symbols_in_volume": {"abc.xyz.i": {'line number': 5}}},
+            "data": {
+                "lineno": 4,
+                "symbols_in_volume": {"abc.xyz.i": {"line number": [5]}},
+            },
         },
     }
 
@@ -60,7 +63,10 @@ def test_alias_import():
         },
         "mm.f": {
             "type": "function",
-            "data": {"lineno": 4, "symbols_in_volume": {"abc.xyz.i": {'line number': 5}}},
+            "data": {
+                "lineno": 4,
+                "symbols_in_volume": {"abc.xyz.i": {"line number": [5]}},
+            },
         },
     }
 
@@ -84,7 +90,10 @@ def test_import_with_and_without_alias_exposes_import_and_alias():
         },
         "mm.f": {
             "type": "function",
-            "data": {"lineno": 5, "symbols_in_volume": {"abc.xyz.i": {'line number': 6}}},
+            "data": {
+                "lineno": 5,
+                "symbols_in_volume": {"abc.xyz.i": {"line number": [6]}},
+            },
         },
         "mm.xyz": {
             "type": "import",
@@ -115,7 +124,13 @@ def test_calls():
         },
         "mm.f": {
             "type": "function",
-            "data": {"lineno": 4, "symbols_in_volume": {"numpy.ones": {'line number': 5}, "numpy.twos": {'line number': 5}}},
+            "data": {
+                "lineno": 4,
+                "symbols_in_volume": {
+                    "numpy.ones": {"line number": [5]},
+                    "numpy.twos": {"line number": [5]},
+                },
+            },
         },
         "mm.np": {
             "type": "import",
@@ -137,7 +152,7 @@ def test_constant():
     assert z.symbols == {
         "mm": {
             "type": "module",
-            "data": {"symbols_in_volume": {"numpy.ones": {'line number': 4}}},
+            "data": {"symbols_in_volume": {"numpy.ones": {"line number": [4]}}},
         },
         "mm.np": {
             "type": "import",
@@ -172,7 +187,10 @@ def test_class():
         },
         "mm.ABC": {
             "type": "class",
-            "data": {"lineno": 4, "symbols_in_volume": {"numpy.ones": {'line number': 5}}},
+            "data": {
+                "lineno": 4,
+                "symbols_in_volume": {"numpy.ones": {"line number": [5]}},
+            },
         },
     }
 
@@ -198,13 +216,16 @@ def test_class_method():
         },
         "mm.ABC": {
             "type": "class",
-            "data": {"lineno": 4, "symbols_in_volume": {"numpy.ones": {'line number': 5}}},
+            "data": {
+                "lineno": 4,
+                "symbols_in_volume": {"numpy.ones": {"line number": [5]}},
+            },
         },
         "mm.ABC.xyz": {
             "type": "function",
             "data": {
                 "lineno": 7,
-                "symbols_in_volume": {"numpy.twos": {'line number': 8}},
+                "symbols_in_volume": {"numpy.twos": {"line number": [8]}},
             },
         },
         "mm.np": {
@@ -243,7 +264,7 @@ def test_import_adds_symbols():
         },
         "mm": {
             "type": "module",
-            "data": {"symbols_in_volume": {"numpy.ones": {'line number': 7}}},
+            "data": {"symbols_in_volume": {"numpy.ones": {"line number": [7]}}},
         },
         "mm.z": {
             "type": "constant",
@@ -301,7 +322,10 @@ def test_undeclared_symbols():
         "mm": {
             "type": "module",
             "data": {
-                "symbols_in_volume": {"numpy.ones": {'line number': 8}, "twos": {'line number': 9}},
+                "symbols_in_volume": {
+                    "numpy.ones": {"line number": [8]},
+                    "twos": {"line number": [9]},
+                },
             },
         },
         "mm.a": {
@@ -332,7 +356,7 @@ def test_imported_symbols_not_treated_as_undeclared():
     assert z.symbols == {
         "mm": {
             "type": "module",
-            "data": {"symbols_in_volume": {"abc.twos": {'line number': 4}}},
+            "data": {"symbols_in_volume": {"abc.twos": {"line number": [4]}}},
         },
         "mm.twos": {
             "type": "import",
@@ -360,7 +384,7 @@ def test_builtin_symbols_not_treated_as_undeclared():
     assert z.symbols == {
         "mm": {
             "type": "module",
-            "data": {"symbols_in_volume": {"len": {'line number': 4}}},
+            "data": {"symbols_in_volume": {"len": {"line number": [4]}}},
         },
         "mm.twos": {
             "type": "import",
@@ -391,7 +415,7 @@ def test_functions_not_treated_as_undeclared():
     assert z.symbols == {
         "mm": {
             "type": "module",
-            "data": {"symbols_in_volume": {"mm.f": {'line number': 7}}},
+            "data": {"symbols_in_volume": {"mm.f": {"line number": [7]}}},
         },
         "mm.f": {
             "type": "function",
@@ -419,7 +443,12 @@ def test_attr_assignment():
     z = process_code_str(code)
     assert z.symbols == {
         "mm": {
-            "data": {"symbols_in_volume": {"abc.twos.three": {'line number': 4}, "abc.twos.four": {'line number': 5}}},
+            "data": {
+                "symbols_in_volume": {
+                    "abc.twos.three": {"line number": [4]},
+                    "abc.twos.four": {"line number": [5]},
+                }
+            },
             "type": "module",
         },
         "mm.twos": {"data": {"shadows": "abc.twos"}, "type": "import"},
@@ -438,8 +467,28 @@ def test_out_of_order_func_def():
     assert z.post_process_symbols() == {
         "mm": {"data": {}, "type": "module"},
         "mm.a": {
-            "data": {"lineno": 2, "symbols_in_volume": {"mm.b": {'line number': 3}}},
+            "data": {"lineno": 2, "symbols_in_volume": {"mm.b": {"line number": [3]}}},
             "type": "function",
         },
         "mm.b": {"data": {"lineno": 5}, "type": "function"},
+    }
+
+
+def test_multi_use_of_symbol():
+    code = """
+    def a():
+        a = ones(5)
+        b = ones(5)
+        return a + b
+    """
+    z = process_code_str(code)
+    assert z.post_process_symbols() == {
+        "mm": {"data": {}, "type": "module"},
+        "mm.a": {
+            "data": {
+                "lineno": 2,
+                "symbols_in_volume": {"ones": {"line number": [3, 4]}},
+            },
+            "type": "function",
+        },
     }
