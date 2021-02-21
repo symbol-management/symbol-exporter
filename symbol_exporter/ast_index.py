@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import glob
 import json
 import os
+import shutil
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from itertools import groupby
@@ -39,6 +40,8 @@ from pathlib import Path
 
 from libcflib.jsonutils import dump, load
 from tqdm import tqdm
+
+from symbol_exporter.ast_symbol_extractor import version
 
 
 def get_data(file):
@@ -73,6 +76,21 @@ def write_out_maps(gn, import_map):
 
 if __name__ == "__main__":
     symbol_table = defaultdict(set)
+    path = "symbol_table"
+
+    if os.path.exists(os.path.join(path, "_inspection_version.txt")):
+        with open(os.path.join(path, "_inspection_version.txt")) as f:
+            db_version = f.read()
+    else:
+        db_version = ""
+    if db_version != version and os.path.exists(path):
+        shutil.rmtree(path)
+        with open(".indexed_files", "w") as f:
+            pass
+    if not os.path.exists(path):
+        os.makedirs(path)
+        with open(os.path.join(path, "_inspection_version.txt"), "w") as f:
+            f.write(version)
 
     try:
         with open(".indexed_files", "r") as f:
@@ -90,22 +108,8 @@ if __name__ == "__main__":
         for symbol in get_data(file):
             symbol_table[symbol].add(artifact_name)
 
-    # for file in new_files:
-    #     artifact_name = Path(file).name.rsplit(".", 1)[0]
-    #     futures[tpe.submit(get_data, file)] = artifact_name
-    #
-    # for future in tqdm(as_completed(futures), total=len(futures)):
-    #     f = futures.pop(future)
-    #     for symbol in future.result():
-    #         symbol_table[symbol].add(f)
-
     os.makedirs("symbol_table", exist_ok=True)
     sorted_imports = sorted(symbol_table.keys(), key=lambda x: x.lower())
-
-    # with tpe as pool:
-    #     for gn, keys in tqdm(groupby(sorted_imports, lambda x: x[:2].lower())):
-    #         sub_import_map = {k: symbol_table.pop(k) for k in keys}
-    #         pool.submit(write_out_maps, gn, sub_import_map)
 
     for gn, keys in tqdm(
         groupby(sorted_imports, lambda x: x.partition(".")[0].lower())
