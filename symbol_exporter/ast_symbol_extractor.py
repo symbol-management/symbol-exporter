@@ -23,7 +23,7 @@ class SymbolFinder(ast.NodeVisitor):
         self.current_symbol_stack = [module_name]
         module_metadata = {}
         if filename:
-            module_metadata['filename'] = filename
+            module_metadata["filename"] = filename
         self._symbols = {
             module_name: {
                 "type": SymbolType.MODULE,
@@ -201,9 +201,7 @@ class SymbolFinder(ast.NodeVisitor):
         data = self._symbols[surface_symbol]["data"]
         symbols_in_volume = data.setdefault("symbols_in_volume", {})
         symbol_in_volume_metadata = symbols_in_volume.setdefault(volume_symbol, {})
-        symbol_in_volume_metadata.setdefault("line number", []).append(
-            lineno
-        )
+        symbol_in_volume_metadata.setdefault("line number", []).append(lineno)
 
     def _add_symbol_to_star_imports(self, imported_symbol):
         default = dict(type=SymbolType.STAR_IMPORT, data=dict(imports=set()))

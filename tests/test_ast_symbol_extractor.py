@@ -14,7 +14,7 @@ def process_code_str(code):
 def test_from_import_attr_access():
     code = """
     from abc import xyz
-    
+
     def f():
         return xyz.i
     """
@@ -44,7 +44,7 @@ def test_from_import_attr_access():
 def test_alias_import():
     code = """
     from abc import xyz as l
-    
+
     def f():
         return l.i
     """
@@ -75,7 +75,7 @@ def test_import_with_and_without_alias_exposes_import_and_alias():
     code = """
     from abc import xyz
     from abc import xyz as l
-    
+
     def f():
         return l.i
 """
@@ -109,7 +109,7 @@ def test_import_with_and_without_alias_exposes_import_and_alias():
 def test_calls():
     code = """
     import numpy as np
-    
+
     def f():
         return np.ones(np.twos().three)
     """
@@ -142,7 +142,7 @@ def test_calls():
 def test_constant():
     code = """
     import numpy as np
-    
+
     z = np.ones(5)
     """
     z = process_code_str(code)
@@ -168,7 +168,7 @@ def test_constant():
 def test_class():
     code = """
     import numpy as np
-    
+
     class ABC():
         a = np.ones(5)
     """
@@ -198,10 +198,10 @@ def test_class():
 def test_class_method():
     code = """
     import numpy as np
-    
+
     class ABC():
         a = np.ones(5)
-    
+
         def xyz(self):
             return np.twos(10)
     """
@@ -301,11 +301,11 @@ def test_star_import():
 def test_undeclared_symbols():
     code = """
     import numpy as np
-    
+
     from abc import *
     from xyz import *
-    
-    
+
+
     a = np.ones(5)
     b = twos(10)
     """
@@ -346,7 +346,7 @@ def test_undeclared_symbols():
 def test_imported_symbols_not_treated_as_undeclared():
     code = """
     from abc import twos
-    
+
     b = twos(10)
     """
     z = process_code_str(code)
@@ -373,7 +373,7 @@ def test_imported_symbols_not_treated_as_undeclared():
 def test_builtin_symbols_not_treated_as_undeclared():
     code = """
     from abc import twos
-    
+
     b = len([])
     """
     z = process_code_str(code)
@@ -401,10 +401,10 @@ def test_builtin_symbols_not_treated_as_undeclared():
 def test_functions_not_treated_as_undeclared():
     code = """
     from abc import twos
-    
+
     def f():
         return 1
-    
+
     g = f()
     """
     z = process_code_str(code)
@@ -436,7 +436,7 @@ def test_functions_not_treated_as_undeclared():
 def test_attr_assignment():
     code = """
     from abc import twos
-    
+
     twos.three = '*'
     twos.four = None
     """
