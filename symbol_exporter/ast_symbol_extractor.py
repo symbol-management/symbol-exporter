@@ -153,13 +153,14 @@ class SymbolFinder(ast.NodeVisitor):
             # A previously declared symbol in the module is being referenced.
             surface_symbol = self._symbol_stack_to_symbol_name()
             if symbol_name != surface_symbol:
+                lineno = node.lineno
                 if self._is_constant(surface_symbol):
                     self._add_symbol_to_volume(
-                        surface_symbol=self._module_name, volume_symbol=symbol_name
+                        surface_symbol=self._module_name, volume_symbol=symbol_name, lineno=lineno
                     )
                 else:
                     self._add_symbol_to_volume(
-                        surface_symbol=surface_symbol, volume_symbol=symbol_name
+                        surface_symbol=surface_symbol, volume_symbol=symbol_name, lineno=lineno
                     )
         self.generic_visit(node)
 
@@ -189,9 +190,9 @@ class SymbolFinder(ast.NodeVisitor):
         )
         self._symbols[full_symbol_name] = dict(type=symbol_type, data=kwargs)
 
-    def _add_symbol_to_volume(self, surface_symbol, volume_symbol):
+    def _add_symbol_to_volume(self, surface_symbol, volume_symbol, lineno):
         data = self._symbols[surface_symbol]["data"]
-        data.setdefault("symbols_in_volume", set()).add(volume_symbol)
+        data.setdefault("symbols_in_volume", {}).update({volume_symbol: {'line number': lineno}})
 
     def _add_symbol_to_star_imports(self, imported_symbol):
         default = dict(type=SymbolType.STAR_IMPORT, data=dict(imports=set()))
@@ -207,9 +208,9 @@ class SymbolFinder(ast.NodeVisitor):
         for k, v in output_symbols.items():
             volume = v["data"].get("symbols_in_volume")
             if volume:
-                for bad_func_name in volume & set(stripped_names):
-                    volume.remove(bad_func_name)
-                    volume.add(stripped_names[bad_func_name])
+                for bad_func_name in set(volume) & set(stripped_names):
+                    symbol_md = volume.pop(bad_func_name)
+                    volume[stripped_names[bad_func_name]] = symbol_md
                     self.undeclared_symbols.remove(bad_func_name)
         return output_symbols
 
