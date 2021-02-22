@@ -11,6 +11,13 @@ from functools import lru_cache
 import pwn
 
 ASM_PATTERN = re.compile(r"^\s+([0-9a-f]+):\s+([0-9a-f]{2}(?: [0-9a-f]{2})*)(?:\s+([^\s]+)(?:\s+(.+?)\s*(?:# (0x[0-9a-f]+))?)?)?\s*$", re.MULTILINE)
+RE_ASM_EXPRESSION = re.compile(
+    r"([DQ]WORD) PTR \["
+    r"([a-z0-9]{3})"
+    r"(?:\+([a-z0-9]{3})\*([\d+]))?"
+    r"(?:\+(0x[0-9a-f]+))?"
+    r"\]"
+)
 PYMODULE_STRUCT = struct.Struct("x"*40 + "LLlL")
 PYMETHOD_STRUCT = struct.Struct("LLixxxxL")
 
@@ -35,14 +42,28 @@ class AssemblyInstruction:
     address: Optional[str]
 
     def __repr__(self):
+        if self.symbol_name:
+            symbols_identifier = f"# [{self.symbol_name}]"
+        elif self.address:
+            symbols_identifier = f"# [{self.address}]"
+        else:
+            symbols_identifier = ""
+
         return "".join([
             self.line.rjust(8),
             ":       ",
             (self.data or "").ljust(24),
             (self.instruction or "").ljust(7),
             (self.args or "").ljust(30),
-            (f"# [{self.symbol_name}]" if self.symbol_name else "").ljust(20),
+            symbols_identifier.ljust(20),
         ])
+
+    @property
+    def size(self):
+        length = (len(self.data) + 1)
+        assert length % 3 == 0
+        assert self.data.count(" ") == (length // 3 - 1)
+        return length // 3
 
     @property
     def symbol_name(self):
@@ -53,6 +74,7 @@ class Tracers(Enum):
     MODULE = "MODULE"
     SUBMODULE = "SUBMODULE"
     MODULE_DICT = "MODULE_DICT"
+    UNKNOWN = "UNKNOWN"
 
 
 
@@ -196,27 +218,88 @@ def disassemble_symbol(elf, loc_to_symbol: dict, function_name: str):
 def emulate(elf, loc_to_symbol, function_name, results, registers=None):
     if registers is None:
         registers = {}
-    instructions = disassemble_symbol(elf, loc_to_symbol, function_name)
     stack = []
+    instructions = disassemble_symbol(elf, loc_to_symbol, function_name)
 
     # Parse the assembly calling the parser functions in KNOWN_SYMBOLS when needed
     for instruction in instructions:
         logger.debug("Executing: %r", instruction)
+        registers["rip"] = hex(int(instruction.line, 16) + instruction.size)
+
+        # if "4484" in repr(instruction):
+        #     breakpoint()
+
         if instruction.instruction in ["lea"]:
             destination, source = map(str.strip, instruction.args.split(","))
             registers[destination] = instruction.address
 
+        elif instruction.instruction in ["add"]:
+            destination, source = map(str.strip, instruction.args.split(","))
+            current_value = registers.get(destination, "0x0")
+            # FIXME (current_value and)
+            if current_value and current_value != Tracers.UNKNOWN:
+                registers[destination] = hex(int(current_value, 16) + int(source, 16))
+
+        elif instruction.instruction in ["sub"]:
+            destination, source = map(str.strip, instruction.args.split(","))
+            current_value = registers.get(destination, "0x0")
+            # FIXME (current_value and)
+            if current_value and current_value != Tracers.UNKNOWN:
+                registers[destination] = hex(int(current_value, 16) + int(source, 16))
+
+        elif instruction.instruction in ["xor"]:
+            destination, source = map(str.strip, instruction.args.split(","))
+            if destination == source:
+                # https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/x64-architecture
+                # FIXME
+                # if destination == "r15d":
+                #     destination = "r15"
+                registers[destination] = "0x0"
+
         elif instruction.instruction in ["mov"]:
             destination, source = map(str.strip, instruction.args.split(","))
-            
-            if match := re.fullmatch(r"[DQ]WORD PTR \[([a-z0-9]{3})(\+0x0)?\]", destination):
-                dest, offset = match.groups()
-                destination = dest
 
-            if instruction.address:
-                registers[destination] = instruction.symbol_name
-            else:
-                registers[destination] = registers.get(source)
+            # if match := re.fullmatch(r"([DQ]WORD) PTR \[([a-z0-9]{3})(\+0x[0-9]+)?\]", destination):
+            #     size, dest, offset = match.groups()
+            #     destination = dest
+
+            try:
+                if instruction.symbol_name:
+                    registers[destination] = instruction.symbol_name
+                elif source in registers:
+                    registers[destination] = registers[source]
+                elif source.startswith("0x"):
+                    assert int(source, 16) >= 0, source
+                    registers[destination] = source
+                elif match := RE_ASM_EXPRESSION.fullmatch(source):
+                    size, src, offset_reg, multiplier, offset_idx = match.groups()
+                    assert not src.startswith("0x"), src
+
+                    if registers[src] in elf.symbols:
+                        idx = elf.symbols[registers[src]]
+                    elif registers[src] == Tracers.UNKNOWN:
+                        idx = Tracers.UNKNOWN
+                    else:
+                        idx = int(registers[src], 16)
+
+                    if idx != Tracers.UNKNOWN and offset_idx:
+                        idx += int(offset_idx, 16)
+
+                    if idx != Tracers.UNKNOWN and offset_reg:
+                        if registers[offset_reg] == Tracers.UNKNOWN:
+                            idx = Tracers.UNKNOWN
+                        elif int(registers[offset_reg], 16) > 0:
+                            idx += elf.u64(int(registers[offset_reg], 16)) * int(multiplier)
+
+                    if idx == Tracers.UNKNOWN:
+                        registers[destination] = Tracers.UNKNOWN
+                    elif idx > 0:
+                        registers[destination] = hex(getattr(elf, {"DWORD": "u32", "QWORD": "u64"}[size])(idx))
+                    else:
+                        raise Exception()
+            except Exception:
+                logger.warning("Failed to fill %r from %r", destination, instruction)
+                registers[destination] = Tracers.UNKNOWN
 
         elif instruction.instruction in ["push"]:
             source, = map(str.strip, instruction.args.split(","))
@@ -242,6 +325,8 @@ def emulate(elf, loc_to_symbol, function_name, results, registers=None):
                 emulate(elf, loc_to_symbol, symbol_name, results, registers)
             else:
                 logger.debug("Skipping call to %s (%s) as function definition is not available", address, symbol_name)
+                # TODO Maybe this should be a large negative value instead?
+                registers["rax"] = Tracers.UNKNOWN
 
 
 def parse_args():

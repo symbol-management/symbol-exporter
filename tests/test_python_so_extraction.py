@@ -200,7 +200,7 @@ def test_datetime():
 
 @pytest.mark.xfail(strict=True)
 def test_decimal():
-    expected = {'FloatOperation', 'MIN_EMIN', 'DivisionByZero', 'DecimalException', 'ConversionSyntax', 'MIN_ETINY', 'ROUND_CEILING', 'Decimal', 'ROUND_UP', 'Rounded', 'Underflow', 'HAVE_THREADS', 'Clamped', 'InvalidOperation', 'Subnormal', 'setcontext', 'MAX_PREC', 'localcontext', 'ROUND_DOWN', 'DivisionUndefined', 'ROUND_HALF_UP', 'DefaultContext', 'ROUND_HALF_DOWN', 'DivisionImpossible', 'Inexact', 'Context', 'DecimalTuple', 'Overflow', 'ROUND_05UP', 'InvalidContext', 'BasicContext', 'MAX_EMAX', 'getcontext', 'ExtendedContext', 'ROUND_FLOOR', 'ROUND_HALF_EVEN'}
+    expected = {'__libmpdec_version__', '__version__', 'FloatOperation', 'MIN_EMIN', 'DivisionByZero', 'DecimalException', 'ConversionSyntax', 'MIN_ETINY', 'ROUND_CEILING', 'Decimal', 'ROUND_UP', 'Rounded', 'Underflow', 'HAVE_THREADS', 'Clamped', 'InvalidOperation', 'Subnormal', 'setcontext', 'MAX_PREC', 'localcontext', 'ROUND_DOWN', 'DivisionUndefined', 'ROUND_HALF_UP', 'DefaultContext', 'ROUND_HALF_DOWN', 'DivisionImpossible', 'Inexact', 'Context', 'DecimalTuple', 'Overflow', 'ROUND_05UP', 'InvalidContext', 'BasicContext', 'MAX_EMAX', 'getcontext', 'ExtendedContext', 'ROUND_FLOOR', 'ROUND_HALF_EVEN'}
     compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_decimal.cpython-37m-x86_64-linux-gnu.so', '_decimal', expected)
 
 
