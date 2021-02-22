@@ -13,7 +13,7 @@ def compare(filename, module_name, expected, *, xmissing=False):
     diff = (expected - actual)
     if xmissing:
         assert diff, "Unexpectedly passed!"
-        pytest.xfail(f"{len(diff)} were not found (known issue)")
+        pytest.xfail(f"{len(diff)} out of {len(expected)} were not found (known issue)")
     else:
         assert not diff, (f"Failed to find {len(diff)} out of {len(expected)} keys", diff)
 

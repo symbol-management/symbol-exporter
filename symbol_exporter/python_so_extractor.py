@@ -89,6 +89,10 @@ def initfunc_name(name):
 
 def parse_create(elf, call: AssemblyInstruction, registers: dict, results: dict):
     module = registers["rdi"]
+    if module == Tracers.UNKNOWN:
+        logger.error("Failed to trace module struct")
+        registers["rax"] = Tracers.UNKNOWN
+        return
 
     module_struct_data = elf.read(int(module, base=16), PYMODULE_STRUCT.size)
     logger.debug("parse_module: module_struct_data is %s", list(map(hex, module_struct_data)))
