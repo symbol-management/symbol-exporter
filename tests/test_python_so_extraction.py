@@ -3,7 +3,7 @@ import pytest
 from symbol_exporter import python_so_extractor
 
 
-def compare(filename, module_name, expected):
+def compare(filename, module_name, expected, *, xmissing=False):
     python_so_extractor.disassembled_cache = {}
     results = python_so_extractor.parse_file(filename, module_name)
     actual = {x["name"] for x in results["methods"]}
@@ -11,8 +11,11 @@ def compare(filename, module_name, expected):
     diff = (actual - expected)
     assert not diff, (f"Found {len(diff)} extra keys", diff)
     diff = (expected - actual)
-    assert not diff, (f"Failed to find {len(diff)} out of {len(expected)} keys", diff)
-
+    if xmissing:
+        assert diff, "Unexpectedly passed!"
+        pytest.xfail(f"{len(diff)} were not found (known issue)")
+    else:
+        assert not diff, (f"Failed to find {len(diff)} out of {len(expected)} keys", diff)
 
 def test__sha1():
     expected = {'SHA1Type', 'sha1'}
@@ -64,16 +67,14 @@ def test__bz2():
     compare("/home/cburr/miniconda3/lib/python3.7/lib-dynload/_bz2.cpython-37m-x86_64-linux-gnu.so", "_bz2", expected)
 
 
-@pytest.mark.xfail(strict=True)
 def test__curses_py37():
-    expected = {'KEY_BREAK', 'KEY_F42', 'def_prog_mode', 'KEY_SCANCEL', 'KEY_RESIZE', 'KEY_SCOMMAND', 'KEY_SEND', 'KEY_F21', 'KEY_MARK', 'KEY_SPRINT', 'KEY_SEXIT', 'KEY_SHELP', 'KEY_STAB', 'KEY_MESSAGE', 'KEY_F48', 'unctrl', 'KEY_F59', 'KEY_IL', 'has_ic', 'reset_shell_mode', 'is_term_resized', 'KEY_FIND', 'nonl', 'BUTTON3_RELEASED', 'A_LOW', 'KEY_CLEAR', 'KEY_F34', 'curs_set', 'KEY_PPAGE', 'KEY_F1', 'def_shell_mode', 'KEY_BACKSPACE', 'KEY_SRIGHT', 'BUTTON2_PRESSED', 'BUTTON_CTRL', 'killchar', 'BUTTON4_DOUBLE_CLICKED', 'COLOR_RED', 'KEY_HOME', 'KEY_F54', 'KEY_F49', 'KEY_F6', 'delay_output', 'A_BLINK', 'KEY_COPY', 'tigetstr', 'KEY_SRESET', 'can_change_color', 'endwin', 'filter', 'KEY_F58', 'version', 'KEY_F16', 'KEY_CTAB', 'tigetflag', 'A_VERTICAL', 'KEY_F30', 'KEY_F19', 'KEY_SR', 'KEY_END', 'A_STANDOUT', 'REPORT_MOUSE_POSITION', 'KEY_F3', 'KEY_F63', 'termattrs', 'A_ALTCHARSET', 'BUTTON3_TRIPLE_CLICKED', 'BUTTON2_DOUBLE_CLICKED', 'KEY_F41', 'longname', 'termname', 'KEY_F45', 'pair_content', 'pair_number', 'KEY_LL', 'KEY_IC', 'KEY_REPLACE', 'KEY_F10', 'error', 'A_TOP', 'meta', 'BUTTON2_CLICKED', 'KEY_F46', 'KEY_F7', 'BUTTON1_RELEASED', 'KEY_HELP', 'A_COLOR', 'KEY_F12', 'initscr', 'KEY_F17', 'KEY_C3', 'BUTTON1_DOUBLE_CLICKED', 'KEY_F20', 'KEY_F32', 'resetty', 'KEY_RESUME', 'KEY_RIGHT', 'A_PROTECT', 'KEY_LEFT', 'ungetmouse', 'KEY_F57', 'halfdelay', 'A_RIGHT', 'KEY_RESTART', 'BUTTON4_PRESSED', 'KEY_SOPTIONS', 'KEY_F29', 'KEY_SCOPY', 'BUTTON4_TRIPLE_CLICKED', 'doupdate', 'KEY_RESET', 'savetty', 'COLOR_BLACK', 'COLOR_WHITE', 'KEY_F55', 'KEY_SBEG', 'KEY_F0', 'BUTTON4_CLICKED', 'KEY_F28', 'KEY_SNEXT', 'resize_term', 'mousemask', 'update_lines_cols', 'BUTTON_ALT', 'KEY_F2', 'KEY_F14', 'KEY_OPTIONS', 'KEY_SCREATE', 'noraw', 'A_ATTRIBUTES', 'KEY_F37', 'KEY_SUNDO', 'KEY_SREPLACE', 'KEY_CANCEL', 'BUTTON3_PRESSED', 'KEY_F36', 'KEY_SIC', 'setsyx', 'A_NORMAL', 'KEY_F60', 'BUTTON1_PRESSED', 'tparm', 'KEY_SAVE', 'KEY_ENTER', 'KEY_SPREVIOUS', 'KEY_EXIT', 'has_il', 'KEY_F62', 'noqiflush', 'KEY_DOWN', 'putp', 'keyname', 'ungetch', 'A_DIM', 'A_ITALIC', 'KEY_SLEFT', 'KEY_F51', 'KEY_F23', 'KEY_SMOVE', 'KEY_MOUSE', 'KEY_MOVE', 'A_BOLD', 'COLOR_MAGENTA', 'KEY_MAX', 'KEY_UP', 'KEY_SRSUME', 'KEY_F25', 'KEY_EOL', 'KEY_F33', 'KEY_EOS', 'intrflush', 'newpad', 'has_key', 'start_color', 'KEY_SFIND', 'KEY_SDC', 'BUTTON3_DOUBLE_CLICKED', 'A_INVIS', 'KEY_F26', 'KEY_F52', 'tigetnum', 'KEY_F44', 'KEY_CREATE', 'napms', 'nl', 'KEY_EIC', 'A_CHARTEXT', 'KEY_REDO', 'KEY_F11', 'A_UNDERLINE', 'KEY_SDL', 'resizeterm', 'color_pair', 'isendwin', 'COLOR_CYAN', 'baudrate', 'raw', 'setupterm', 'flash', 'KEY_F18', 'KEY_F50', 'BUTTON3_CLICKED', 'KEY_NEXT', 'KEY_DL', '_C_API', 'BUTTON2_TRIPLE_CLICKED', 'init_pair', 'COLOR_BLUE', 'init_color', 'newwin', 'KEY_CATAB', 'KEY_SELECT', 'KEY_F22', 'mouseinterval', 'reset_prog_mode', 'KEY_F13', 'KEY_SEOL', 'has_colors', 'unget_wch', 'getwin', 'erasechar', 'KEY_C1', 'noecho', 'getmouse', 'KEY_F24', 'BUTTON2_RELEASED', 'A_REVERSE', 'KEY_BEG', 'A_LEFT', 'BUTTON1_TRIPLE_CLICKED', 'KEY_F5', 'KEY_CLOSE', 'KEY_OPEN', 'KEY_A3', 'KEY_F8', 'KEY_REFRESH', 'typeahead', 'use_env', 'KEY_F27', 'KEY_F47', 'KEY_F56', 'BUTTON4_RELEASED', 'KEY_F61', 'KEY_A1', 'BUTTON1_CLICKED', 'KEY_F35', 'KEY_F53', 'OK', 'A_HORIZONTAL', 'KEY_SHOME', 'COLOR_YELLOW', 'KEY_REFERENCE', 'BUTTON_SHIFT', 'KEY_F38', 'cbreak', 'color_content', 'KEY_COMMAND', 'KEY_F15', 'KEY_DC', 'KEY_F43', 'beep', 'use_default_colors', 'KEY_SREDO', 'KEY_SSUSPEND', 'ALL_MOUSE_EVENTS', 'ERR', 'KEY_F31', 'KEY_F9', 'nocbreak', 'KEY_SSAVE', 'KEY_F40', 'KEY_F39', 'KEY_SUSPEND', 'KEY_BTAB', 'KEY_MIN', 'KEY_NPAGE', 'KEY_PREVIOUS', 'echo', 'COLOR_GREEN', 'KEY_B2', 'getsyx', 'KEY_SMESSAGE', 'KEY_PRINT', 'KEY_F4', 'KEY_UNDO', 'KEY_SF', 'flushinp', 'qiflush'}
-    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_curses.cpython-37m-x86_64-linux-gnu.so', '_curses', expected)
+    expected = {'__version__', 'KEY_BREAK', 'KEY_F42', 'def_prog_mode', 'KEY_SCANCEL', 'KEY_RESIZE', 'KEY_SCOMMAND', 'KEY_SEND', 'KEY_F21', 'KEY_MARK', 'KEY_SPRINT', 'KEY_SEXIT', 'KEY_SHELP', 'KEY_STAB', 'KEY_MESSAGE', 'KEY_F48', 'unctrl', 'KEY_F59', 'KEY_IL', 'has_ic', 'reset_shell_mode', 'is_term_resized', 'KEY_FIND', 'nonl', 'BUTTON3_RELEASED', 'A_LOW', 'KEY_CLEAR', 'KEY_F34', 'curs_set', 'KEY_PPAGE', 'KEY_F1', 'def_shell_mode', 'KEY_BACKSPACE', 'KEY_SRIGHT', 'BUTTON2_PRESSED', 'BUTTON_CTRL', 'killchar', 'BUTTON4_DOUBLE_CLICKED', 'COLOR_RED', 'KEY_HOME', 'KEY_F54', 'KEY_F49', 'KEY_F6', 'delay_output', 'A_BLINK', 'KEY_COPY', 'tigetstr', 'KEY_SRESET', 'can_change_color', 'endwin', 'filter', 'KEY_F58', 'version', 'KEY_F16', 'KEY_CTAB', 'tigetflag', 'A_VERTICAL', 'KEY_F30', 'KEY_F19', 'KEY_SR', 'KEY_END', 'A_STANDOUT', 'REPORT_MOUSE_POSITION', 'KEY_F3', 'KEY_F63', 'termattrs', 'A_ALTCHARSET', 'BUTTON3_TRIPLE_CLICKED', 'BUTTON2_DOUBLE_CLICKED', 'KEY_F41', 'longname', 'termname', 'KEY_F45', 'pair_content', 'pair_number', 'KEY_LL', 'KEY_IC', 'KEY_REPLACE', 'KEY_F10', 'error', 'A_TOP', 'meta', 'BUTTON2_CLICKED', 'KEY_F46', 'KEY_F7', 'BUTTON1_RELEASED', 'KEY_HELP', 'A_COLOR', 'KEY_F12', 'initscr', 'KEY_F17', 'KEY_C3', 'BUTTON1_DOUBLE_CLICKED', 'KEY_F20', 'KEY_F32', 'resetty', 'KEY_RESUME', 'KEY_RIGHT', 'A_PROTECT', 'KEY_LEFT', 'ungetmouse', 'KEY_F57', 'halfdelay', 'A_RIGHT', 'KEY_RESTART', 'BUTTON4_PRESSED', 'KEY_SOPTIONS', 'KEY_F29', 'KEY_SCOPY', 'BUTTON4_TRIPLE_CLICKED', 'doupdate', 'KEY_RESET', 'savetty', 'COLOR_BLACK', 'COLOR_WHITE', 'KEY_F55', 'KEY_SBEG', 'KEY_F0', 'BUTTON4_CLICKED', 'KEY_F28', 'KEY_SNEXT', 'resize_term', 'mousemask', 'update_lines_cols', 'BUTTON_ALT', 'KEY_F2', 'KEY_F14', 'KEY_OPTIONS', 'KEY_SCREATE', 'noraw', 'A_ATTRIBUTES', 'KEY_F37', 'KEY_SUNDO', 'KEY_SREPLACE', 'KEY_CANCEL', 'BUTTON3_PRESSED', 'KEY_F36', 'KEY_SIC', 'setsyx', 'A_NORMAL', 'KEY_F60', 'BUTTON1_PRESSED', 'tparm', 'KEY_SAVE', 'KEY_ENTER', 'KEY_SPREVIOUS', 'KEY_EXIT', 'has_il', 'KEY_F62', 'noqiflush', 'KEY_DOWN', 'putp', 'keyname', 'ungetch', 'A_DIM', 'A_ITALIC', 'KEY_SLEFT', 'KEY_F51', 'KEY_F23', 'KEY_SMOVE', 'KEY_MOUSE', 'KEY_MOVE', 'A_BOLD', 'COLOR_MAGENTA', 'KEY_MAX', 'KEY_UP', 'KEY_SRSUME', 'KEY_F25', 'KEY_EOL', 'KEY_F33', 'KEY_EOS', 'intrflush', 'newpad', 'has_key', 'start_color', 'KEY_SFIND', 'KEY_SDC', 'BUTTON3_DOUBLE_CLICKED', 'A_INVIS', 'KEY_F26', 'KEY_F52', 'tigetnum', 'KEY_F44', 'KEY_CREATE', 'napms', 'nl', 'KEY_EIC', 'A_CHARTEXT', 'KEY_REDO', 'KEY_F11', 'A_UNDERLINE', 'KEY_SDL', 'resizeterm', 'color_pair', 'isendwin', 'COLOR_CYAN', 'baudrate', 'raw', 'setupterm', 'flash', 'KEY_F18', 'KEY_F50', 'BUTTON3_CLICKED', 'KEY_NEXT', 'KEY_DL', '_C_API', 'BUTTON2_TRIPLE_CLICKED', 'init_pair', 'COLOR_BLUE', 'init_color', 'newwin', 'KEY_CATAB', 'KEY_SELECT', 'KEY_F22', 'mouseinterval', 'reset_prog_mode', 'KEY_F13', 'KEY_SEOL', 'has_colors', 'unget_wch', 'getwin', 'erasechar', 'KEY_C1', 'noecho', 'getmouse', 'KEY_F24', 'BUTTON2_RELEASED', 'A_REVERSE', 'KEY_BEG', 'A_LEFT', 'BUTTON1_TRIPLE_CLICKED', 'KEY_F5', 'KEY_CLOSE', 'KEY_OPEN', 'KEY_A3', 'KEY_F8', 'KEY_REFRESH', 'typeahead', 'use_env', 'KEY_F27', 'KEY_F47', 'KEY_F56', 'BUTTON4_RELEASED', 'KEY_F61', 'KEY_A1', 'BUTTON1_CLICKED', 'KEY_F35', 'KEY_F53', 'OK', 'A_HORIZONTAL', 'KEY_SHOME', 'COLOR_YELLOW', 'KEY_REFERENCE', 'BUTTON_SHIFT', 'KEY_F38', 'cbreak', 'color_content', 'KEY_COMMAND', 'KEY_F15', 'KEY_DC', 'KEY_F43', 'beep', 'use_default_colors', 'KEY_SREDO', 'KEY_SSUSPEND', 'ALL_MOUSE_EVENTS', 'ERR', 'KEY_F31', 'KEY_F9', 'nocbreak', 'KEY_SSAVE', 'KEY_F40', 'KEY_F39', 'KEY_SUSPEND', 'KEY_BTAB', 'KEY_MIN', 'KEY_NPAGE', 'KEY_PREVIOUS', 'echo', 'COLOR_GREEN', 'KEY_B2', 'getsyx', 'KEY_SMESSAGE', 'KEY_PRINT', 'KEY_F4', 'KEY_UNDO', 'KEY_SF', 'flushinp', 'qiflush'}
+    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_curses.cpython-37m-x86_64-linux-gnu.so', '_curses', expected, xmissing=True)
 
 
-@pytest.mark.xfail(strict=True)
 def test__csv_py37():
-    expected = {'field_size_limit', '_dialects', 'get_dialect', 'reader', 'QUOTE_ALL', 'QUOTE_NONNUMERIC', 'Dialect', 'QUOTE_MINIMAL', 'unregister_dialect', 'Error', 'register_dialect', 'QUOTE_NONE', 'writer', 'list_dialects'}
-    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_csv.cpython-37m-x86_64-linux-gnu.so', '_csv', expected)
+    expected = {'__version__', 'field_size_limit', '_dialects', 'get_dialect', 'reader', 'QUOTE_ALL', 'QUOTE_NONNUMERIC', 'Dialect', 'QUOTE_MINIMAL', 'unregister_dialect', 'Error', 'register_dialect', 'QUOTE_NONE', 'writer', 'list_dialects'}
+    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_csv.cpython-37m-x86_64-linux-gnu.so', '_csv', expected, xmissing=True)
 
 
 def test_binascii():
@@ -81,10 +82,9 @@ def test_binascii():
     compare("/home/cburr/miniconda3/lib/python3.7/lib-dynload/binascii.cpython-37m-x86_64-linux-gnu.so", "binascii", expected)
 
 
-@pytest.mark.xfail(strict=True)
 def test_ctypes():
-    expected = {'POINTER', 'Union', 'pointer', 'PyObj_FromPtr', 'FUNCFLAG_USE_ERRNO', 'Array', 'sizeof', '_memmove_addr', 'ArgumentError', 'RTLD_LOCAL', '_wstring_at_addr', '_string_at_addr', 'get_errno', '_pointer_type_cache', 'buffer_info', 'byref', 'addressof', '_cast_addr', 'Structure', 'dlclose', 'call_function', 'FUNCFLAG_PYTHONAPI', '_Pointer', 'FUNCFLAG_USE_LASTERROR', 'Py_INCREF', 'CFuncPtr', 'dlsym', 'FUNCFLAG_CDECL', '_memset_addr', 'Py_DECREF', '_SimpleCData', 'set_errno', 'RTLD_GLOBAL', 'call_cdeclfunction', 'dlopen', '_unpickle', 'alignment', 'resize'}
-    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_ctypes.cpython-37m-x86_64-linux-gnu.so', '_ctypes', expected)
+    expected = {'__version__', 'POINTER', 'Union', 'pointer', 'PyObj_FromPtr', 'FUNCFLAG_USE_ERRNO', 'Array', 'sizeof', '_memmove_addr', 'ArgumentError', 'RTLD_LOCAL', '_wstring_at_addr', '_string_at_addr', 'get_errno', '_pointer_type_cache', 'buffer_info', 'byref', 'addressof', '_cast_addr', 'Structure', 'dlclose', 'call_function', 'FUNCFLAG_PYTHONAPI', '_Pointer', 'FUNCFLAG_USE_LASTERROR', 'Py_INCREF', 'CFuncPtr', 'dlsym', 'FUNCFLAG_CDECL', '_memset_addr', 'Py_DECREF', '_SimpleCData', 'set_errno', 'RTLD_GLOBAL', 'call_cdeclfunction', 'dlopen', '_unpickle', 'alignment', 'resize'}
+    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_ctypes.cpython-37m-x86_64-linux-gnu.so', '_ctypes', expected, xmissing=True)
 
 
 def test_cmath():
@@ -137,39 +137,39 @@ def test_bisect():
     compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_bisect.cpython-37m-x86_64-linux-gnu.so', '_bisect', expected)
 
 
-@pytest.mark.xfail(strict=True)
-def test_codecs_cn():
+@pytest.mark.xfail(reason="The object names are generated dynamically using strcp, better emulation is required to handle this.")
+def test__codecs_cn():
     expected = {'__map_gb2312', '__map_gb18030ext', '__map_gbcommon', 'getcodec', '__map_gbkext'}
-    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_codecs_cn.cpython-37m-x86_64-linux-gnu.so', '_codecs_cn', expected)
+    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_codecs_cn.cpython-37m-x86_64-linux-gnu.so', '_codecs_cn', expected, xmissing=True)
 
 
-@pytest.mark.xfail(strict=True)
-def test_codecs_hk():
+@pytest.mark.xfail(reason="The object names are generated dynamically using strcp, better emulation is required to handle this.")
+def test__codecs_hk():
     expected = {'__map_big5hkscs_nonbmp', '__map_big5hkscs_bmp', 'getcodec', '__map_big5hkscs'}
-    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_codecs_hk.cpython-37m-x86_64-linux-gnu.so', '_codecs_hk', expected)
+    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_codecs_hk.cpython-37m-x86_64-linux-gnu.so', '_codecs_hk', expected, xmissing=True)
 
 
-def test_codecs_iso2022():
+def test__codecs_iso2022():
     expected = {'getcodec'}
     compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_codecs_iso2022.cpython-37m-x86_64-linux-gnu.so', '_codecs_iso2022', expected)
 
 
-@pytest.mark.xfail(strict=True)
-def test_codecs_jp():
+@pytest.mark.xfail(reason="The object names are generated dynamically using strcp, better emulation is required to handle this.")
+def test__codecs_jp():
     expected = {'__map_jisx0212', '__map_jisx0213_1_emp', '__map_jisx0208', '__map_jisx0213_emp', '__map_jisx0213_2_bmp', '__map_jisx0213_pair', 'getcodec', '__map_jisx0213_2_emp', '__map_cp932ext', '__map_jisxcommon', '__map_jisx0213_bmp', '__map_jisx0213_1_bmp'}
-    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_codecs_jp.cpython-37m-x86_64-linux-gnu.so', '_codecs_jp', expected)
+    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_codecs_jp.cpython-37m-x86_64-linux-gnu.so', '_codecs_jp', expected, xmissing=True)
 
 
-@pytest.mark.xfail(strict=True)
-def test_codecs_kr():
+@pytest.mark.xfail(reason="The object names are generated dynamically using strcp, better emulation is required to handle this.")
+def test__codecs_kr():
     expected = {'__map_ksx1001', '__map_cp949ext', '__map_cp949', 'getcodec'}
-    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_codecs_kr.cpython-37m-x86_64-linux-gnu.so', '_codecs_kr', expected)
+    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_codecs_kr.cpython-37m-x86_64-linux-gnu.so', '_codecs_kr', expected, xmissing=True)
 
 
-@pytest.mark.xfail(strict=True)
-def test_codecs_tw():
+@pytest.mark.xfail(reason="The object names are generated dynamically using strcp, better emulation is required to handle this.")
+def test__codecs_tw():
     expected = {'getcodec', '__map_cp950ext', '__map_big5'}
-    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_codecs_tw.cpython-37m-x86_64-linux-gnu.so', '_codecs_tw', expected)
+    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_codecs_tw.cpython-37m-x86_64-linux-gnu.so', '_codecs_tw', expected, xmissing=True)
 
 
 def test_contextvars():
@@ -187,10 +187,9 @@ def test_ctypes_test():
     compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_ctypes_test.cpython-37m-x86_64-linux-gnu.so', '_ctypes_test', expected)
 
 
-@pytest.mark.xfail(strict=True)
 def test_curses_panel():
     expected = {'new_panel', 'top_panel', 'error', 'version', 'update_panels', 'bottom_panel'}
-    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_curses_panel.cpython-37m-x86_64-linux-gnu.so', '_curses_panel', expected)
+    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_curses_panel.cpython-37m-x86_64-linux-gnu.so', '_curses_panel', expected, xmissing=True)
 
 
 def test_datetime():
@@ -198,10 +197,9 @@ def test_datetime():
     compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_datetime.cpython-37m-x86_64-linux-gnu.so', '_datetime', expected)
 
 
-@pytest.mark.xfail(strict=True)
 def test_decimal():
     expected = {'__libmpdec_version__', '__version__', 'FloatOperation', 'MIN_EMIN', 'DivisionByZero', 'DecimalException', 'ConversionSyntax', 'MIN_ETINY', 'ROUND_CEILING', 'Decimal', 'ROUND_UP', 'Rounded', 'Underflow', 'HAVE_THREADS', 'Clamped', 'InvalidOperation', 'Subnormal', 'setcontext', 'MAX_PREC', 'localcontext', 'ROUND_DOWN', 'DivisionUndefined', 'ROUND_HALF_UP', 'DefaultContext', 'ROUND_HALF_DOWN', 'DivisionImpossible', 'Inexact', 'Context', 'DecimalTuple', 'Overflow', 'ROUND_05UP', 'InvalidContext', 'BasicContext', 'MAX_EMAX', 'getcontext', 'ExtendedContext', 'ROUND_FLOOR', 'ROUND_HALF_EVEN'}
-    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_decimal.cpython-37m-x86_64-linux-gnu.so', '_decimal', expected)
+    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_decimal.cpython-37m-x86_64-linux-gnu.so', '_decimal', expected, xmissing=True)
 
 
 def test_elementtree():
@@ -229,10 +227,9 @@ def test_lzma():
     compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_lzma.cpython-37m-x86_64-linux-gnu.so', '_lzma', expected)
 
 
-@pytest.mark.xfail(strict=True)
 def test_multibytecodec():
     expected = {'MultibyteStreamWriter', 'MultibyteIncrementalEncoder', 'MultibyteIncrementalDecoder', '__create_codec', 'MultibyteStreamReader'}
-    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_multibytecodec.cpython-37m-x86_64-linux-gnu.so', '_multibytecodec', expected)
+    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_multibytecodec.cpython-37m-x86_64-linux-gnu.so', '_multibytecodec', expected, xmissing=True)
 
 
 def test_multiprocessing():
@@ -260,10 +257,9 @@ def test_socket():
     compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_socket.cpython-37m-x86_64-linux-gnu.so', '_socket', expected)
 
 
-@pytest.mark.xfail(strict=True)
 def test_sqlite3():
     expected = {'SQLITE_DETACH', 'SQLITE_REINDEX', 'SQLITE_DONE', 'sqlite_version', 'SQLITE_FUNCTION', 'PrepareProtocol', 'SQLITE_DROP_TRIGGER', 'SQLITE_RECURSIVE', 'SQLITE_DROP_INDEX', 'version', 'SQLITE_ATTACH', 'SQLITE_ANALYZE', 'enable_shared_cache', 'SQLITE_CREATE_TEMP_TABLE', 'SQLITE_DROP_TEMP_TRIGGER', 'enable_callback_tracebacks', 'DataError', 'Row', 'PARSE_COLNAMES', 'DatabaseError', 'Connection', 'SQLITE_IGNORE', 'IntegrityError', 'SQLITE_CREATE_TEMP_VIEW', 'SQLITE_DENY', 'Warning', 'OptimizedUnicode', 'SQLITE_CREATE_TEMP_INDEX', 'SQLITE_DROP_TEMP_INDEX', 'adapt', 'converters', 'SQLITE_SAVEPOINT', 'SQLITE_UPDATE', 'Statement', 'SQLITE_READ', 'adapters', 'Cursor', 'Error', 'register_converter', 'SQLITE_CREATE_TEMP_TRIGGER', 'connect', 'SQLITE_TRANSACTION', 'SQLITE_DROP_VIEW', 'SQLITE_DELETE', 'SQLITE_DROP_VTABLE', 'PARSE_DECLTYPES', 'SQLITE_SELECT', 'SQLITE_OK', 'SQLITE_PRAGMA', 'SQLITE_DROP_TEMP_VIEW', 'SQLITE_CREATE_TABLE', 'register_adapter', 'SQLITE_DROP_TEMP_TABLE', 'SQLITE_CREATE_VIEW', 'SQLITE_INSERT', 'InternalError', 'NotSupportedError', 'SQLITE_CREATE_INDEX', 'complete_statement', 'ProgrammingError', 'OperationalError', 'SQLITE_ALTER_TABLE', 'SQLITE_CREATE_VTABLE', 'SQLITE_DROP_TABLE', 'SQLITE_CREATE_TRIGGER', 'Cache', 'InterfaceError'}
-    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_sqlite3.cpython-37m-x86_64-linux-gnu.so', '_sqlite3', expected)
+    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_sqlite3.cpython-37m-x86_64-linux-gnu.so', '_sqlite3', expected, xmissing=True)
 
 
 def test_ssl():
@@ -291,10 +287,9 @@ def test_testimportmultiple():
     compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_testimportmultiple.cpython-37m-x86_64-linux-gnu.so', '_testimportmultiple', expected)
 
 
-@pytest.mark.xfail(strict=True)
 def test_testmultiphase():
     expected = {'call_state_registration_func', 'Str', 'Example', 'int_const', 'str_const', 'foo', 'error'}
-    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_testmultiphase.cpython-37m-x86_64-linux-gnu.so', '_testmultiphase', expected)
+    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_testmultiphase.cpython-37m-x86_64-linux-gnu.so', '_testmultiphase', expected, xmissing=True)
 
 
 def test_tkinter():
@@ -307,10 +302,9 @@ def test_xxtestfuzz():
     compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/_xxtestfuzz.cpython-37m-x86_64-linux-gnu.so', '_xxtestfuzz', expected)
 
 
-@pytest.mark.xfail(strict=True)
 def test_array():
     expected = {'typecodes', 'ArrayType', '_array_reconstructor', 'array'}
-    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/array.cpython-37m-x86_64-linux-gnu.so', 'array', expected)
+    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/array.cpython-37m-x86_64-linux-gnu.so', 'array', expected, xmissing=True)
 
 
 def test_audioop():
@@ -353,10 +347,9 @@ def test_syslog():
     compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/syslog.cpython-37m-x86_64-linux-gnu.so', 'syslog', expected)
 
 
-@pytest.mark.xfail(strict=True)
 def test_termios():
     expected = {'ICANON', 'CSTART', 'B460800', 'TIOCMGET', 'BSDLY', 'TCSETS', 'CINTR', 'TIOCSERGWILD', 'B230400', 'TIOCGSOFTCAR', 'CQUIT', 'VEOL', 'TIOCM_RNG', 'VEOL2', 'TIOCSERGETLSR', 'INLCR', 'TCSETSF', 'ONLRET', 'TCIOFLUSH', 'B2000000', 'BS0', 'NCC', 'TIOCGPGRP', 'TIOCM_RI', 'TIOCSERSETMULTI', 'CDSUSP', 'FIOASYNC', 'CR0', 'OFILL', 'NL0', 'N_SLIP', 'CS8', 'TIOCSERCONFIG', 'TIOCM_SR', 'IUCLC', 'B300', 'TAB0', 'BS1', 'VMIN', 'CIBAUD', 'CSIZE', 'TIOCM_DTR', 'PARENB', 'IXANY', 'TIOCSER_TEMT', 'B9600', 'TCION', 'VKILL', 'TCSANOW', 'IOCSIZE_SHIFT', 'TIOCPKT_DATA', 'OLCUC', 'TIOCPKT_NOSTOP', 'N_TTY', 'B4800', 'N_PPP', 'PARMRK', 'CREAD', 'TABDLY', 'TIOCEXCL', 'OCRNL', 'TIOCM_RTS', 'CS6', 'TIOCSPGRP', 'VSTART', 'TIOCSERSWILD', 'B19200', 'ECHOKE', 'TCOFLUSH', 'ECHONL', 'TIOCGSERIAL', 'TIOCNXCL', 'TCSAFLUSH', 'B500000', 'B110', 'B200', 'TIOCSTI', 'IGNPAR', 'TIOCSSOFTCAR', 'ECHO', 'ISTRIP', 'B2500000', 'TIOCPKT_STOP', 'FLUSHO', 'IGNBRK', 'TIOCPKT_DOSTOP', 'TCSETSW', 'CRPRNT', 'TCSETAW', 'PARODD', 'TIOCSCTTY', 'B1000000', 'VDISCARD', 'ECHOK', 'CSUSP', 'TIOCINQ', 'tcsetattr', 'tcsendbreak', 'TIOCSETD', 'tcdrain', 'B3500000', 'VSTOP', 'TIOCM_DSR', 'tcgetattr', 'ONLCR', 'VERASE', 'TCOOFF', 'TIOCMBIC', 'TIOCM_ST', 'TCSETA', 'TIOCSLCKTRMIOS', 'TCOON', 'TIOCPKT_FLUSHREAD', 'ECHOPRT', 'TIOCGETD', 'FIONBIO', 'TIOCNOTTY', 'CLOCAL', 'TOSTOP', 'TIOCSWINSZ', 'FF1', 'VLNEXT', 'TIOCSSERIAL', 'VTDLY', 'CRDLY', 'B2400', 'IXOFF', 'HUPCL', 'CR2', 'B134', 'FIONREAD', 'CRTSCTS', 'TCIOFF', 'TIOCMIWAIT', 'TIOCOUTQ', 'error', 'TIOCPKT_FLUSHWRITE', 'B1152000', 'IOCSIZE_MASK', 'TCIFLUSH', 'ICRNL', 'TAB1', 'CKILL', 'TIOCGLCKTRMIOS', 'CERASE', 'CLNEXT', 'IGNCR', 'VSUSP', 'CBAUD', 'CS7', 'B38400', 'ONOCR', 'TIOCMSET', 'TIOCSERGETMULTI', 'BRKINT', 'B57600', 'B1200', 'CR3', 'IEXTEN', 'B3000000', 'TIOCGWINSZ', 'tcflush', 'N_MOUSE', 'VWERASE', 'TIOCM_CAR', 'INPCK', 'B150', 'TCFLSH', 'B600', 'TCXONC', 'NOFLSH', 'CFLUSH', 'VSWTC', 'ECHOCTL', 'FIOCLEX', 'B921600', 'NCCS', 'FIONCLEX', 'tcflow', 'TIOCM_CD', 'TIOCSERGSTRUCT', 'ISIG', 'TCSADRAIN', 'TCGETS', 'TIOCMBIS', 'TIOCPKT', 'ECHOE', 'TIOCM_CTS', 'TCSBRKP', 'NL1', 'TIOCLINUX', 'FFDLY', 'VREPRINT', 'NLDLY', 'B50', 'CR1', 'CEOT', 'B4000000', 'CSTOP', 'VEOF', 'CWERASE', 'VSWTCH', 'CEOF', 'N_STRIP', 'CS5', 'VT1', 'FF0', 'EXTB', 'OPOST', 'TIOCCONS', 'TCSBRK', 'B1500000', 'VINTR', 'IXON', 'VTIME', 'XCASE', 'XTABS', 'TCGETA', 'TIOCPKT_START', 'CSTOPB', 'TAB3', 'VT0', 'B115200', 'B576000', 'TAB2', 'TIOCM_LE', 'IMAXBEL', 'TIOCGICOUNT', 'OFDEL', 'PENDIN', 'TCSETAF', 'B0', 'B75', 'CEOL', 'VQUIT', 'B1800', 'CBAUDEX', 'EXTA'}
-    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/termios.cpython-37m-x86_64-linux-gnu.so', 'termios', expected)
+    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/termios.cpython-37m-x86_64-linux-gnu.so', 'termios', expected, xmissing=True)
 
 
 def test_unicodedata():
@@ -364,7 +357,6 @@ def test_unicodedata():
     compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/unicodedata.cpython-37m-x86_64-linux-gnu.so', 'unicodedata', expected)
 
 
-@pytest.mark.xfail(strict=True)
 def test_xxlimited():
     expected = {'Xxo', 'Null', 'Str', 'roj', 'new', 'error', 'foo'}
-    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/xxlimited.cpython-37m-x86_64-linux-gnu.so', 'xxlimited', expected)
+    compare('/home/cburr/miniconda3/lib/python3.7/lib-dynload/xxlimited.cpython-37m-x86_64-linux-gnu.so', 'xxlimited', expected, xmissing=True)

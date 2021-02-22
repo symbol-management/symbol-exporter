@@ -245,7 +245,7 @@ def emulate(elf, loc_to_symbol, function_name, results, registers=None):
             current_value = registers.get(destination, "0x0")
             # FIXME (current_value and)
             if current_value and current_value != Tracers.UNKNOWN:
-                registers[destination] = hex(int(current_value, 16) + int(source, 16))
+                registers[destination] = hex(int(current_value, 16) - int(source, 16))
 
         elif instruction.instruction in ["xor"]:
             destination, source = map(str.strip, instruction.args.split(","))
@@ -259,14 +259,8 @@ def emulate(elf, loc_to_symbol, function_name, results, registers=None):
         elif instruction.instruction in ["mov"]:
             destination, source = map(str.strip, instruction.args.split(","))
 
-            # if match := re.fullmatch(r"([DQ]WORD) PTR \[([a-z0-9]{3})(\+0x[0-9]+)?\]", destination):
-            #     size, dest, offset = match.groups()
-            #     destination = dest
-
             try:
-                if instruction.symbol_name:
-                    registers[destination] = instruction.symbol_name
-                elif source in registers:
+                if source in registers:
                     registers[destination] = registers[source]
                 elif source.startswith("0x"):
                     assert int(source, 16) >= 0, source
@@ -275,9 +269,7 @@ def emulate(elf, loc_to_symbol, function_name, results, registers=None):
                     size, src, offset_reg, multiplier, offset_idx = match.groups()
                     assert not src.startswith("0x"), src
 
-                    if registers[src] in elf.symbols:
-                        idx = elf.symbols[registers[src]]
-                    elif registers[src] == Tracers.UNKNOWN:
+                    if registers[src] == Tracers.UNKNOWN:
                         idx = Tracers.UNKNOWN
                     else:
                         idx = int(registers[src], 16)
