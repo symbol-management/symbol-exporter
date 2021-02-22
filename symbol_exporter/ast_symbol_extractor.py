@@ -18,16 +18,13 @@ class SymbolType(str, Enum):
 
 
 class SymbolFinder(ast.NodeVisitor):
-    def __init__(self, module_name, filename=None):
+    def __init__(self, module_name):
         self._module_name = module_name
         self.current_symbol_stack = [module_name]
-        module_metadata = {}
-        if filename:
-            module_metadata["filename"] = filename
         self._symbols = {
             module_name: {
                 "type": SymbolType.MODULE,
-                "data": module_metadata,
+                "data": {},
             }
         }
         self.imported_symbols = []
