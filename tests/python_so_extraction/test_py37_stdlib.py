@@ -1,21 +1,15 @@
+from functools import partial
+
 import pytest
 
-from symbol_exporter import python_so_extractor
+from . import compare
 
+compare = partial(
+    compare,
+    "https://conda.anaconda.org/conda-forge/linux-64/python-3.7.6-cpython_he5300dc_6.tar.bz2",
+    "9c5305f3a5f24f74fb87eb6d67e4053c",
+)
 
-def compare(filename, module_name, expected, *, xmissing=False):
-    python_so_extractor.disassembled_cache = {}
-    results = python_so_extractor.parse_file(filename, module_name)
-    actual = {x["name"] for x in results["methods"]}
-    actual |= {x["name"] for x in results["objects"]}
-    diff = (actual - expected)
-    assert not diff, (f"Found {len(diff)} extra keys", diff)
-    diff = (expected - actual)
-    if xmissing:
-        assert diff, "Unexpectedly passed!"
-        pytest.xfail(f"{len(diff)} out of {len(expected)} were not found (known issue)")
-    else:
-        assert not diff, (f"Failed to find {len(diff)} out of {len(expected)} keys", diff)
 
 def test__sha1():
     expected = {'SHA1Type', 'sha1'}

@@ -201,6 +201,7 @@ def parse_file(filename, module_name):
     return results
 
 
+# TODO: This should go away!
 disassembled_cache = {}
 
 def disassemble_symbol(elf, loc_to_symbol: dict, function_name: str):

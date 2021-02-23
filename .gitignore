@@ -21,3 +21,6 @@ docs/_build/
 
 coverage.xml
 .coverage.*
+
+# clib symbol extraction tests
+tests/python_so_extraction/.cache/
