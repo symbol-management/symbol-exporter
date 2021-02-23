@@ -4,16 +4,21 @@ from textwrap import dedent
 from symbol_exporter.ast_symbol_extractor import SymbolFinder
 
 
-def test_from_import_attr_access():
-    code = """
-from abc import xyz
-
-def f():
-    return xyz.i
-"""
-    tree = ast.parse(code)
+def process_code_str(code):
+    tree = ast.parse(dedent(code))
     z = SymbolFinder(module_name="mm")
     z.visit(tree)
+    return z
+
+
+def test_from_import_attr_access():
+    code = """
+    from abc import xyz
+
+    def f():
+        return xyz.i
+    """
+    z = process_code_str(code)
     assert z.aliases == {"xyz": "abc.xyz"}
     assert z.imported_symbols == ["abc.xyz"]
     assert z.used_symbols == {"abc.xyz.i"}
@@ -28,21 +33,22 @@ def f():
         },
         "mm.f": {
             "type": "function",
-            "data": {"lineno": 4, "symbols_in_volume": {"abc.xyz.i"}},
+            "data": {
+                "lineno": 4,
+                "symbols_in_volume": {"abc.xyz.i": {"line number": [5]}},
+            },
         },
     }
 
 
 def test_alias_import():
     code = """
-from abc import xyz as l
+    from abc import xyz as l
 
-def f():
-    return l.i
-"""
-    tree = ast.parse(code)
-    z = SymbolFinder(module_name="mm")
-    z.visit(tree)
+    def f():
+        return l.i
+    """
+    z = process_code_str(code)
     assert z.aliases == {"xyz": "abc.xyz", "l": "abc.xyz"}
     assert z.imported_symbols == ["abc.xyz"]
     assert z.used_symbols == {"abc.xyz.i"}
@@ -57,22 +63,23 @@ def f():
         },
         "mm.f": {
             "type": "function",
-            "data": {"lineno": 4, "symbols_in_volume": {"abc.xyz.i"}},
+            "data": {
+                "lineno": 4,
+                "symbols_in_volume": {"abc.xyz.i": {"line number": [5]}},
+            },
         },
     }
 
 
 def test_import_with_and_without_alias_exposes_import_and_alias():
     code = """
-from abc import xyz
-from abc import xyz as l
+    from abc import xyz
+    from abc import xyz as l
 
-def f():
-    return l.i
+    def f():
+        return l.i
 """
-    tree = ast.parse(code)
-    z = SymbolFinder(module_name="mm")
-    z.visit(tree)
+    z = process_code_str(code)
     assert z.aliases == {"xyz": "abc.xyz", "l": "abc.xyz"}
     assert z.imported_symbols == ["abc.xyz", "abc.xyz"]
     assert z.used_symbols == {"abc.xyz.i"}
@@ -83,7 +90,10 @@ def f():
         },
         "mm.f": {
             "type": "function",
-            "data": {"lineno": 5, "symbols_in_volume": {"abc.xyz.i"}},
+            "data": {
+                "lineno": 5,
+                "symbols_in_volume": {"abc.xyz.i": {"line number": [6]}},
+            },
         },
         "mm.xyz": {
             "type": "import",
@@ -98,14 +108,12 @@ def f():
 
 def test_calls():
     code = """
-import numpy as np
+    import numpy as np
 
-def f():
-    return np.ones(np.twos().three)
-"""
-    tree = ast.parse(code)
-    z = SymbolFinder(module_name="mm")
-    z.visit(tree)
+    def f():
+        return np.ones(np.twos().three)
+    """
+    z = process_code_str(code)
     assert z.aliases == {"np": "numpy"}
     assert z.imported_symbols == ["numpy"]
     assert z.used_symbols == {"numpy.ones", "numpy.twos"}
@@ -116,7 +124,13 @@ def f():
         },
         "mm.f": {
             "type": "function",
-            "data": {"lineno": 4, "symbols_in_volume": {"numpy.ones", "numpy.twos"}},
+            "data": {
+                "lineno": 4,
+                "symbols_in_volume": {
+                    "numpy.ones": {"line number": [5]},
+                    "numpy.twos": {"line number": [5]},
+                },
+            },
         },
         "mm.np": {
             "type": "import",
@@ -127,20 +141,18 @@ def f():
 
 def test_constant():
     code = """
-import numpy as np
+    import numpy as np
 
-z = np.ones(5)
+    z = np.ones(5)
     """
-    tree = ast.parse(code)
-    z = SymbolFinder(module_name="mm")
-    z.visit(tree)
+    z = process_code_str(code)
     assert z.aliases == {"np": "numpy"}
     assert z.imported_symbols == ["numpy"]
     assert z.used_symbols == {"numpy.ones"}
     assert z.symbols == {
         "mm": {
             "type": "module",
-            "data": {"symbols_in_volume": {"numpy.ones"}},
+            "data": {"symbols_in_volume": {"numpy.ones": {"line number": [4]}}},
         },
         "mm.np": {
             "type": "import",
@@ -155,14 +167,12 @@ z = np.ones(5)
 
 def test_class():
     code = """
-import numpy as np
+    import numpy as np
 
-class ABC():
-    a = np.ones(5)
+    class ABC():
+        a = np.ones(5)
     """
-    tree = ast.parse(code)
-    z = SymbolFinder(module_name="mm")
-    z.visit(tree)
+    z = process_code_str(code)
     assert z.aliases == {"np": "numpy"}
     assert z.imported_symbols == ["numpy"]
     assert z.used_symbols == {"numpy.ones"}
@@ -177,24 +187,25 @@ class ABC():
         },
         "mm.ABC": {
             "type": "class",
-            "data": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}},
+            "data": {
+                "lineno": 4,
+                "symbols_in_volume": {"numpy.ones": {"line number": [5]}},
+            },
         },
     }
 
 
 def test_class_method():
     code = """
-import numpy as np
+    import numpy as np
 
-class ABC():
-    a = np.ones(5)
+    class ABC():
+        a = np.ones(5)
 
-    def xyz(self):
-        return np.twos(10)
+        def xyz(self):
+            return np.twos(10)
     """
-    tree = ast.parse(code)
-    z = SymbolFinder(module_name="mm")
-    z.visit(tree)
+    z = process_code_str(code)
     assert z.aliases == {"np": "numpy"}
     assert z.imported_symbols == ["numpy"]
     assert z.used_symbols == {"numpy.ones", "numpy.twos"}
@@ -205,13 +216,16 @@ class ABC():
         },
         "mm.ABC": {
             "type": "class",
-            "data": {"lineno": 4, "symbols_in_volume": {"numpy.ones"}},
+            "data": {
+                "lineno": 4,
+                "symbols_in_volume": {"numpy.ones": {"line number": [5]}},
+            },
         },
         "mm.ABC.xyz": {
             "type": "function",
             "data": {
                 "lineno": 7,
-                "symbols_in_volume": {"numpy.twos"},
+                "symbols_in_volume": {"numpy.twos": {"line number": [8]}},
             },
         },
         "mm.np": {
@@ -230,9 +244,7 @@ def test_import_adds_symbols():
 
     z = np.ones(5)
     """
-    tree = ast.parse(dedent(code))
-    z = SymbolFinder(module_name="mm")
-    z.visit(tree)
+    z = process_code_str(code)
     assert z.symbols == {
         "mm.np": {
             "type": "import",
@@ -252,7 +264,7 @@ def test_import_adds_symbols():
         },
         "mm": {
             "type": "module",
-            "data": {"symbols_in_volume": {"numpy.ones"}},
+            "data": {"symbols_in_volume": {"numpy.ones": {"line number": [7]}}},
         },
         "mm.z": {
             "type": "constant",
@@ -263,12 +275,10 @@ def test_import_adds_symbols():
 
 def test_star_import():
     code = """
-import numpy as np
-from abc import *
+    import numpy as np
+    from abc import *
     """
-    tree = ast.parse(code)
-    z = SymbolFinder(module_name="mm")
-    z.visit(tree)
+    z = process_code_str(code)
     assert z.aliases == {"np": "numpy"}
     assert z.imported_symbols == ["numpy"]
     assert not z.used_symbols
@@ -290,18 +300,16 @@ from abc import *
 
 def test_undeclared_symbols():
     code = """
-import numpy as np
+    import numpy as np
 
-from abc import *
-from xyz import *
+    from abc import *
+    from xyz import *
 
 
-a = np.ones(5)
-b = twos(10)
+    a = np.ones(5)
+    b = twos(10)
     """
-    tree = ast.parse(code)
-    z = SymbolFinder(module_name="mm")
-    z.visit(tree)
+    z = process_code_str(code)
     assert z.aliases == {"np": "numpy"}
     assert z.imported_symbols == ["numpy"]
     assert z.used_symbols == {"numpy.ones", "twos"}
@@ -314,7 +322,10 @@ b = twos(10)
         "mm": {
             "type": "module",
             "data": {
-                "symbols_in_volume": {"numpy.ones", "twos"},
+                "symbols_in_volume": {
+                    "numpy.ones": {"line number": [8]},
+                    "twos": {"line number": [9]},
+                },
             },
         },
         "mm.a": {
@@ -334,20 +345,18 @@ b = twos(10)
 
 def test_imported_symbols_not_treated_as_undeclared():
     code = """
-from abc import twos
+    from abc import twos
 
-b = twos(10)
+    b = twos(10)
     """
-    tree = ast.parse(code)
-    z = SymbolFinder(module_name="mm")
-    z.visit(tree)
+    z = process_code_str(code)
     assert z.aliases == {"twos": "abc.twos"}
     assert z.imported_symbols == ["abc.twos"]
     assert z.used_symbols == {"abc.twos"}
     assert z.symbols == {
         "mm": {
             "type": "module",
-            "data": {"symbols_in_volume": {"abc.twos"}},
+            "data": {"symbols_in_volume": {"abc.twos": {"line number": [4]}}},
         },
         "mm.twos": {
             "type": "import",
@@ -363,13 +372,11 @@ b = twos(10)
 
 def test_builtin_symbols_not_treated_as_undeclared():
     code = """
-from abc import twos
+    from abc import twos
 
-b = len([])
+    b = len([])
     """
-    tree = ast.parse(code)
-    z = SymbolFinder(module_name="mm")
-    z.visit(tree)
+    z = process_code_str(code)
     assert z.aliases == {"twos": "abc.twos"}
     assert z.imported_symbols == ["abc.twos"]
     assert z.used_symbols == {"len"}
@@ -377,7 +384,7 @@ b = len([])
     assert z.symbols == {
         "mm": {
             "type": "module",
-            "data": {"symbols_in_volume": {"len"}},
+            "data": {"symbols_in_volume": {"len": {"line number": [4]}}},
         },
         "mm.twos": {
             "type": "import",
@@ -393,16 +400,14 @@ b = len([])
 
 def test_functions_not_treated_as_undeclared():
     code = """
-from abc import twos
+    from abc import twos
 
-def f():
-    return 1
+    def f():
+        return 1
 
-g = f()
+    g = f()
     """
-    tree = ast.parse(code)
-    z = SymbolFinder(module_name="mm")
-    z.visit(tree)
+    z = process_code_str(code)
     assert z.aliases == {"twos": "abc.twos"}
     assert z.imported_symbols == ["abc.twos"]
     assert z.used_symbols == {"mm.f"}
@@ -410,7 +415,7 @@ g = f()
     assert z.symbols == {
         "mm": {
             "type": "module",
-            "data": {"symbols_in_volume": {"mm.f"}},
+            "data": {"symbols_in_volume": {"mm.f": {"line number": [7]}}},
         },
         "mm.f": {
             "type": "function",
@@ -430,17 +435,20 @@ g = f()
 
 def test_attr_assignment():
     code = """
-from abc import twos
+    from abc import twos
 
-twos.three = '*'
-twos.four = None
+    twos.three = '*'
+    twos.four = None
     """
-    tree = ast.parse(code)
-    z = SymbolFinder(module_name="mm")
-    z.visit(tree)
+    z = process_code_str(code)
     assert z.symbols == {
         "mm": {
-            "data": {"symbols_in_volume": {"abc.twos.three", "abc.twos.four"}},
+            "data": {
+                "symbols_in_volume": {
+                    "abc.twos.three": {"line number": [4]},
+                    "abc.twos.four": {"line number": [5]},
+                }
+            },
             "type": "module",
         },
         "mm.twos": {"data": {"shadows": "abc.twos"}, "type": "import"},
@@ -455,14 +463,32 @@ def test_out_of_order_func_def():
     def b():
         return 1
     """
-    tree = ast.parse(dedent(code))
-    z = SymbolFinder(module_name="mm")
-    z.visit(tree)
+    z = process_code_str(code)
     assert z.post_process_symbols() == {
         "mm": {"data": {}, "type": "module"},
         "mm.a": {
-            "data": {"lineno": 2, "symbols_in_volume": {"mm.b"}},
+            "data": {"lineno": 2, "symbols_in_volume": {"mm.b": {"line number": [3]}}},
             "type": "function",
         },
         "mm.b": {"data": {"lineno": 5}, "type": "function"},
+    }
+
+
+def test_multi_use_of_symbol():
+    code = """
+    def a():
+        a = ones(5)
+        b = ones(5)
+        return a + b
+    """
+    z = process_code_str(code)
+    assert z.post_process_symbols() == {
+        "mm": {"data": {}, "type": "module"},
+        "mm.a": {
+            "data": {
+                "lineno": 2,
+                "symbols_in_volume": {"ones": {"line number": [3, 4]}},
+            },
+            "type": "function",
+        },
     }
