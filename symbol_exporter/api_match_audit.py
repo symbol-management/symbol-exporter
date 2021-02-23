@@ -14,7 +14,12 @@ from random import shuffle
 from symbol_exporter.ast_symbol_extractor import version
 
 
-def main(n_to_pull=1000):
+audit_version = '1'
+
+complete_version = f'{version}_{audit_version}'
+
+
+def main(n_to_pull=10):
     path = 'audit'
 
     if os.path.exists(os.path.join(path, "_inspection_version.txt")):
@@ -22,13 +27,15 @@ def main(n_to_pull=1000):
             db_version = f.read()
     else:
         db_version = ""
-    if db_version != version and os.path.exists(path):
+    if db_version != complete_version and os.path.exists(path):
         shutil.rmtree(path)
 
-    if not os.path.exists("audit"):
-        os.makedirs("audit")
+    if not os.path.exists(path):
+        os.makedirs(path)
+    with open(os.path.join(path, "_inspection_version.txt"), 'w') as f:
+        f.write(complete_version)
 
-    existing_artifacts = glob.glob("audit/**/*.json", recursive=True)
+    existing_artifacts = glob.glob(f"{path}/**/*.json", recursive=True)
     existing_names = {k.partition("/")[2] for k in existing_artifacts}
     existing_pkg_names = {k.partition("/")[0] for k in existing_names}
 
@@ -65,7 +72,7 @@ def main(n_to_pull=1000):
             continue
         volume = set()
         for v in symbols.values():
-            volume.update(v.get("symbols_in_volume", set()))
+            volume.update(v.get('data', {}).get("symbols_in_volume", set()))
         deps, bad = find_supplying_version_set(volume)
         dep_sets = [list(sorted(k)) for k in deps]
 
