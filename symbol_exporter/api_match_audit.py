@@ -1,6 +1,7 @@
 import glob
 import json
 import os
+import shutil
 
 import requests
 from tqdm import tqdm
@@ -10,10 +11,23 @@ from symbol_exporter.ast_db_populator import sort_arch_ordering
 
 from random import shuffle
 
+from symbol_exporter.ast_symbol_extractor import version
+
 
 def main(n_to_pull=1000):
+    path = 'audit'
+
+    if os.path.exists(os.path.join(path, "_inspection_version.txt")):
+        with open(os.path.join(path, "_inspection_version.txt")) as f:
+            db_version = f.read()
+    else:
+        db_version = ""
+    if db_version != version and os.path.exists(path):
+        shutil.rmtree(path)
+
     if not os.path.exists("audit"):
         os.makedirs("audit")
+
     existing_artifacts = glob.glob("audit/**/*.json", recursive=True)
     existing_names = {k.partition("/")[2] for k in existing_artifacts}
     existing_pkg_names = {k.partition("/")[0] for k in existing_names}
