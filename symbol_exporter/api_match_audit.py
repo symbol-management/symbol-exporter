@@ -19,7 +19,7 @@ audit_version = '1'
 complete_version = f'{version}_{audit_version}'
 
 
-def main(n_to_pull=10):
+def main(n_to_pull=1000):
     path = 'audit'
 
     if os.path.exists(os.path.join(path, "_inspection_version.txt")):
