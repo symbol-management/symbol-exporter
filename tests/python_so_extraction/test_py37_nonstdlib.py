@@ -23,7 +23,7 @@ def test_rapidfuzz_levenshtein():
         'levenshtein',
         expected,
     )
-  
+
 
 def test_rapidfuzz_fuzz():
     expected = {'token_set_ratio', 'quick_lev_ratio', 'token_sort_ratio', 'partial_token_ratio', 'partial_token_sort_ratio', 'token_ratio', 'partial_token_set_ratio', 'ratio', 'QRatio', 'WRatio', 'partial_ratio'}

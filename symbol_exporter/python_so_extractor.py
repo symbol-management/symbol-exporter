@@ -6,11 +6,16 @@ import struct
 from typing import Optional
 import logging
 from pprint import pprint
-from functools import lru_cache
 
 import pwn
+import colorlog
 
-ASM_PATTERN = re.compile(r"^\s+([0-9a-f]+):\s+([0-9a-f]{2}(?: [0-9a-f]{2})*)(?:\s+([^\s]+)(?:\s+(.+?)\s*(?:# (0x[0-9a-f]+))?)?)?\s*$", re.MULTILINE)
+ASM_PATTERN = re.compile(
+    r"^\s+([0-9a-f]+):"
+    r"\s+([0-9a-f]{2}(?: [0-9a-f]{2})*)"
+    r"(?:\s+([^\s]+)(?:\s+(.+?)\s*(?:# (0x[0-9a-f]+))?)?)?\s*$",
+    re.MULTILINE,
+)
 RE_ASM_EXPRESSION = re.compile(
     r"([DQ]WORD) PTR \["
     r"([a-z0-9]{3})"
@@ -18,14 +23,13 @@ RE_ASM_EXPRESSION = re.compile(
     r"(?:\+(0x[0-9a-f]+))?"
     r"\]"
 )
-PYMODULE_STRUCT = struct.Struct("x"*40 + "LLlL")
+PYMODULE_STRUCT = struct.Struct("x" * 40 + "LLlL")
 PYMETHOD_STRUCT = struct.Struct("LLixxxxL")
 
-import colorlog
 
 handler = colorlog.StreamHandler()
 handler.setFormatter(colorlog.ColoredFormatter(
-	'%(log_color)s%(levelname)s:%(name)s:%(message)s'))
+    '%(log_color)s%(levelname)s:%(name)s:%(message)s'))
 logger = logging.getLogger("pyso_extract")
 handler.setLevel(logging.DEBUG)
 logger.setLevel(logging.DEBUG)
@@ -75,7 +79,6 @@ class Tracers(Enum):
     SUBMODULE = "SUBMODULE"
     MODULE_DICT = "MODULE_DICT"
     UNKNOWN = "UNKNOWN"
-
 
 
 def initfunc_name(name):
@@ -203,6 +206,7 @@ def parse_file(filename, module_name):
 
 # TODO: This should go away!
 disassembled_cache = {}
+
 
 def disassemble_symbol(elf, loc_to_symbol: dict, function_name: str):
     global disassembled_cache
