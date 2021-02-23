@@ -7,22 +7,21 @@ import pathlib
 from conda_package_handling import api as cph_api
 import pytest
 
-from symbol_exporter import python_so_extractor
+from symbol_exporter.python_so_extractor import CompiledPythonLib
 
 CACHE_DIR = pathlib.Path(__file__).parent / ".cache"
 CACHE_DIR.mkdir(exist_ok=True)
 
 
-def compare(url, checksum, filename, module_name, expected, *, xmissing=False):
+def compare(url, checksum, filename, expected, *, xmissing=False):
     package_dir = download_sample(url, checksum)
 
-    python_so_extractor.disassembled_cache = {}
-    results = python_so_extractor.parse_file(package_dir / filename, module_name)
+    results = CompiledPythonLib(package_dir / filename).find_symbols()
     actual = {x["name"] for x in results["methods"]}
     actual |= {x["name"] for x in results["objects"]}
-    diff = (actual - expected)
+    diff = actual - expected
     assert not diff, (f"Found {len(diff)} extra keys", diff)
-    diff = (expected - actual)
+    diff = expected - actual
     if xmissing:
         assert diff, "Unexpectedly passed!"
         pytest.xfail(f"{len(diff)} out of {len(expected)} were not found (known issue)")
@@ -41,7 +40,7 @@ def download_sample(url, checksum):
 
     md5 = hashlib.md5()
     with filename.open("rb") as f:
-        while data := f.read(1024**2):
+        while data := f.read(1024 ** 2):
             md5.update(data)
     if md5.hexdigest() != checksum:
         raise RuntimeError(f"Hash mismatch for {filename}, expected {checksum} got {md5.hexdigest()}")
