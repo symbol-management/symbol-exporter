@@ -79,7 +79,12 @@ def harvest_imports(io_like):
         symbols = {}
         found_sp = False
         for root, subdirs, files in os.walk(f):
-            if root.lower().endswith("site-packages"):
+            # ony run if we have a site packages file or it is python itself
+            # todo pull up list of python versions or pull it from somewhere else
+            if root.lower().endswith("site-packages") or any(
+                root.lower().endswith(f"python{k}")
+                for k in ["2.7", "3.5", "3.6", "3.7", "3.8", "3.9"]
+            ):
                 found_sp = True
                 _symbols = get_all_symbol_names(root)
                 symbols.update(_symbols)
