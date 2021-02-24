@@ -14,7 +14,7 @@ from random import shuffle
 from symbol_exporter.ast_symbol_extractor import version
 
 
-audit_version = "1"
+audit_version = "1.1"
 
 complete_version = f"{version}_{audit_version}"
 
