@@ -36,4 +36,6 @@ jobs:
       - name: run tests
         shell: bash -l {0}
         run: |
+          # Avoid errors like "Warning: _curses.error: setupterm: could not find terminfo database" when using pwntools
+          export TERM=xterm
           pytest -v
