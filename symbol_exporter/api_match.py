@@ -22,7 +22,9 @@ def get_symbol_table(top_level_import):
 def find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table):
     supplying_versions = {}
 
-    symbol_by_top_level = groupby(sorted(volume - builtin_symbols), key=lambda x: x.partition(".")[0])
+    symbol_by_top_level = groupby(
+        sorted(volume - builtin_symbols), key=lambda x: x.partition(".")[0]
+    )
 
     bad_symbols = set()
 

@@ -14,13 +14,13 @@ from random import shuffle
 from symbol_exporter.ast_symbol_extractor import version
 
 
-audit_version = '1.1'
+audit_version = "1.1"
 
-complete_version = f'{version}_{audit_version}'
+complete_version = f"{version}_{audit_version}"
 
 
-def main(n_to_pull=10):
-    path = 'audit'
+def main(n_to_pull=1000):
+    path = "audit"
 
     if os.path.exists(os.path.join(path, "_inspection_version.txt")):
         with open(os.path.join(path, "_inspection_version.txt")) as f:
@@ -32,7 +32,7 @@ def main(n_to_pull=10):
 
     if not os.path.exists(path):
         os.makedirs(path)
-    with open(os.path.join(path, "_inspection_version.txt"), 'w') as f:
+    with open(os.path.join(path, "_inspection_version.txt"), "w") as f:
         f.write(complete_version)
 
     existing_artifacts = glob.glob(f"{path}/**/*.json", recursive=True)
@@ -72,7 +72,7 @@ def main(n_to_pull=10):
             continue
         volume = set()
         for v in symbols.values():
-            volume.update(v.get('data', {}).get("symbols_in_volume", set()))
+            volume.update(v.get("data", {}).get("symbols_in_volume", set()))
         deps, bad = find_supplying_version_set(volume)
         dep_sets = [list(sorted(k)) for k in deps]
 
