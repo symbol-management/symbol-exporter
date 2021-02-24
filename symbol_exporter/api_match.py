@@ -3,6 +3,8 @@ from itertools import groupby
 import requests
 from libcflib.jsonutils import loads
 
+from symbol_exporter.ast_symbol_extractor import builtin_symbols
+
 FILE_LISTING_URL = "https://raw.githubusercontent.com/symbol-management/ast-symbol-table/master/.file_listing.json"
 
 RAW_URL_TEMPLATE = "https://raw.githubusercontent.com/symbol-management/ast-symbol-table/master/symbol_table/{}.json"
@@ -20,7 +22,7 @@ def get_symbol_table(top_level_import):
 def find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table):
     supplying_versions = {}
 
-    symbol_by_top_level = groupby(sorted(volume), key=lambda x: x.partition(".")[0])
+    symbol_by_top_level = groupby(sorted(volume - builtin_symbols), key=lambda x: x.partition(".")[0])
 
     bad_symbols = set()
 

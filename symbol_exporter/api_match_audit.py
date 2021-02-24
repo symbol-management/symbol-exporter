@@ -14,12 +14,12 @@ from random import shuffle
 from symbol_exporter.ast_symbol_extractor import version
 
 
-audit_version = '1'
+audit_version = '1.1'
 
 complete_version = f'{version}_{audit_version}'
 
 
-def main(n_to_pull=1000):
+def main(n_to_pull=10):
     path = 'audit'
 
     if os.path.exists(os.path.join(path, "_inspection_version.txt")):
