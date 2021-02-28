@@ -14,6 +14,7 @@ from libcflib.preloader import ReapFailure, diff
 from tqdm import tqdm
 
 from symbol_exporter.ast_symbol_extractor import SymbolFinder, version
+from symbol_exporter.python_so_extractor import CompiledPythonLib, c_symbols_to_datamodel
 from symbol_exporter.tools import executor
 
 
@@ -37,7 +38,7 @@ def parse_code(code, module_name):
     return z.post_process_symbols()
 
 
-def single_file_extraction(python_file, top_dir):
+def single_py_file_extraction(python_file, top_dir):
     folder_path = python_file.rpartition(top_dir + "/")[-1]
     import_name = file_path_to_import(folder_path)
     try:
@@ -54,6 +55,18 @@ def single_file_extraction(python_file, top_dir):
     return s
 
 
+def parse_so(filename):
+    return c_symbols_to_datamodel(CompiledPythonLib(filename).find_symbols())
+
+def single_so_file_extraction(so_file):
+    try:
+        s = parse_so(so_file)
+    except Exception as e:
+        print(e)
+        s = {}
+    return s
+
+
 def get_all_symbol_names(top_dir):
     # Note Jedi seems to pick up things that are protected by a
     # __name__ == '__main__' if statement
@@ -62,9 +75,14 @@ def get_all_symbol_names(top_dir):
     # to depend on those
     symbols_dict = {}
     # walk all the files looking for python files
-    glob_glob = glob.glob(f"{top_dir}/**/*.py", recursive=True)
-    for file_name in [k for k in glob_glob]:
-        sd = single_file_extraction(file_name, top_dir)
+    py_glob_glob = glob.glob(f"{top_dir}/**/*.py", recursive=True)
+    for file_name in [k for k in py_glob_glob]:
+        sd = single_py_file_extraction(file_name, top_dir)
+        symbols_dict.update(sd)
+
+    py_glob_glob = glob.glob(f"{top_dir}/**/*.so", recursive=True)
+    for file_name in [k for k in py_glob_glob]:
+        sd = single_so_file_extraction(file_name)
         symbols_dict.update(sd)
 
     return symbols_dict
@@ -74,7 +92,12 @@ def harvest_imports(io_like):
     tf = tarfile.open(fileobj=io_like, mode="r:bz2")
     # TODO: push dir allocation into thread?
     with TemporaryDirectory() as f:
-        py_members = [m for m in tf.getmembers() if m.name.endswith(".py")]
+        py_members = [
+            m
+            for m in tf.getmembers()
+            if m.name.endswith(".py")
+            or (".cpython" in m.name and m.name.endswith(".so"))
+        ]
         tf.extractall(path=f, members=py_members)
         symbols = {}
         found_sp = False
