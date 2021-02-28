@@ -26,7 +26,10 @@ def compare(url, checksum, filename, expected, *, xmissing=False):
         assert diff, "Unexpectedly passed!"
         pytest.xfail(f"{len(diff)} out of {len(expected)} were not found (known issue)")
     else:
-        assert not diff, (f"Failed to find {len(diff)} out of {len(expected)} keys", diff)
+        assert not diff, (
+            f"Failed to find {len(diff)} out of {len(expected)} keys",
+            diff,
+        )
 
 
 def download_sample(url, checksum):
@@ -43,9 +46,13 @@ def download_sample(url, checksum):
         while data := f.read(1024 ** 2):
             md5.update(data)
     if md5.hexdigest() != checksum:
-        raise RuntimeError(f"Hash mismatch for {filename}, expected {checksum} got {md5.hexdigest()}")
+        raise RuntimeError(
+            f"Hash mismatch for {filename}, expected {checksum} got {md5.hexdigest()}"
+        )
 
-    target_dir = pathlib.Path(str(filename).replace(".tar.bz2", "").replace(".conda", ""))
+    target_dir = pathlib.Path(
+        str(filename).replace(".tar.bz2", "").replace(".conda", "")
+    )
     if not target_dir.is_dir():
         cph_api.extract(str(filename), str(target_dir))
 

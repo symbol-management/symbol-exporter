@@ -14,6 +14,7 @@ from .utils import (
     Tracers,
     initfunc_name,
 )
+from ..ast_symbol_extractor import SymbolType
 
 
 class CompiledPythonLib:
@@ -283,3 +284,17 @@ class CompiledPythonLib:
                 self._registers["rdx"],
             )
             self._results["objects"] += [{"name": object_name}]
+
+
+def c_symbols_to_datamodel(symbols):
+    top_level_import = symbols["name"]
+    output_data = {top_level_import: {"type": SymbolType.MODULE, "data": {}}}
+    for method in symbols["methods"]:
+        output_data[f"{top_level_import}.{method['name']}"] = dict(
+            type=SymbolType.FUNCTION, data={}
+        )
+    for object in symbols["objects"]:
+        output_data[f"{top_level_import}.{object['name']}"] = dict(
+            type=SymbolType.CONSTANT, data={}
+        )
+    return output_data
