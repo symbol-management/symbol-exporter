@@ -14,7 +14,10 @@ from libcflib.preloader import ReapFailure, diff
 from tqdm import tqdm
 
 from symbol_exporter.ast_symbol_extractor import SymbolFinder, version
-from symbol_exporter.python_so_extractor import CompiledPythonLib, c_symbols_to_datamodel
+from symbol_exporter.python_so_extractor import (
+    CompiledPythonLib,
+    c_symbols_to_datamodel,
+)
 from symbol_exporter.tools import executor
 
 
@@ -57,6 +60,7 @@ def single_py_file_extraction(python_file, top_dir):
 
 def parse_so(filename):
     return c_symbols_to_datamodel(CompiledPythonLib(filename).find_symbols())
+
 
 def single_so_file_extraction(so_file):
     try:
