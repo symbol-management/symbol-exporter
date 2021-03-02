@@ -4,7 +4,8 @@ from typing import Any
 from enum import Enum
 
 # Increment when we need the database to be rebuilt (eg adding a new feature)
-version = "1.2"
+NOT_A_DEFAULT_ARG = "~~NOT_A_DEFAULT~~"
+version = "1.3"
 builtin_symbols = set(dir(builtins))
 
 
@@ -33,6 +34,7 @@ class SymbolFinder(ast.NodeVisitor):
         self.aliases = {}
         self.undeclared_symbols = set()
         self.used_builtins = set()
+        self.current_args_kwargs_stack = []
 
     @property
     def symbols(self):
@@ -107,6 +109,7 @@ class SymbolFinder(ast.NodeVisitor):
             and node.func.id not in self.aliases
             and node.func.id not in builtin_symbols
             and not self._symbol_in_surface_area(node.func.id)
+            and not self._symbol_in_args_kwargs(node.func.id)
         ):
             self.undeclared_symbols.add(node.func.id)
         tmp_stack = self.attr_stack.copy()
@@ -117,6 +120,9 @@ class SymbolFinder(ast.NodeVisitor):
     def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
         self.current_symbol_stack.append(node.name)
         symbol_name = self._symbol_stack_to_symbol_name()
+        args_kwargs_dict = self._create_args_kwargs_dict(node.args)
+        # TODO: add args kwargs dict to symbols description
+        self.current_args_kwargs_stack.append(args_kwargs_dict)
         self._add_symbol_to_surface_area(
             SymbolType.FUNCTION,
             symbol_name,
@@ -124,6 +130,7 @@ class SymbolFinder(ast.NodeVisitor):
         )
         self.generic_visit(node)
         self.current_symbol_stack.pop(-1)
+        self.current_args_kwargs_stack.pop(-1)
 
     def visit_ClassDef(self, node: ast.ClassDef) -> Any:
         self.current_symbol_stack.append(node.name)
@@ -219,6 +226,39 @@ class SymbolFinder(ast.NodeVisitor):
                     volume[stripped_names[bad_func_name]] = symbol_md
                     self.undeclared_symbols.remove(bad_func_name)
         return output_symbols
+
+    def _create_args_kwargs_dict(self, arguments: ast.arguments):
+        # TODO: handle defaults properly, most likely using our own visit methods with returns?
+        output = {}
+        if arguments.vararg:
+            output[arguments.vararg.arg] = {"type": "vararg"}
+        if arguments.kwarg:
+            output[arguments.kwarg.arg] = {"type": "kwarg"}
+
+        # args/defaults
+        arg_defaults = [NOT_A_DEFAULT_ARG] * (
+            len(arguments.args) - len(arguments.defaults)
+        ) + arguments.defaults
+        for arg, default, position in zip(
+            arguments.args, arg_defaults, range(len(arguments.args))
+        ):
+            d = {"type": "arg", "position": position}
+            # if default != NOT_A_DEFAULT_ARG:
+            #     d.update(default=default)
+            output[arg.arg] = d
+
+        # kw_default, kwonlyargs, posonlyargs
+        for kwarg, default in zip(arguments.kwonlyargs, arguments.kw_defaults):
+            d = {"type": "kwonlyarg"}
+            # if default:
+            #     d['default'] = default.value
+            output[kwarg.arg] = d
+        return output
+
+    def _symbol_in_args_kwargs(self, id):
+        return (
+            self.current_args_kwargs_stack and id in self.current_args_kwargs_stack[-1]
+        )
 
 
 # 1. get all the imports and their aliases (which includes imported things)

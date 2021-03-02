@@ -492,3 +492,21 @@ def test_multi_use_of_symbol():
             "type": "function",
         },
     }
+
+
+def test_self_is_callable():
+    code = """
+    class A:
+        def a(self, job_name_class=None):
+            self()
+        def b(self):
+            self.z = self.x
+    """
+    z = process_code_str(code)
+    assert z.undeclared_symbols == set()
+    assert z.post_process_symbols() == {
+        "mm": {"data": {}, "type": "module"},
+        "mm.A": {"data": {"lineno": 2}, "type": "class"},
+        "mm.A.a": {"data": {"lineno": 3}, "type": "function"},
+        "mm.A.b": {"data": {"lineno": 5}, "type": "function"},
+    }
