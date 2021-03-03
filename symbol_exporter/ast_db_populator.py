@@ -1,11 +1,15 @@
 import ast
 import glob
+import hashlib
+import hmac
 import io
 import json
 import os
 import shutil
 import tarfile
 from concurrent.futures._base import as_completed
+from datetime import datetime
+from functools import partial
 from tempfile import TemporaryDirectory
 
 import requests
@@ -118,7 +122,54 @@ def harvest_imports(io_like):
     tf.close()
     if not found_sp:
         return None
-    return symbols
+
+    return {"metadata": {"data model version": version}, "symbols": symbols}
+
+
+def send_to_webserver(data, package, dst_path):
+    host = "https://cf-ast-symbol-table.web.cern.ch"
+    secret_token = os.environ["SECRET_TOKEN"].encode("utf-8")
+    url = f"/api/v0/symbols/{package}/{dst_path}"
+
+    # Generate the signature
+    headers = {
+        "X-Signature-Timestamp": datetime.utcnow().isoformat(),
+        "X-Body-Signature": hmac.new(
+            secret_token, json.dumps(data).encode(), hashlib.sha256
+        ).hexdigest(),
+    }
+    headers["X-Headers-Signature"] = hmac.new(
+        secret_token,
+        b"".join(
+            [
+                url.encode(),
+                headers["X-Signature-Timestamp"].encode(),
+                headers["X-Body-Signature"].encode(),
+            ]
+        ),
+        hashlib.sha256,
+    ).hexdigest()
+
+    # Upload the data
+    r = requests.put(
+        f"{host}{url}",
+        data=data,
+        headers=headers,
+    )
+    r.raise_for_status()
+
+
+def reap_symbols_send_to_webserver(
+    package, dst_path, src_url, filelike, progress_callback=None
+):
+    if progress_callback:
+        progress_callback()
+    try:
+        harvested_data = harvest_imports(filelike)
+        send_to_webserver(harvested_data, package, dst_path)
+        del harvested_data
+    except Exception as e:
+        raise ReapFailure(package, src_url, str(e))
 
 
 def reap_imports(
@@ -151,6 +202,14 @@ def fetch_and_run(path, pkg, dst, src_url, progess_callback=None):
     filelike.close()
 
 
+def fetch_and_run_web(pkg, dst, src_url, progess_callback=None):
+    filelike = fetch_artifact(src_url)
+    reap_symbols_send_to_webserver(
+        pkg, dst, src_url, filelike, progress_callback=progess_callback
+    )
+    filelike.close()
+
+
 # todo pull this from the og list but reorder that list first
 sort_arch_ordering = [
     "noarch",
@@ -163,7 +222,13 @@ sort_arch_ordering = [
 ]
 
 
-def reap(path, known_bad_packages=(), number_to_reap=1000, single_thread=False):
+def reap(
+    path,
+    known_bad_packages=(),
+    number_to_reap=1000,
+    single_thread=False,
+    webserver=True,
+):
     if os.path.exists(os.path.join(path, "_inspection_version.txt")):
         with open(os.path.join(path, "_inspection_version.txt")) as f:
             db_version = f.read()
@@ -190,9 +255,14 @@ def reap(path, known_bad_packages=(), number_to_reap=1000, single_thread=False):
     print(f"TOTAL OUTSTANDING ARTIFACTS: {len(sorted_files)}")
     sorted_files = sorted_files[:number_to_reap]
 
+    if webserver:
+        fetch_and_run_function = fetch_and_run_web
+    else:
+        fetch_and_run_function = partial(fetch_and_run, path)
+
     if single_thread:
         futures = {
-            fetch_and_run(
+            fetch_and_run_function(
                 path,
                 package,
                 dst,
@@ -206,7 +276,7 @@ def reap(path, known_bad_packages=(), number_to_reap=1000, single_thread=False):
         with executor(max_workers=5, kind="dask") as pool:
             futures = {
                 pool.submit(
-                    fetch_and_run,
+                    fetch_and_run_function,
                     path,
                     package,
                     dst,
@@ -241,6 +311,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--n_artifacts", help="number of artifacts to inspect", default=5000
     )
+    parser.add_argument(
+        "--webserver", help="to use the webserver storage or local disk", default=True
+    )
 
     args = parser.parse_args()
     print(args)
@@ -255,4 +328,5 @@ if __name__ == "__main__":
         known_bad_packages,
         number_to_reap=int(args.n_artifacts),
         single_thread=bool(args.debug),
+        webserver=bool(args.webserver),
     )
