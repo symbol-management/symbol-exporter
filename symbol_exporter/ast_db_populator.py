@@ -14,7 +14,7 @@ from tempfile import TemporaryDirectory
 
 import requests
 from libcflib.tools import expand_file_and_mkdirs
-from libcflib.preloader import ReapFailure, diff
+from libcflib.preloader import ReapFailure, fetch_upstream, existing
 from tqdm import tqdm
 
 from symbol_exporter.ast_symbol_extractor import SymbolFinder, version
@@ -22,7 +22,7 @@ from symbol_exporter.python_so_extractor import (
     CompiledPythonLib,
     c_symbols_to_datamodel,
 )
-from symbol_exporter.tools import executor
+from symbol_exporter.tools import executor, diff
 
 
 def make_json_friendly(data):
@@ -127,9 +127,38 @@ def harvest_imports(io_like):
 
 
 def send_to_webserver(data, package, dst_path):
+    # BSD 3-Clause License
+    #
+    # Copyright (c) 2021, Chris Burr
+    # All rights reserved.
+    #
+    # Redistribution and use in source and binary forms, with or without
+    # modification, are permitted provided that the following conditions are met:
+    #
+    # * Redistributions of source code must retain the above copyright notice, this
+    #   list of conditions and the following disclaimer.
+    #
+    # * Redistributions in binary form must reproduce the above copyright notice,
+    #   this list of conditions and the following disclaimer in the documentation
+    #   and/or other materials provided with the distribution.
+    #
+    # * Neither the name of the copyright holder nor the names of its
+    #   contributors may be used to endorse or promote products derived from
+    #   this software without specific prior written permission.
+    #
+    # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    # DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    # FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    # DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     host = "https://cf-ast-symbol-table.web.cern.ch"
     secret_token = os.environ["SECRET_TOKEN"].encode("utf-8")
-    url = f"/api/v0/symbols/{package}/{dst_path}"
+    url = f"/api/v{version}/symbols/{package}/{dst_path}"
 
     # Generate the signature
     headers = {
@@ -210,6 +239,14 @@ def fetch_and_run_web(pkg, dst, src_url, progess_callback=None):
     filelike.close()
 
 
+def get_current_extracted_pkgs():
+    host = "https://cf-ast-symbol-table.web.cern.ch"
+    url = f"/api/v{version}/symbols"
+    paths = requests.get(f"{host}{url}").json()
+    path_by_pkg = {path.split("/")[0]: path for path in paths}
+    return path_by_pkg
+
+
 # todo pull this from the og list but reorder that list first
 sort_arch_ordering = [
     "noarch",
@@ -229,20 +266,29 @@ def reap(
     single_thread=False,
     webserver=True,
 ):
-    if os.path.exists(os.path.join(path, "_inspection_version.txt")):
-        with open(os.path.join(path, "_inspection_version.txt")) as f:
-            db_version = f.read()
+    upstream = fetch_upstream()
+    if not webserver:
+        if os.path.exists(os.path.join(path, "_inspection_version.txt")):
+            with open(os.path.join(path, "_inspection_version.txt")) as f:
+                db_version = f.read()
+        else:
+            db_version = ""
+        if db_version != version and os.path.exists(path):
+            shutil.rmtree(path)
+        if not os.path.exists(path):
+            os.makedirs(path)
+            with open(os.path.join(path, "_inspection_version.txt"), "w") as f:
+                f.write(version)
+
+        existing_pkg_dict = existing(path)
+        fetch_and_run_function = partial(fetch_and_run, path)
     else:
-        db_version = ""
-    if db_version != version and os.path.exists(path):
-        shutil.rmtree(path)
-    if not os.path.exists(path):
-        os.makedirs(path)
-        with open(os.path.join(path, "_inspection_version.txt"), "w") as f:
-            f.write(version)
+        existing_pkg_dict = get_current_extracted_pkgs()
+        fetch_and_run_function = fetch_and_run_web
 
-    existing_pkgs = os.listdir(path)
+    existing_pkgs = existing_pkg_dict.values()
 
+    # Pull up and partial this out existing_pkgs
     def diff_sort(val):
         package, dst, src_url = val
         arch = dst.split("/")[1]
@@ -251,14 +297,11 @@ def reap(
             sort_arch_ordering.index(arch),
         )
 
-    sorted_files = sorted(list(diff(path)), key=diff_sort)
+    # need to handle case for webserver here too since it doesn't have files, but does have all the symbols
+    pkgs_to_inspect = diff(upstream, existing_pkgs)
+    sorted_files = sorted(list(pkgs_to_inspect), key=diff_sort)
     print(f"TOTAL OUTSTANDING ARTIFACTS: {len(sorted_files)}")
     sorted_files = sorted_files[:number_to_reap]
-
-    if webserver:
-        fetch_and_run_function = fetch_and_run_web
-    else:
-        fetch_and_run_function = partial(fetch_and_run, path)
 
     if single_thread:
         futures = {
