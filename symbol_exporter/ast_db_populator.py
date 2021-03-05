@@ -157,8 +157,8 @@ def send_to_webserver(data, package, dst_path):
     # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
     # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     host = "https://cf-ast-symbol-table.web.cern.ch"
-    secret_token = os.environ["SECRET_TOKEN"].encode("utf-8")
-    url = f"/api/v{version}/symbols/{package}/{dst_path}"
+    secret_token = os.environ["STORAGE_SECRET_TOKEN"].encode("utf-8")
+    url = f"/api/v{version}/symbols/{package}/{dst_path}".replace(".json", "")
 
     # Generate the signature
     headers = {
@@ -226,12 +226,14 @@ def fetch_artifact(src_url):
 
 
 def fetch_and_run(path, pkg, dst, src_url, progess_callback=None):
+    print(dst)
     filelike = fetch_artifact(src_url)
     reap_imports(path, pkg, dst, src_url, filelike, progress_callback=progess_callback)
     filelike.close()
 
 
 def fetch_and_run_web(pkg, dst, src_url, progess_callback=None):
+    print(dst)
     filelike = fetch_artifact(src_url)
     reap_symbols_send_to_webserver(
         pkg, dst, src_url, filelike, progress_callback=progess_callback
@@ -286,19 +288,16 @@ def reap(
         existing_pkg_dict = get_current_extracted_pkgs()
         fetch_and_run_function = fetch_and_run_web
 
-    existing_pkgs = existing_pkg_dict.values()
-
     # Pull up and partial this out existing_pkgs
     def diff_sort(val):
         package, dst, src_url = val
         arch = dst.split("/")[1]
         return (
-            package in existing_pkgs,
+            package in existing_pkg_dict,
             sort_arch_ordering.index(arch),
         )
 
-    # need to handle case for webserver here too since it doesn't have files, but does have all the symbols
-    pkgs_to_inspect = diff(upstream, existing_pkgs)
+    pkgs_to_inspect = diff(upstream, existing_pkg_dict)
     sorted_files = sorted(list(pkgs_to_inspect), key=diff_sort)
     print(f"TOTAL OUTSTANDING ARTIFACTS: {len(sorted_files)}")
     sorted_files = sorted_files[:number_to_reap]
@@ -306,7 +305,6 @@ def reap(
     if single_thread:
         futures = {
             fetch_and_run_function(
-                path,
                 package,
                 dst,
                 src_url,
@@ -320,7 +318,6 @@ def reap(
             futures = {
                 pool.submit(
                     fetch_and_run_function,
-                    path,
                     package,
                     dst,
                     src_url,
@@ -355,7 +352,7 @@ if __name__ == "__main__":
         "--n_artifacts", help="number of artifacts to inspect", default=5000
     )
     parser.add_argument(
-        "--webserver", help="to use the webserver storage or local disk", default=True
+        "--local", help="to local disk for storage", default=False
     )
 
     args = parser.parse_args()
@@ -371,5 +368,5 @@ if __name__ == "__main__":
         known_bad_packages,
         number_to_reap=int(args.n_artifacts),
         single_thread=bool(args.debug),
-        webserver=bool(args.webserver),
+        webserver=not bool(args.local),
     )
