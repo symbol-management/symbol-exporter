@@ -157,7 +157,7 @@ def send_to_webserver(data, package, dst_path):
     # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
     # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     if not data:
-        return
+        data = None
     host = "https://cf-ast-symbol-table.web.cern.ch"
     secret_token = os.environ["STORAGE_SECRET_TOKEN"].encode("utf-8")
     url = f"/api/v{version}/symbols/{package}/{dst_path}".replace(".json", "")
