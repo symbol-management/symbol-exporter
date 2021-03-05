@@ -156,15 +156,18 @@ def send_to_webserver(data, package, dst_path):
     # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
     # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
     # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    if not data:
+        return
     host = "https://cf-ast-symbol-table.web.cern.ch"
     secret_token = os.environ["STORAGE_SECRET_TOKEN"].encode("utf-8")
     url = f"/api/v{version}/symbols/{package}/{dst_path}".replace(".json", "")
 
     # Generate the signature
+    dumped_data = json.dumps(data, default=make_json_friendly, sort_keys=True)
     headers = {
         "X-Signature-Timestamp": datetime.utcnow().isoformat(),
         "X-Body-Signature": hmac.new(
-            secret_token, json.dumps(data).encode(), hashlib.sha256
+            secret_token, dumped_data.encode(), hashlib.sha256
         ).hexdigest(),
     }
     headers["X-Headers-Signature"] = hmac.new(
@@ -182,7 +185,7 @@ def send_to_webserver(data, package, dst_path):
     # Upload the data
     r = requests.put(
         f"{host}{url}",
-        data=data,
+        data=dumped_data,
         headers=headers,
     )
     r.raise_for_status()
