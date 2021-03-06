@@ -1,16 +1,20 @@
 import ast
 import glob
+import hashlib
+import hmac
 import io
 import json
 import os
 import shutil
 import tarfile
 from concurrent.futures._base import as_completed
+from datetime import datetime
+from functools import partial
 from tempfile import TemporaryDirectory
 
 import requests
 from libcflib.tools import expand_file_and_mkdirs
-from libcflib.preloader import ReapFailure, diff
+from libcflib.preloader import ReapFailure, fetch_upstream, existing
 from tqdm import tqdm
 
 from symbol_exporter.ast_symbol_extractor import SymbolFinder, version
@@ -18,7 +22,7 @@ from symbol_exporter.python_so_extractor import (
     CompiledPythonLib,
     c_symbols_to_datamodel,
 )
-from symbol_exporter.tools import executor
+from symbol_exporter.tools import executor, diff
 
 
 def make_json_friendly(data):
@@ -118,7 +122,86 @@ def harvest_imports(io_like):
     tf.close()
     if not found_sp:
         return None
-    return symbols
+
+    return {"metadata": {"data model version": version}, "symbols": symbols}
+
+
+def send_to_webserver(data, package, dst_path):
+    # BSD 3-Clause License
+    #
+    # Copyright (c) 2021, Chris Burr
+    # All rights reserved.
+    #
+    # Redistribution and use in source and binary forms, with or without
+    # modification, are permitted provided that the following conditions are met:
+    #
+    # * Redistributions of source code must retain the above copyright notice, this
+    #   list of conditions and the following disclaimer.
+    #
+    # * Redistributions in binary form must reproduce the above copyright notice,
+    #   this list of conditions and the following disclaimer in the documentation
+    #   and/or other materials provided with the distribution.
+    #
+    # * Neither the name of the copyright holder nor the names of its
+    #   contributors may be used to endorse or promote products derived from
+    #   this software without specific prior written permission.
+    #
+    # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    # DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    # FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    # DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    if not data:
+        data = None
+    host = "https://cf-ast-symbol-table.web.cern.ch"
+    secret_token = os.environ["STORAGE_SECRET_TOKEN"].encode("utf-8")
+    url = f"/api/v{version}/symbols/{package}/{dst_path}".replace(".json", "")
+
+    # Generate the signature
+    dumped_data = json.dumps(data, default=make_json_friendly, sort_keys=True)
+    headers = {
+        "X-Signature-Timestamp": datetime.utcnow().isoformat(),
+        "X-Body-Signature": hmac.new(
+            secret_token, dumped_data.encode(), hashlib.sha256
+        ).hexdigest(),
+    }
+    headers["X-Headers-Signature"] = hmac.new(
+        secret_token,
+        b"".join(
+            [
+                url.encode(),
+                headers["X-Signature-Timestamp"].encode(),
+                headers["X-Body-Signature"].encode(),
+            ]
+        ),
+        hashlib.sha256,
+    ).hexdigest()
+
+    # Upload the data
+    r = requests.put(
+        f"{host}{url}",
+        data=dumped_data,
+        headers=headers,
+    )
+    r.raise_for_status()
+
+
+def reap_symbols_send_to_webserver(
+    package, dst_path, src_url, filelike, progress_callback=None
+):
+    if progress_callback:
+        progress_callback()
+    try:
+        harvested_data = harvest_imports(filelike)
+        send_to_webserver(harvested_data, package, dst_path)
+        del harvested_data
+    except Exception as e:
+        raise ReapFailure(package, src_url, str(e))
 
 
 def reap_imports(
@@ -146,9 +229,27 @@ def fetch_artifact(src_url):
 
 
 def fetch_and_run(path, pkg, dst, src_url, progess_callback=None):
+    print(dst)
     filelike = fetch_artifact(src_url)
     reap_imports(path, pkg, dst, src_url, filelike, progress_callback=progess_callback)
     filelike.close()
+
+
+def fetch_and_run_web(pkg, dst, src_url, progess_callback=None):
+    print(dst)
+    filelike = fetch_artifact(src_url)
+    reap_symbols_send_to_webserver(
+        pkg, dst, src_url, filelike, progress_callback=progess_callback
+    )
+    filelike.close()
+
+
+def get_current_extracted_pkgs():
+    host = "https://cf-ast-symbol-table.web.cern.ch"
+    url = f"/api/v{version}/symbols"
+    paths = requests.get(f"{host}{url}").json()
+    path_by_pkg = {path.split("/")[0]: path for path in paths}
+    return path_by_pkg
 
 
 # todo pull this from the og list but reorder that list first
@@ -163,37 +264,50 @@ sort_arch_ordering = [
 ]
 
 
-def reap(path, known_bad_packages=(), number_to_reap=1000, single_thread=False):
-    if os.path.exists(os.path.join(path, "_inspection_version.txt")):
-        with open(os.path.join(path, "_inspection_version.txt")) as f:
-            db_version = f.read()
+def reap(
+    path,
+    known_bad_packages=(),
+    number_to_reap=1000,
+    single_thread=False,
+    webserver=True,
+):
+    upstream = fetch_upstream()
+    if not webserver:
+        if os.path.exists(os.path.join(path, "_inspection_version.txt")):
+            with open(os.path.join(path, "_inspection_version.txt")) as f:
+                db_version = f.read()
+        else:
+            db_version = ""
+        if db_version != version and os.path.exists(path):
+            shutil.rmtree(path)
+        if not os.path.exists(path):
+            os.makedirs(path)
+            with open(os.path.join(path, "_inspection_version.txt"), "w") as f:
+                f.write(version)
+
+        existing_pkg_dict = existing(path)
+        fetch_and_run_function = partial(fetch_and_run, path)
     else:
-        db_version = ""
-    if db_version != version and os.path.exists(path):
-        shutil.rmtree(path)
-    if not os.path.exists(path):
-        os.makedirs(path)
-        with open(os.path.join(path, "_inspection_version.txt"), "w") as f:
-            f.write(version)
+        existing_pkg_dict = get_current_extracted_pkgs()
+        fetch_and_run_function = fetch_and_run_web
 
-    existing_pkgs = os.listdir(path)
-
+    # Pull up and partial this out existing_pkgs
     def diff_sort(val):
         package, dst, src_url = val
         arch = dst.split("/")[1]
         return (
-            package in existing_pkgs,
+            package in existing_pkg_dict,
             sort_arch_ordering.index(arch),
         )
 
-    sorted_files = sorted(list(diff(path)), key=diff_sort)
+    pkgs_to_inspect = diff(upstream, existing_pkg_dict)
+    sorted_files = sorted(list(pkgs_to_inspect), key=diff_sort)
     print(f"TOTAL OUTSTANDING ARTIFACTS: {len(sorted_files)}")
     sorted_files = sorted_files[:number_to_reap]
 
     if single_thread:
         futures = {
-            fetch_and_run(
-                path,
+            fetch_and_run_function(
                 package,
                 dst,
                 src_url,
@@ -206,8 +320,7 @@ def reap(path, known_bad_packages=(), number_to_reap=1000, single_thread=False):
         with executor(max_workers=5, kind="dask") as pool:
             futures = {
                 pool.submit(
-                    fetch_and_run,
-                    path,
+                    fetch_and_run_function,
                     package,
                     dst,
                     src_url,
@@ -241,6 +354,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--n_artifacts", help="number of artifacts to inspect", default=5000
     )
+    parser.add_argument(
+        "--local", help="to local disk for storage", default=False
+    )
 
     args = parser.parse_args()
     print(args)
@@ -255,4 +371,5 @@ if __name__ == "__main__":
         known_bad_packages,
         number_to_reap=int(args.n_artifacts),
         single_thread=bool(args.debug),
+        webserver=not bool(args.local),
     )
