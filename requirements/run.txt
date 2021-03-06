@@ -1,4 +1,5 @@
-libcflib
+# Install this manually
+# libcflib
 tqdm
 conda
 # added because conda keeps installing latest xonsh for libcflib, which needs a release
