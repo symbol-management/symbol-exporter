@@ -10,6 +10,7 @@ import tarfile
 from concurrent.futures._base import as_completed
 from datetime import datetime
 from functools import partial
+from random import shuffle
 from tempfile import TemporaryDirectory
 
 import requests
@@ -306,8 +307,10 @@ def reap(
             sort_arch_ordering.index(arch),
         )
 
-    pkgs_to_inspect = diff(upstream, existing_pkg_dict)
-    sorted_files = sorted(list(pkgs_to_inspect), key=diff_sort)
+    pkgs_to_inspect = list(diff(upstream, existing_pkg_dict))
+    # shuffle so that we don't always get the same pkgs
+    shuffle(pkgs_to_inspect)
+    sorted_files = sorted(pkgs_to_inspect, key=diff_sort)
     print(f"TOTAL OUTSTANDING ARTIFACTS: {len(sorted_files)}")
     sorted_files = sorted_files[:number_to_reap]
 

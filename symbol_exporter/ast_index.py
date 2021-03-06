@@ -130,7 +130,6 @@ def push_symbol_table(top_level_name, symbol_table):
     url = f"/api/v{version}/symbol_table/{top_level_name}"
 
     # Generate the signature
-    print(f"Pushing {len(symbol_table)} symbols to remote")
     dumped_data = json.dumps(symbol_table, default=make_json_friendly, sort_keys=True)
     headers = {
         "X-Signature-Timestamp": datetime.utcnow().isoformat(),
