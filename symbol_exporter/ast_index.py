@@ -29,17 +29,14 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-import glob
 import hashlib
 import hmac
 import json
 import os
 import shutil
-from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
+
 from datetime import datetime
 from itertools import groupby
-from pathlib import Path
 
 import requests
 from libcflib.jsonutils import dump, load
@@ -193,6 +190,11 @@ if __name__ == "__main__":
             push_symbol_table(
                 top_level_name, {"symbol table": symbol_table, "metadata": metadata}
             )
+
+    # import glob
+    # from collections import defaultdict
+    # from concurrent.futures import ThreadPoolExecutor
+    # from pathlib import Path
 
     # symbol_table = defaultdict(set)
     # path = "symbol_table"
