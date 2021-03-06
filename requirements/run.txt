@@ -7,3 +7,4 @@ conda
 xonsh=0.9.24
 pwntools
 colorlog
+dask
