@@ -21,11 +21,12 @@ from symbol_exporter.ast_symbol_extractor import SymbolFinder, version
 from symbol_exporter.python_so_extractor import (
     CompiledPythonLib,
     c_symbols_to_datamodel,
-    logger
+    logger,
 )
 from symbol_exporter.tools import executor, diff
 
-logger.setLevel('WARNING')
+logger.setLevel("WARNING")
+
 
 def make_json_friendly(data):
     if isinstance(data, set):
@@ -356,9 +357,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--n_artifacts", help="number of artifacts to inspect", default=5000
     )
-    parser.add_argument(
-        "--local", help="to local disk for storage", default=False
-    )
+    parser.add_argument("--local", help="to local disk for storage", default=False)
 
     args = parser.parse_args()
     print(args)
