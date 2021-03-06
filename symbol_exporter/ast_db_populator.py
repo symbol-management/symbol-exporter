@@ -21,9 +21,11 @@ from symbol_exporter.ast_symbol_extractor import SymbolFinder, version
 from symbol_exporter.python_so_extractor import (
     CompiledPythonLib,
     c_symbols_to_datamodel,
+    logger
 )
 from symbol_exporter.tools import executor, diff
 
+logger.setLevel('WARNING')
 
 def make_json_friendly(data):
     if isinstance(data, set):
