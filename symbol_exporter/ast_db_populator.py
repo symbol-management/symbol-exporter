@@ -115,9 +115,12 @@ def harvest_imports(io_like):
         for root, subdirs, files in os.walk(f):
             # only run if we have a site packages file or it is python itself
             # todo pull up list of python versions or pull it from somewhere else
-            if root.lower().endswith("site-packages") or any(
-                root.lower().endswith(f"python{k}")
-                for k in ["2.7", "3.5", "3.6", "3.7", "3.8", "3.9"]
+            if root.lower().endswith("site-packages") or (
+                any(
+                    root.lower().endswith(f"python{k}")
+                    for k in ["2.7", "3.5", "3.6", "3.7", "3.8", "3.9"]
+                )
+                and "site-packages" not in subdirs
             ):
                 found_sp = True
                 _symbols = get_all_symbol_names(root)
