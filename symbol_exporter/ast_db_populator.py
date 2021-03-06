@@ -21,11 +21,12 @@ from symbol_exporter.ast_symbol_extractor import SymbolFinder, version
 from symbol_exporter.python_so_extractor import (
     CompiledPythonLib,
     c_symbols_to_datamodel,
-    logger
+    logger,
 )
 from symbol_exporter.tools import executor, diff
 
-logger.setLevel('WARNING')
+logger.setLevel("WARNING")
+
 
 def make_json_friendly(data):
     if isinstance(data, set):
@@ -114,10 +115,13 @@ def harvest_imports(io_like):
         for root, subdirs, files in os.walk(f):
             # only run if we have a site packages file or it is python itself
             # todo pull up list of python versions or pull it from somewhere else
-            if root.lower().endswith("site-packages") or (any(
-                root.lower().endswith(f"python{k}")
-                for k in ["2.7", "3.5", "3.6", "3.7", "3.8", "3.9"]
-            ) and "site-packages" not in subdirs):
+            if root.lower().endswith("site-packages") or (
+                any(
+                    root.lower().endswith(f"python{k}")
+                    for k in ["2.7", "3.5", "3.6", "3.7", "3.8", "3.9"]
+                )
+                and "site-packages" not in subdirs
+            ):
                 found_sp = True
                 _symbols = get_all_symbol_names(root)
                 symbols.update(_symbols)
@@ -356,9 +360,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--n_artifacts", help="number of artifacts to inspect", default=5000
     )
-    parser.add_argument(
-        "--local", help="to local disk for storage", default=False
-    )
+    parser.add_argument("--local", help="to local disk for storage", default=False)
 
     args = parser.parse_args()
     print(args)
