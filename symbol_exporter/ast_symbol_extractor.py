@@ -5,7 +5,7 @@ from enum import Enum
 
 # Increment when we need the database to be rebuilt (eg adding a new feature)
 NOT_A_DEFAULT_ARG = "~~NOT_A_DEFAULT~~"
-version = "0"  # must be an integer
+version = "1"  # must be an integer
 builtin_symbols = set(dir(builtins))
 
 
