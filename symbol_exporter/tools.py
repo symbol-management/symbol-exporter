@@ -1,3 +1,4 @@
+"""Tooling from third parties with motifications"""
 import contextlib
 from concurrent.futures.process import ProcessPoolExecutor
 from concurrent.futures.thread import ThreadPoolExecutor

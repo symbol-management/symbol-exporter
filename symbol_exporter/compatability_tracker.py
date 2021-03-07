@@ -1,3 +1,4 @@
+"""Tracks if a package has added or removed symbols"""
 import csv
 import glob
 import json

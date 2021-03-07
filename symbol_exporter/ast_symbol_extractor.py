@@ -1,3 +1,4 @@
+"""AST driven tooling for extracting symbols from python code"""
 import ast
 import builtins
 from typing import Any

@@ -1,4 +1,8 @@
 """
+Perform a reverse index of the symbols, creating the symbol table that maps symbols to the artifacts
+that provide them from jedi derived symbols.
+"""
+"""
 BSD 3-Clause License
 
 Copyright (c) 2018, Re(search) Gro(up)

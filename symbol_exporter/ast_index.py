@@ -1,4 +1,9 @@
 """
+Perform a reverse index of the symbols, creating the symbol table that maps symbols to the artifacts
+that provide them from AST derived symbols.
+"""
+
+"""
 BSD 3-Clause License
 
 Copyright (c) 2018, Re(search) Gro(up)
@@ -115,7 +120,9 @@ def get_current_symbol_table_artifacts():
     print("getting current symbol table artifacts")
     pool = ThreadPoolExecutor()
     futures = {
-        pool.submit(_pull_symbol_table_indexed_artifacts, host, symbol_entry): symbol_entry
+        pool.submit(
+            _pull_symbol_table_indexed_artifacts, host, symbol_entry
+        ): symbol_entry
         for symbol_entry in tqdm(extracted_symbols)
     }
     for future in tqdm(as_completed(futures), total=len(futures)):
