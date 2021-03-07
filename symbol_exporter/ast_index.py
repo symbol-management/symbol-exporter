@@ -114,19 +114,30 @@ def get_current_symbol_table_artifacts():
     extracted_symbols = requests.get(f"{host}{symbol_table_url}").json()
     print("getting current symbol table artifacts")
     pool = ThreadPoolExecutor()
-    futures = [
-        pool.submit(_pull_symbol_table_indexed_artifacts, host, symbol_entry)
+    futures = {
+        pool.submit(_pull_symbol_table_indexed_artifacts, host, symbol_entry): symbol_entry
         for symbol_entry in tqdm(extracted_symbols)
-    ]
+    }
     for future in tqdm(as_completed(futures), total=len(futures)):
-        all_indexted_pkgs.update(future.result())
+        try:
+            all_indexted_pkgs.update(future.result())
+        # If we can't get the results we'll just push a new one up
+        except Exception as e:
+            print(futures[future], e)
+            pass
+    pool.shutdown()
     return all_indexted_pkgs
 
 
 def get_symbol_table(top_level_name):
     host = "https://cf-ast-symbol-table.web.cern.ch"
     symbol_table_url = f"/api/v{version}/symbol_table/{top_level_name}"
-    return requests.get(f"{host}{symbol_table_url}").json()
+    try:
+        results = requests.get(f"{host}{symbol_table_url}").json()
+    except Exception as e:
+        print(top_level_name, e)
+        results = {}
+    return results
 
 
 def get_artifact_symbols(artifact_name):
