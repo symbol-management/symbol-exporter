@@ -224,7 +224,8 @@ class SymbolFinder(ast.NodeVisitor):
                 for bad_func_name in set(volume) & set(stripped_names):
                     symbol_md = volume.pop(bad_func_name)
                     volume[stripped_names[bad_func_name]] = symbol_md
-                    self.undeclared_symbols.remove(bad_func_name)
+                    if bad_func_name in self.undeclared_symbols:
+                        self.undeclared_symbols.remove(bad_func_name)
         return output_symbols
 
     def _create_args_kwargs_dict(self, arguments: ast.arguments):

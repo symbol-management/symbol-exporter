@@ -14,6 +14,7 @@ from random import shuffle
 from tempfile import TemporaryDirectory
 
 import requests
+import dask.bag as db
 from libcflib.tools import expand_file_and_mkdirs
 from libcflib.preloader import ReapFailure, fetch_upstream, existing
 from tqdm import tqdm
@@ -61,7 +62,7 @@ def single_py_file_extraction(python_file, top_dir):
             code = f.read()
         s = parse_code(code, module_name=import_name)
     except Exception as e:
-        print(e)
+        print(python_file, repr(e))
         s = {}
     return s
 
@@ -74,7 +75,7 @@ def single_so_file_extraction(so_file):
     try:
         s = parse_so(so_file)
     except Exception as e:
-        print(e)
+        print(so_file, repr(e))
         s = {}
     return s
 
@@ -326,25 +327,8 @@ def reap(
             if (src_url not in known_bad_packages)
         }
     else:
-        with executor(max_workers=5, kind="dask") as pool:
-            futures = {
-                pool.submit(
-                    fetch_and_run_function,
-                    package,
-                    dst,
-                    src_url,
-                    # progress.update
-                ): (package, dst, src_url)
-                for package, dst, src_url in sorted_files
-                if (src_url not in known_bad_packages)
-            }
-            for f in tqdm(as_completed(futures), total=len(sorted_files)):
-                try:
-                    f.result()
-                except ReapFailure as e:
-                    print(f"FAILURE {e.args}")
-                except Exception:
-                    pass
+        # This uses processes by default, which is most likely ok
+        db.from_sequence(sorted_files).map(lambda x: fetch_and_run_function(*x)).compute()
 
 
 if __name__ == "__main__":
