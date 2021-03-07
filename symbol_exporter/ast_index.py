@@ -34,9 +34,12 @@ import hmac
 import json
 import os
 import shutil
+from concurrent.futures._base import as_completed
+from concurrent.futures.thread import ThreadPoolExecutor
 
 from datetime import datetime
 from itertools import groupby
+from random import shuffle
 
 import requests
 from libcflib.jsonutils import dump, load
@@ -95,19 +98,28 @@ def check_if_table_is_current(path):
             f.write(version)
 
 
+def _pull_symbol_table_indexed_artifacts(host, symbol_entry):
+    return (
+        requests.get(f"{host}/api/v{version}/symbol_table/{symbol_entry}")
+        .json()
+        .get("metadata", {})
+        .get("indexed artifacts", [])
+    )
+
+
 def get_current_symbol_table_artifacts():
     all_indexted_pkgs = set()
     host = "https://cf-ast-symbol-table.web.cern.ch"
     symbol_table_url = f"/api/v{version}/symbol_table"
     extracted_symbols = requests.get(f"{host}{symbol_table_url}").json()
-    # TODO: run in parallel on threads
-    for symbol_entry in extracted_symbols:
-        all_indexted_pkgs.update(
-            requests.get(f"{host}/api/v{version}/symbol_table/{symbol_entry}")
-            .json()
-            .get("metadata", {})
-            .get("indexed artifacts", [])
-        )
+    print("getting current symbol table artifacts")
+    pool = ThreadPoolExecutor()
+    futures = [
+        pool.submit(_pull_symbol_table_indexed_artifacts, host, symbol_entry)
+        for symbol_entry in tqdm(extracted_symbols)
+    ]
+    for future in tqdm(as_completed(futures), total=len(futures)):
+        all_indexted_pkgs.update(future.result())
     return all_indexted_pkgs
 
 
@@ -158,37 +170,55 @@ def push_symbol_table(top_level_name, symbol_table):
     r.raise_for_status()
 
 
+def inner_loop(artifact_name):
+    symbols = get_artifact_symbols(artifact_name)
+    for top_level_name, keys in groupby(
+        sorted(symbols), lambda x: x.partition(".")[0].lower()
+    ):
+        # carve out for star imports which don't have dots
+        if top_level_name == "*":
+            continue
+        # download the existing symbol table
+        symbol_table_with_metadata = get_symbol_table(top_level_name)
+        symbol_table = symbol_table_with_metadata.get("symbol table", {})
+        metadata = symbol_table_with_metadata.get("metadata", {})
+        # update the symbol table
+        for k in list(symbols):
+            symbol_table.setdefault(k, []).append(artifact_name)
+        # add artifacts to metadata
+        metadata["version"] = version
+        metadata.setdefault("indexed artifacts", []).append(artifact_name)
+        # push back to server
+        push_symbol_table(
+            top_level_name, {"symbol table": symbol_table, "metadata": metadata}
+        )
+
+
 if __name__ == "__main__":
-    # pull all the existing symbol tables, read the metadata for all artifacts read
     extracted_artifacts = get_current_symbol_table_artifacts()
-    # pull all symbol listings
     all_artifacts = get_current_extracted_pkgs().values()
-    # check difference
-    artifacts_to_index = set(all_artifacts) - set(extracted_artifacts)
-    for artifact_name in tqdm(sorted(artifacts_to_index)):
-        print(artifact_name)
-        # get the data
-        symbols = get_artifact_symbols(artifact_name)
-        for top_level_name, keys in groupby(
-            sorted(symbols), lambda x: x.partition(".")[0].lower()
-        ):
-            # carve out for star imports which don't have dots
-            if top_level_name == "*":
-                continue
-            # download the existing symbol table
-            symbol_table_with_metadata = get_symbol_table(top_level_name)
-            symbol_table = symbol_table_with_metadata.get("symbol table", {})
-            metadata = symbol_table_with_metadata.get("metadata", {})
-            # update the symbol table
-            for k in list(symbols):
-                symbol_table.setdefault(k, []).append(artifact_name)
-            # add artifacts to metadata
-            metadata["version"] = version
-            metadata.setdefault("indexed artifacts", []).append(artifact_name)
-            # push back to server
-            push_symbol_table(
-                top_level_name, {"symbol table": symbol_table, "metadata": metadata}
-            )
+    artifacts_to_index = list(set(all_artifacts) - set(extracted_artifacts))
+    print(f"Number of artifacts to index: {len(artifacts_to_index)}")
+
+    # The shuffle here is to try to not have two threads running on the same symbol table json at once if possible
+    shuffle(artifacts_to_index)
+    pool = ThreadPoolExecutor()
+    # Note that this is a race condition here, two threads could try to write to the same symbol table
+    # however one of those will win so next round there will be one added safely and this continues
+    # until none are left to be added
+    print("issuing futures")
+    futures = {
+        pool.submit(inner_loop, artifact_name): artifact_name
+        for artifact_name in tqdm(artifacts_to_index)
+    }
+    print("awaiting futures")
+    for future in tqdm(as_completed(futures), total=len(futures)):
+        print(futures[future])
+        try:
+            future.result()
+        except Exception as e:
+            print(e)
+    pool.shutdown()
 
     # import glob
     # from collections import defaultdict
