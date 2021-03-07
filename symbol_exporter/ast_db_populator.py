@@ -27,6 +27,10 @@ from symbol_exporter.python_so_extractor import (
 )
 from symbol_exporter.tools import executor, diff
 
+from dask.diagnostics import ProgressBar
+ProgressBar().register()
+
+
 logger.setLevel("WARNING")
 
 
