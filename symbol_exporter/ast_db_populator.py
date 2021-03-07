@@ -1,24 +1,22 @@
 import ast
 import glob
-import hashlib
-import hmac
 import io
 import json
 import os
 import shutil
 import tarfile
 from concurrent.futures._base import as_completed
-from datetime import datetime
 from functools import partial
 from random import shuffle
 from tempfile import TemporaryDirectory
 
 import requests
-from libcflib.tools import expand_file_and_mkdirs
 from libcflib.preloader import ReapFailure, fetch_upstream, existing
+from libcflib.tools import expand_file_and_mkdirs
 from tqdm import tqdm
 
 from symbol_exporter.ast_symbol_extractor import SymbolFinder, version
+from symbol_exporter.db_access_model import make_json_friendly, WebDB
 from symbol_exporter.python_so_extractor import (
     CompiledPythonLib,
     c_symbols_to_datamodel,
@@ -28,11 +26,8 @@ from symbol_exporter.tools import executor, diff
 
 logger.setLevel("WARNING")
 
-
-def make_json_friendly(data):
-    if isinstance(data, set):
-        return list(sorted(data))
-    return data
+# TODO: push this into the web only branches so we don't require the secret to be set
+web_interface = WebDB()
 
 
 def file_path_to_import(file_path: str):
@@ -133,71 +128,6 @@ def harvest_imports(io_like):
     return {"metadata": {"data model version": version}, "symbols": symbols}
 
 
-def send_to_webserver(data, package, dst_path):
-    # BSD 3-Clause License
-    #
-    # Copyright (c) 2021, Chris Burr
-    # All rights reserved.
-    #
-    # Redistribution and use in source and binary forms, with or without
-    # modification, are permitted provided that the following conditions are met:
-    #
-    # * Redistributions of source code must retain the above copyright notice, this
-    #   list of conditions and the following disclaimer.
-    #
-    # * Redistributions in binary form must reproduce the above copyright notice,
-    #   this list of conditions and the following disclaimer in the documentation
-    #   and/or other materials provided with the distribution.
-    #
-    # * Neither the name of the copyright holder nor the names of its
-    #   contributors may be used to endorse or promote products derived from
-    #   this software without specific prior written permission.
-    #
-    # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-    # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-    # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-    # DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-    # FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-    # DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-    # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-    # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-    # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-    if not data:
-        data = None
-    host = "https://cf-ast-symbol-table.web.cern.ch"
-    secret_token = os.environ["STORAGE_SECRET_TOKEN"].encode("utf-8")
-    url = f"/api/v{version}/symbols/{package}/{dst_path}".replace(".json", "")
-
-    # Generate the signature
-    dumped_data = json.dumps(data, default=make_json_friendly, sort_keys=True)
-    headers = {
-        "X-Signature-Timestamp": datetime.utcnow().isoformat(),
-        "X-Body-Signature": hmac.new(
-            secret_token, dumped_data.encode(), hashlib.sha256
-        ).hexdigest(),
-    }
-    headers["X-Headers-Signature"] = hmac.new(
-        secret_token,
-        b"".join(
-            [
-                url.encode(),
-                headers["X-Signature-Timestamp"].encode(),
-                headers["X-Body-Signature"].encode(),
-            ]
-        ),
-        hashlib.sha256,
-    ).hexdigest()
-
-    # Upload the data
-    r = requests.put(
-        f"{host}{url}",
-        data=dumped_data,
-        headers=headers,
-    )
-    r.raise_for_status()
-
-
 def reap_symbols_send_to_webserver(
     package, dst_path, src_url, filelike, progress_callback=None
 ):
@@ -205,7 +135,7 @@ def reap_symbols_send_to_webserver(
         progress_callback()
     try:
         harvested_data = harvest_imports(filelike)
-        send_to_webserver(harvested_data, package, dst_path)
+        web_interface.send_to_webserver(harvested_data, package, dst_path)
         del harvested_data
     except Exception as e:
         raise ReapFailure(package, src_url, str(e))
@@ -251,14 +181,6 @@ def fetch_and_run_web(pkg, dst, src_url, progess_callback=None):
     filelike.close()
 
 
-def get_current_extracted_pkgs():
-    host = "https://cf-ast-symbol-table.web.cern.ch"
-    url = f"/api/v{version}/symbols"
-    paths = requests.get(f"{host}{url}").json()
-    path_by_pkg = {path.split("/")[0]: path for path in paths}
-    return path_by_pkg
-
-
 # todo pull this from the og list but reorder that list first
 sort_arch_ordering = [
     "noarch",
@@ -295,7 +217,7 @@ def reap(
         existing_pkg_dict = existing(path)
         fetch_and_run_function = partial(fetch_and_run, path)
     else:
-        existing_pkg_dict = get_current_extracted_pkgs()
+        existing_pkg_dict = web_interface.get_current_extracted_pkgs()
         fetch_and_run_function = fetch_and_run_web
 
     # Pull up and partial this out existing_pkgs
