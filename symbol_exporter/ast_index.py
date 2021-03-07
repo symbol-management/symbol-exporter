@@ -220,7 +220,7 @@ if __name__ == "__main__":
     print("issuing futures")
     futures = {
         pool.submit(inner_loop, artifact_name): artifact_name
-        for artifact_name in tqdm(artifacts_to_index)
+        for artifact_name in tqdm(artifacts_to_index[:1000])
     }
     print("awaiting futures")
     for future in tqdm(as_completed(futures), total=len(futures)):
