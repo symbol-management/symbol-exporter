@@ -7,15 +7,16 @@ import json
 import os
 import shutil
 import tarfile
-from concurrent.futures._base import as_completed
 from datetime import datetime
 from functools import partial
 from random import shuffle
 from tempfile import TemporaryDirectory
 
+import dask.bag as db
 import requests
-from libcflib.tools import expand_file_and_mkdirs
+from dask.diagnostics import ProgressBar
 from libcflib.preloader import ReapFailure, fetch_upstream, existing
+from libcflib.tools import expand_file_and_mkdirs
 from tqdm import tqdm
 
 from symbol_exporter.ast_symbol_extractor import SymbolFinder, version
@@ -24,7 +25,10 @@ from symbol_exporter.python_so_extractor import (
     c_symbols_to_datamodel,
     logger,
 )
-from symbol_exporter.tools import executor, diff
+from symbol_exporter.tools import diff
+
+ProgressBar().register()
+
 
 logger.setLevel("WARNING")
 
@@ -61,7 +65,7 @@ def single_py_file_extraction(python_file, top_dir):
             code = f.read()
         s = parse_code(code, module_name=import_name)
     except Exception as e:
-        print(e)
+        print(python_file, repr(e))
         s = {}
     return s
 
@@ -74,7 +78,7 @@ def single_so_file_extraction(so_file):
     try:
         s = parse_so(so_file)
     except Exception as e:
-        print(e)
+        print(so_file, repr(e))
         s = {}
     return s
 
@@ -315,7 +319,7 @@ def reap(
     sorted_files = sorted_files[:number_to_reap]
 
     if single_thread:
-        futures = {
+        {
             fetch_and_run_function(
                 package,
                 dst,
@@ -326,25 +330,10 @@ def reap(
             if (src_url not in known_bad_packages)
         }
     else:
-        with executor(max_workers=5, kind="dask") as pool:
-            futures = {
-                pool.submit(
-                    fetch_and_run_function,
-                    package,
-                    dst,
-                    src_url,
-                    # progress.update
-                ): (package, dst, src_url)
-                for package, dst, src_url in sorted_files
-                if (src_url not in known_bad_packages)
-            }
-            for f in tqdm(as_completed(futures), total=len(sorted_files)):
-                try:
-                    f.result()
-                except ReapFailure as e:
-                    print(f"FAILURE {e.args}")
-                except Exception:
-                    pass
+        # This uses processes by default, which is most likely ok
+        db.from_sequence(sorted_files).map(
+            lambda x: fetch_and_run_function(*x)
+        ).compute()
 
 
 if __name__ == "__main__":
