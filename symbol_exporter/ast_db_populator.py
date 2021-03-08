@@ -7,16 +7,16 @@ import json
 import os
 import shutil
 import tarfile
-from concurrent.futures._base import as_completed
 from datetime import datetime
 from functools import partial
 from random import shuffle
 from tempfile import TemporaryDirectory
 
-import requests
 import dask.bag as db
-from libcflib.tools import expand_file_and_mkdirs
+import requests
+from dask.diagnostics import ProgressBar
 from libcflib.preloader import ReapFailure, fetch_upstream, existing
+from libcflib.tools import expand_file_and_mkdirs
 from tqdm import tqdm
 
 from symbol_exporter.ast_symbol_extractor import SymbolFinder, version
@@ -25,9 +25,8 @@ from symbol_exporter.python_so_extractor import (
     c_symbols_to_datamodel,
     logger,
 )
-from symbol_exporter.tools import executor, diff
+from symbol_exporter.tools import diff
 
-from dask.diagnostics import ProgressBar
 ProgressBar().register()
 
 
@@ -320,7 +319,7 @@ def reap(
     sorted_files = sorted_files[:number_to_reap]
 
     if single_thread:
-        futures = {
+        {
             fetch_and_run_function(
                 package,
                 dst,
@@ -332,7 +331,9 @@ def reap(
         }
     else:
         # This uses processes by default, which is most likely ok
-        db.from_sequence(sorted_files).map(lambda x: fetch_and_run_function(*x)).compute()
+        db.from_sequence(sorted_files).map(
+            lambda x: fetch_and_run_function(*x)
+        ).compute()
 
 
 if __name__ == "__main__":

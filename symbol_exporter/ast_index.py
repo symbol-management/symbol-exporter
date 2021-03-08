@@ -115,7 +115,9 @@ def get_current_symbol_table_artifacts():
     print("getting current symbol table artifacts")
     pool = ThreadPoolExecutor()
     futures = {
-        pool.submit(_pull_symbol_table_indexed_artifacts, host, symbol_entry): symbol_entry
+        pool.submit(
+            _pull_symbol_table_indexed_artifacts, host, symbol_entry
+        ): symbol_entry
         for symbol_entry in tqdm(extracted_symbols)
     }
     for future in tqdm(as_completed(futures), total=len(futures)):
