@@ -56,18 +56,19 @@ class SymbolFinder(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> Any:
-        if node.module and node.level == 0:
-            for k in node.names:
-                if k.name != "*":
-                    module_name = f"{node.module}.{k.name}"
-                    self.aliases[k.name] = module_name
-                    self.imported_symbols.append(module_name)
-                    if not k.asname:
-                        self._add_symbol_to_surface_area(
-                            SymbolType.IMPORT, symbol=k.name, shadows=module_name
-                        )
-                else:
-                    self._add_symbol_to_star_imports(node.module, symbol_type=SymbolType.STAR_IMPORT)
+        for k in node.names:
+            if k.name != "*":
+                symbol_type = SymbolType.IMPORT if node.level == 0 else SymbolType.RELATIVE_IMPORT
+                module_name = f"{node.module}.{k.name}" if node.module else k.name
+                self.aliases[k.name] = module_name
+                self.imported_symbols.append(module_name)
+                if not k.asname:
+                    self._add_symbol_to_surface_area(
+                        symbol_type, symbol=k.name, shadows=module_name
+                    )
+            else:
+                symbol_type = SymbolType.STAR_IMPORT if node.level == 0 else SymbolType.RELATIVE_STAR_IMPORT
+                self._add_symbol_to_star_imports(node.module, symbol_type=symbol_type)
         self.generic_visit(node)
 
     def visit_alias(self, node: ast.alias) -> Any:
@@ -199,7 +200,7 @@ class SymbolFinder(ast.NodeVisitor):
     def _add_symbol_to_surface_area(self, symbol_type: SymbolType, symbol, **kwargs):
         full_symbol_name = (
             f"{self._module_name}.{symbol}"
-            if symbol_type is SymbolType.IMPORT
+            if symbol_type in (SymbolType.IMPORT, SymbolType.RELATIVE_IMPORT)
             else symbol
         )
         self._symbols[full_symbol_name] = dict(type=symbol_type, data=kwargs)
@@ -218,7 +219,7 @@ class SymbolFinder(ast.NodeVisitor):
         stripped_names = {
             k.split(f"{self._module_name}.")[1]: k
             for k in self._symbols
-            if k != self._module_name and k != "*"
+            if "." in k
         }
         output_symbols = self._symbols
         for k, v in output_symbols.items():

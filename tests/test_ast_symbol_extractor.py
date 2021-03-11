@@ -298,6 +298,33 @@ def test_star_import():
     }
 
 
+def test_relative_import():
+    code = """
+    from . import core
+    from .core import ones
+    from ..core import twos
+    """
+    z = process_code_str(code)
+    assert z.symbols == {
+        "mm.core": {
+            "type": "relative-import",
+            "data": {"shadows": "core"},
+        },
+        "mm.ones": {
+            "type": "relative-import",
+            "data": {"shadows": "core.ones"},
+        },
+        "mm.twos": {
+            "type": "relative-import",
+            "data": {"shadows": "core.twos"},
+        },
+        "mm": {
+            "type": "module",
+            "data": {},
+        },
+    }
+
+
 def test_undeclared_symbols():
     code = """
     import numpy as np
