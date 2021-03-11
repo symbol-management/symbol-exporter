@@ -1,22 +1,19 @@
 from itertools import groupby
 
 import requests
-from libcflib.jsonutils import loads
 
-from symbol_exporter.ast_symbol_extractor import builtin_symbols
+from symbol_exporter.ast_symbol_extractor import builtin_symbols, version
 
-FILE_LISTING_URL = "https://raw.githubusercontent.com/symbol-management/ast-symbol-table/master/.file_listing.json"
-
-RAW_URL_TEMPLATE = "https://raw.githubusercontent.com/symbol-management/ast-symbol-table/master/symbol_table/{}.json"
+host = "https://cf-ast-symbol-table.web.cern.ch"
 
 
 def get_symbol_table(top_level_import):
-    url = RAW_URL_TEMPLATE.format(top_level_import)
+    symbol_table_url = f"/api/v{version}/symbol_table/{top_level_import}"
     # TODO: pull io up/out? Or run in parallel or cache?
-    request = requests.get(url)
+    request = requests.get(f"{host}{symbol_table_url}")
     if request.status_code != 200:
         return {}
-    return loads(request.text)
+    return request.json()['symbol table']
 
 
 def find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table):
@@ -36,7 +33,7 @@ def find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table):
             if not supply:
                 bad_symbols.add(v_symbol)
                 continue
-            supplying_versions.setdefault(top_level_import, list()).append(supply)
+            supplying_versions.setdefault(top_level_import, list()).append(set(supply))
     # TODO: handle the case where multiple pkgs export the same symbols?
     #  In that case we may want to merge thsoe together somehow
     # TODO: handle case where no pkg supports the symbol?

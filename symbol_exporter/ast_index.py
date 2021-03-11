@@ -183,9 +183,11 @@ def push_symbol_table(top_level_name, symbol_table):
 
 def inner_loop(artifact_name):
     symbols = get_artifact_symbols(artifact_name)
+    all_symbol_tables = {}
     for top_level_name, keys in groupby(
         sorted(symbols), lambda x: x.partition(".")[0].lower()
     ):
+        print(top_level_name)
         # carve out for star imports which don't have dots
         if top_level_name == "*":
             continue
@@ -200,9 +202,11 @@ def inner_loop(artifact_name):
         metadata["version"] = version
         metadata.setdefault("indexed artifacts", []).append(artifact_name)
         # push back to server
-        push_symbol_table(
-            top_level_name, {"symbol table": symbol_table, "metadata": metadata}
-        )
+        # push_symbol_table(
+        #     top_level_name, {"symbol table": symbol_table, "metadata": metadata}
+        # )
+        all_symbol_tables[top_level_name] = symbol_table
+    return all_symbol_tables
 
 
 if __name__ == "__main__":
