@@ -58,14 +58,18 @@ class SymbolFinder(ast.NodeVisitor):
     def visit_ImportFrom(self, node: ast.ImportFrom) -> Any:
         for k in node.names:
             if k.name != "*":
-                symbol_type = SymbolType.IMPORT if node.level == 0 else SymbolType.RELATIVE_IMPORT
                 module_name = f"{node.module}.{k.name}" if node.module else k.name
                 self.aliases[k.name] = module_name
                 self.imported_symbols.append(module_name)
                 if not k.asname:
-                    self._add_symbol_to_surface_area(
-                        symbol_type, symbol=k.name, shadows=module_name
-                    )
+                    if node.level == 0:
+                        self._add_symbol_to_surface_area(
+                            SymbolType.IMPORT, symbol=k.name, shadows=module_name
+                        )
+                    else:
+                        self._add_symbol_to_surface_area(
+                            SymbolType.RELATIVE_IMPORT, symbol=k.name, shadows=module_name, level=node.level
+                        )
             else:
                 symbol_type = SymbolType.STAR_IMPORT if node.level == 0 else SymbolType.RELATIVE_STAR_IMPORT
                 self._add_symbol_to_star_imports(node.module, symbol_type=symbol_type)
