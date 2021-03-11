@@ -56,13 +56,14 @@ class SymbolFinder(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> Any:
+        relative_import = node.level > 0
         for k in node.names:
             if k.name != "*":
                 module_name = f"{node.module}.{k.name}" if node.module else k.name
                 self.aliases[k.name] = module_name
                 self.imported_symbols.append(module_name)
                 if not k.asname:
-                    if node.level == 0:
+                    if not relative_import:
                         self._add_symbol_to_surface_area(
                             SymbolType.IMPORT, symbol=k.name, shadows=module_name
                         )
@@ -74,12 +75,16 @@ class SymbolFinder(ast.NodeVisitor):
                             level=node.level,
                         )
             else:
-                symbol_type = (
-                    SymbolType.STAR_IMPORT
-                    if node.level == 0
-                    else SymbolType.RELATIVE_STAR_IMPORT
-                )
-                self._add_symbol_to_star_imports(node.module, symbol_type=symbol_type)
+                if not relative_import:
+                    self._add_symbol_to_star_imports(
+                        node.module, symbol_type=SymbolType.STAR_IMPORT
+                    )
+                else:
+                    self._add_symbol_to_relative_star_imports(
+                        node.module,
+                        symbol_type=SymbolType.RELATIVE_STAR_IMPORT,
+                        level=node.level,
+                    )
         self.generic_visit(node)
 
     def visit_alias(self, node: ast.alias) -> Any:
@@ -225,6 +230,14 @@ class SymbolFinder(ast.NodeVisitor):
     def _add_symbol_to_star_imports(self, imported_symbol, symbol_type: SymbolType):
         default = dict(type=symbol_type, data=dict(imports=set()))
         self._symbols.setdefault("*", default)["data"]["imports"].add(imported_symbol)
+
+    def _add_symbol_to_relative_star_imports(
+        self, imported_symbol, symbol_type: SymbolType, level: int
+    ):
+        default = dict(type=symbol_type, data=dict(imports=[]))
+        self._symbols.setdefault("relative-*", default)["data"]["imports"].append(
+            dict(symbol=imported_symbol, level=level, module=self._module_name)
+        )
 
     def post_process_symbols(self):
         stripped_names = {
