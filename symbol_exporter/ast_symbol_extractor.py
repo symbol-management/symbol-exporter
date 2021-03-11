@@ -17,6 +17,8 @@ class SymbolType(str, Enum):
     CONSTANT = "constant"
     CLASS = "class"
     STAR_IMPORT = "star-import"
+    RELATIVE_IMPORT = "relative-import"
+    RELATIVE_STAR_IMPORT = "relative-star-import"
 
 
 class SymbolFinder(ast.NodeVisitor):
@@ -65,7 +67,7 @@ class SymbolFinder(ast.NodeVisitor):
                             SymbolType.IMPORT, symbol=k.name, shadows=module_name
                         )
                 else:
-                    self._add_symbol_to_star_imports(node.module)
+                    self._add_symbol_to_star_imports(node.module, symbol_type=SymbolType.STAR_IMPORT)
         self.generic_visit(node)
 
     def visit_alias(self, node: ast.alias) -> Any:
@@ -208,8 +210,8 @@ class SymbolFinder(ast.NodeVisitor):
         symbol_in_volume_metadata = symbols_in_volume.setdefault(volume_symbol, {})
         symbol_in_volume_metadata.setdefault("line number", []).append(lineno)
 
-    def _add_symbol_to_star_imports(self, imported_symbol):
-        default = dict(type=SymbolType.STAR_IMPORT, data=dict(imports=set()))
+    def _add_symbol_to_star_imports(self, imported_symbol, symbol_type: SymbolType):
+        default = dict(type=symbol_type, data=dict(imports=set()))
         self._symbols.setdefault("*", default)["data"]["imports"].add(imported_symbol)
 
     def post_process_symbols(self):
