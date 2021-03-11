@@ -68,10 +68,17 @@ class SymbolFinder(ast.NodeVisitor):
                         )
                     else:
                         self._add_symbol_to_surface_area(
-                            SymbolType.RELATIVE_IMPORT, symbol=k.name, shadows=module_name, level=node.level
+                            SymbolType.RELATIVE_IMPORT,
+                            symbol=k.name,
+                            shadows=module_name,
+                            level=node.level,
                         )
             else:
-                symbol_type = SymbolType.STAR_IMPORT if node.level == 0 else SymbolType.RELATIVE_STAR_IMPORT
+                symbol_type = (
+                    SymbolType.STAR_IMPORT
+                    if node.level == 0
+                    else SymbolType.RELATIVE_STAR_IMPORT
+                )
                 self._add_symbol_to_star_imports(node.module, symbol_type=symbol_type)
         self.generic_visit(node)
 
@@ -221,9 +228,7 @@ class SymbolFinder(ast.NodeVisitor):
 
     def post_process_symbols(self):
         stripped_names = {
-            k.split(f"{self._module_name}.")[1]: k
-            for k in self._symbols
-            if "." in k
+            k.split(f"{self._module_name}.")[1]: k for k in self._symbols if "." in k
         }
         output_symbols = self._symbols
         for k, v in output_symbols.items():
