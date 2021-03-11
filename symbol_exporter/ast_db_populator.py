@@ -1,3 +1,4 @@
+"""Stores the ast derived symbols in either github or CERN"""
 import ast
 import glob
 import hashlib
