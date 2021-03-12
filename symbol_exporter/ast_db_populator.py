@@ -32,7 +32,7 @@ from symbol_exporter.tools import diff
 ProgressBar().register()
 
 
-logger.setLevel("WARNING")
+logger.setLevel("ERROR")
 
 
 def make_json_friendly(data):
