@@ -241,7 +241,9 @@ class SymbolFinder(ast.NodeVisitor):
 
     def post_process_symbols(self):
         stripped_names = {
-            k.split(f"{self._module_name}.")[1]: k for k in self._symbols if "." in k
+            k.split(f"{self._module_name}.")[1]: k
+            for k in self._symbols
+            if k != self._module_name and "*" not in k
         }
         output_symbols = self._symbols
         for k, v in output_symbols.items():
