@@ -362,8 +362,8 @@ def test_relative_star_import():
         },
     ]
     assert (
-            sorted(z.symbols["relative-*"]["data"]["imports"], key=itemgetter("symbol"))
-            == expected_relative_imports
+        sorted(z.symbols["relative-*"]["data"]["imports"], key=itemgetter("symbol"))
+        == expected_relative_imports
     )
 
 
