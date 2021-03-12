@@ -271,8 +271,11 @@ def get_current_extracted_pkgs():
     url = f"/api/v{version}/symbols"
     paths = requests.get(f"{host}{url}").json()
     path_by_pkg = {}
-    for pkg, paths in groupby(paths, lambda x: x.split('/')[0]):
-        path_by_pkg[pkg] = {f"{path.partition('/')[-1]}.json": f"https://conda.anaconda.org/{path.partition('/')[-1]}.tar.bz2" for path in paths}
+    for pkg, paths in groupby(paths, lambda x: x.split("/")[0]):
+        path_by_pkg[pkg] = {
+            f"{path.partition('/')[-1]}.json": f"https://conda.anaconda.org/{path.partition('/')[-1]}.tar.bz2"
+            for path in paths
+        }
     return path_by_pkg
 
 
