@@ -3,7 +3,6 @@ from concurrent.futures._base import as_completed
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import lru_cache
 from itertools import groupby
-from pprint import pprint
 
 import requests
 

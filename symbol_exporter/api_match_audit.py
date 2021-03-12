@@ -5,7 +5,6 @@ import os
 import shutil
 from concurrent.futures._base import as_completed
 from concurrent.futures.thread import ThreadPoolExecutor
-from pprint import pprint
 from random import shuffle
 
 import requests
@@ -13,8 +12,6 @@ from tqdm import tqdm
 
 from symbol_exporter.api_match import find_supplying_version_set
 from symbol_exporter.ast_db_populator import (
-    sort_arch_ordering,
-    get_current_extracted_pkgs,
     make_json_friendly,
 )
 from symbol_exporter.ast_symbol_extractor import version
