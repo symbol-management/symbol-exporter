@@ -5,11 +5,28 @@ from operator import itemgetter
 from symbol_exporter.ast_symbol_extractor import SymbolFinder
 
 
-def process_code_str(code):
+def process_code_str(code, module_name="mm"):
     tree = ast.parse(dedent(code))
-    z = SymbolFinder(module_name="mm")
+    z = SymbolFinder(module_name=module_name)
     z.visit(tree)
     return z
+
+
+def test_fully_qualified_module_names():
+    code = """
+     from abc import xyz
+     """
+    z = process_code_str(code, module_name="mm.core")
+    assert z.symbols == {
+        "mm.core": {
+            "type": "module",
+            "data": {},
+        },
+        "mm.core.xyz": {
+            "type": "import",
+            "data": {"shadows": "abc.xyz"},
+        },
+    }
 
 
 def test_from_import_attr_access():
@@ -345,8 +362,8 @@ def test_relative_star_import():
         },
     ]
     assert (
-        sorted(z.symbols["relative-*"]["data"]["imports"], key=itemgetter("symbol"))
-        == expected_relative_imports
+            sorted(z.symbols["relative-*"]["data"]["imports"], key=itemgetter("symbol"))
+            == expected_relative_imports
     )
 
 
