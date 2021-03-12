@@ -52,6 +52,8 @@ class DirectorySymbolFinder:
 
 if __name__ == "__main__":
     import argparse
+    import json
+    import sys
     from pprint import pprint
 
     parser = argparse.ArgumentParser()
@@ -61,4 +63,4 @@ if __name__ == "__main__":
     pprint(args.filename)
     dsf = DirectorySymbolFinder(args.filename)
     symbols = dsf.extract_symbols()
-    pprint(symbols)
+    json.dump(symbols, sys.stdout, indent=2)
