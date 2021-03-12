@@ -79,7 +79,10 @@ def single_so_file_extraction(so_file):
     try:
         s = parse_so(so_file)
     except Exception as e:
-        print(so_file, repr(e))
+        try:
+            print(so_file, repr(e))
+        except Exception as e:
+            print(f"Couldn't print exception for {so_file}, {e}")
         s = {}
     return s
 
@@ -135,7 +138,13 @@ def harvest_imports(io_like):
     if not found_sp:
         return None
 
-    return {"metadata": {"data model version": version}, "symbols": symbols}
+    return {
+        "metadata": {
+            "data model version": version,
+            "top level symbols": set(k.partition(".")[0] for k in symbols),
+        },
+        "symbols": symbols,
+    }
 
 
 def send_to_webserver(data, package, dst_path):
