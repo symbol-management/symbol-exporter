@@ -1,3 +1,4 @@
+"""AST driven tooling for extracting symbols from python code"""
 import ast
 import builtins
 from typing import Any
@@ -16,6 +17,8 @@ class SymbolType(str, Enum):
     CONSTANT = "constant"
     CLASS = "class"
     STAR_IMPORT = "star-import"
+    RELATIVE_IMPORT = "relative-import"
+    RELATIVE_STAR_IMPORT = "relative-star-import"
 
 
 class SymbolFinder(ast.NodeVisitor):
@@ -53,18 +56,35 @@ class SymbolFinder(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> Any:
-        if node.module and node.level == 0:
-            for k in node.names:
-                if k.name != "*":
-                    module_name = f"{node.module}.{k.name}"
-                    self.aliases[k.name] = module_name
-                    self.imported_symbols.append(module_name)
-                    if not k.asname:
+        relative_import = node.level > 0
+        for k in node.names:
+            if k.name != "*":
+                module_name = f"{node.module}.{k.name}" if node.module else k.name
+                self.aliases[k.name] = module_name
+                self.imported_symbols.append(module_name)
+                if not k.asname:
+                    if not relative_import:
                         self._add_symbol_to_surface_area(
                             SymbolType.IMPORT, symbol=k.name, shadows=module_name
                         )
+                    else:
+                        self._add_symbol_to_surface_area(
+                            SymbolType.RELATIVE_IMPORT,
+                            symbol=k.name,
+                            shadows=module_name,
+                            level=node.level,
+                        )
+            else:
+                if not relative_import:
+                    self._add_symbol_to_star_imports(
+                        node.module, symbol_type=SymbolType.STAR_IMPORT
+                    )
                 else:
-                    self._add_symbol_to_star_imports(node.module)
+                    self._add_symbol_to_relative_star_imports(
+                        node.module,
+                        symbol_type=SymbolType.RELATIVE_STAR_IMPORT,
+                        level=node.level,
+                    )
         self.generic_visit(node)
 
     def visit_alias(self, node: ast.alias) -> Any:
@@ -196,7 +216,7 @@ class SymbolFinder(ast.NodeVisitor):
     def _add_symbol_to_surface_area(self, symbol_type: SymbolType, symbol, **kwargs):
         full_symbol_name = (
             f"{self._module_name}.{symbol}"
-            if symbol_type is SymbolType.IMPORT
+            if symbol_type in (SymbolType.IMPORT, SymbolType.RELATIVE_IMPORT)
             else symbol
         )
         self._symbols[full_symbol_name] = dict(type=symbol_type, data=kwargs)
@@ -207,15 +227,23 @@ class SymbolFinder(ast.NodeVisitor):
         symbol_in_volume_metadata = symbols_in_volume.setdefault(volume_symbol, {})
         symbol_in_volume_metadata.setdefault("line number", []).append(lineno)
 
-    def _add_symbol_to_star_imports(self, imported_symbol):
-        default = dict(type=SymbolType.STAR_IMPORT, data=dict(imports=set()))
+    def _add_symbol_to_star_imports(self, imported_symbol, symbol_type: SymbolType):
+        default = dict(type=symbol_type, data=dict(imports=set()))
         self._symbols.setdefault("*", default)["data"]["imports"].add(imported_symbol)
+
+    def _add_symbol_to_relative_star_imports(
+        self, imported_symbol, symbol_type: SymbolType, level: int
+    ):
+        default = dict(type=symbol_type, data=dict(imports=[]))
+        self._symbols.setdefault("relative-*", default)["data"]["imports"].append(
+            dict(symbol=imported_symbol, level=level, module=self._module_name)
+        )
 
     def post_process_symbols(self):
         stripped_names = {
             k.split(f"{self._module_name}.")[1]: k
             for k in self._symbols
-            if k != self._module_name and k != "*"
+            if k != self._module_name and "*" not in k
         }
         output_symbols = self._symbols
         for k, v in output_symbols.items():
@@ -224,7 +252,8 @@ class SymbolFinder(ast.NodeVisitor):
                 for bad_func_name in set(volume) & set(stripped_names):
                     symbol_md = volume.pop(bad_func_name)
                     volume[stripped_names[bad_func_name]] = symbol_md
-                    self.undeclared_symbols.remove(bad_func_name)
+                    if bad_func_name in self.undeclared_symbols:
+                        self.undeclared_symbols.remove(bad_func_name)
         return output_symbols
 
     def _create_args_kwargs_dict(self, arguments: ast.arguments):

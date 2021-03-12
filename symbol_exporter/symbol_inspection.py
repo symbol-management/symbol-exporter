@@ -1,3 +1,4 @@
+"""Jedi driven extraction of symbols from python code"""
 import glob
 import io
 import json

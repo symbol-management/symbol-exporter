@@ -1,14 +1,32 @@
 import ast
 from textwrap import dedent
+from operator import itemgetter
 
 from symbol_exporter.ast_symbol_extractor import SymbolFinder
 
 
-def process_code_str(code):
+def process_code_str(code, module_name="mm"):
     tree = ast.parse(dedent(code))
-    z = SymbolFinder(module_name="mm")
+    z = SymbolFinder(module_name=module_name)
     z.visit(tree)
     return z
+
+
+def test_fully_qualified_module_names():
+    code = """
+     from abc import xyz
+     """
+    z = process_code_str(code, module_name="mm.core")
+    assert z.symbols == {
+        "mm.core": {
+            "type": "module",
+            "data": {},
+        },
+        "mm.core.xyz": {
+            "type": "import",
+            "data": {"shadows": "abc.xyz"},
+        },
+    }
 
 
 def test_from_import_attr_access():
@@ -296,6 +314,57 @@ def test_star_import():
             "data": {},
         },
     }
+
+
+def test_relative_import():
+    code = """
+    from . import core
+    from .core import ones
+    from ..core import twos
+    """
+    z = process_code_str(code)
+    assert z.symbols == {
+        "mm.core": {
+            "type": "relative-import",
+            "data": {"shadows": "core", "level": 1},
+        },
+        "mm.ones": {
+            "type": "relative-import",
+            "data": {"shadows": "core.ones", "level": 1},
+        },
+        "mm.twos": {
+            "type": "relative-import",
+            "data": {"shadows": "core.twos", "level": 2},
+        },
+        "mm": {
+            "type": "module",
+            "data": {},
+        },
+    }
+
+
+def test_relative_star_import():
+    code = """
+    from .core import *
+    from ..numeric import *
+    """
+    z = process_code_str(code)
+    expected_relative_imports = [
+        {
+            "symbol": "core",
+            "level": 1,
+            "module": "mm",
+        },
+        {
+            "symbol": "numeric",
+            "level": 2,
+            "module": "mm",
+        },
+    ]
+    assert (
+        sorted(z.symbols["relative-*"]["data"]["imports"], key=itemgetter("symbol"))
+        == expected_relative_imports
+    )
 
 
 def test_undeclared_symbols():

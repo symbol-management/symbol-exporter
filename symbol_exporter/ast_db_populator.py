@@ -1,3 +1,4 @@
+"""Stores the ast derived symbols in either github or CERN"""
 import ast
 import glob
 import hashlib
@@ -7,15 +8,17 @@ import json
 import os
 import shutil
 import tarfile
-from concurrent.futures._base import as_completed
 from datetime import datetime
 from functools import partial
+from itertools import groupby
 from random import shuffle
 from tempfile import TemporaryDirectory
 
+import dask.bag as db
 import requests
-from libcflib.tools import expand_file_and_mkdirs
+from dask.diagnostics import ProgressBar
 from libcflib.preloader import ReapFailure, fetch_upstream, existing
+from libcflib.tools import expand_file_and_mkdirs
 from tqdm import tqdm
 
 from symbol_exporter.ast_symbol_extractor import SymbolFinder, version
@@ -24,7 +27,10 @@ from symbol_exporter.python_so_extractor import (
     c_symbols_to_datamodel,
     logger,
 )
-from symbol_exporter.tools import executor, diff
+from symbol_exporter.tools import diff
+
+ProgressBar().register()
+
 
 logger.setLevel("WARNING")
 
@@ -61,7 +67,7 @@ def single_py_file_extraction(python_file, top_dir):
             code = f.read()
         s = parse_code(code, module_name=import_name)
     except Exception as e:
-        print(e)
+        print(python_file, repr(e))
         s = {}
     return s
 
@@ -74,7 +80,10 @@ def single_so_file_extraction(so_file):
     try:
         s = parse_so(so_file)
     except Exception as e:
-        print(e)
+        try:
+            print(so_file, repr(e))
+        except Exception as e:
+            print(f"Couldn't print exception for {so_file}, {e}")
         s = {}
     return s
 
@@ -130,7 +139,13 @@ def harvest_imports(io_like):
     if not found_sp:
         return None
 
-    return {"metadata": {"data model version": version}, "symbols": symbols}
+    return {
+        "metadata": {
+            "data model version": version,
+            "top level symbols": set(k.partition(".")[0] for k in symbols),
+        },
+        "symbols": symbols,
+    }
 
 
 def send_to_webserver(data, package, dst_path):
@@ -255,7 +270,12 @@ def get_current_extracted_pkgs():
     host = "https://cf-ast-symbol-table.web.cern.ch"
     url = f"/api/v{version}/symbols"
     paths = requests.get(f"{host}{url}").json()
-    path_by_pkg = {path.split("/")[0]: path for path in paths}
+    path_by_pkg = {}
+    for pkg, paths in groupby(paths, lambda x: x.split("/")[0]):
+        path_by_pkg[pkg] = {
+            f"{path.partition('/')[-1]}.json": f"https://conda.anaconda.org/{path.partition('/')[-1]}.tar.bz2"
+            for path in paths
+        }
     return path_by_pkg
 
 
@@ -315,7 +335,7 @@ def reap(
     sorted_files = sorted_files[:number_to_reap]
 
     if single_thread:
-        futures = {
+        {
             fetch_and_run_function(
                 package,
                 dst,
@@ -326,25 +346,10 @@ def reap(
             if (src_url not in known_bad_packages)
         }
     else:
-        with executor(max_workers=5, kind="dask") as pool:
-            futures = {
-                pool.submit(
-                    fetch_and_run_function,
-                    package,
-                    dst,
-                    src_url,
-                    # progress.update
-                ): (package, dst, src_url)
-                for package, dst, src_url in sorted_files
-                if (src_url not in known_bad_packages)
-            }
-            for f in tqdm(as_completed(futures), total=len(sorted_files)):
-                try:
-                    f.result()
-                except ReapFailure as e:
-                    print(f"FAILURE {e.args}")
-                except Exception:
-                    pass
+        # This uses processes by default, which is most likely ok
+        db.from_sequence(sorted_files).map(
+            lambda x: fetch_and_run_function(*x)
+        ).compute()
 
 
 if __name__ == "__main__":

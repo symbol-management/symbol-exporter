@@ -1,4 +1,9 @@
 """
+Perform a reverse index of the symbols, creating the symbol table that maps symbols to the artifacts
+that provide them from AST derived symbols.
+"""
+
+"""
 BSD 3-Clause License
 
 Copyright (c) 2018, Re(search) Gro(up)
@@ -115,16 +120,13 @@ def get_current_symbol_table_artifacts():
     print("getting current symbol table artifacts")
     pool = ThreadPoolExecutor()
     futures = {
-        pool.submit(_pull_symbol_table_indexed_artifacts, host, symbol_entry): symbol_entry
+        pool.submit(
+            _pull_symbol_table_indexed_artifacts, host, symbol_entry
+        ): symbol_entry
         for symbol_entry in tqdm(extracted_symbols)
     }
     for future in tqdm(as_completed(futures), total=len(futures)):
-        try:
-            all_indexted_pkgs.update(future.result())
-        # If we can't get the results we'll just push a new one up
-        except Exception as e:
-            print(futures[future], e)
-            pass
+        all_indexted_pkgs.update(future.result())
     pool.shutdown()
     return all_indexted_pkgs
 
@@ -132,11 +134,7 @@ def get_current_symbol_table_artifacts():
 def get_symbol_table(top_level_name):
     host = "https://cf-ast-symbol-table.web.cern.ch"
     symbol_table_url = f"/api/v{version}/symbol_table/{top_level_name}"
-    try:
-        results = requests.get(f"{host}{symbol_table_url}").json()
-    except Exception as e:
-        print(top_level_name, e)
-        results = {}
+    results = requests.get(f"{host}{symbol_table_url}").json()
     return results
 
 

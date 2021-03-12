@@ -1,3 +1,4 @@
+"""Audit to derived the expected dependencies and version ranges for all extracted packages"""
 import glob
 import json
 import os
