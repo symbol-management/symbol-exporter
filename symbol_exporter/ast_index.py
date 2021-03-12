@@ -41,7 +41,6 @@ import os
 import shutil
 from concurrent.futures._base import as_completed
 from concurrent.futures.thread import ThreadPoolExecutor
-
 from datetime import datetime
 from itertools import groupby
 from random import shuffle
@@ -51,7 +50,6 @@ from libcflib.jsonutils import dump, load
 from tqdm import tqdm
 
 from symbol_exporter.ast_db_populator import (
-    get_current_extracted_pkgs,
     make_json_friendly,
 )
 from symbol_exporter.ast_symbol_extractor import version
@@ -204,8 +202,10 @@ def inner_loop(artifact_name):
 
 
 if __name__ == "__main__":
+    host = "https://cf-ast-symbol-table.web.cern.ch"
+    url = f"/api/v{version}/symbols"
     extracted_artifacts = get_current_symbol_table_artifacts()
-    all_artifacts = get_current_extracted_pkgs().values()
+    all_artifacts = requests.get(f"{host}{url}").json()
     artifacts_to_index = list(set(all_artifacts) - set(extracted_artifacts))
     print(f"Number of artifacts to index: {len(artifacts_to_index)}")
 
@@ -218,7 +218,7 @@ if __name__ == "__main__":
     print("issuing futures")
     futures = {
         pool.submit(inner_loop, artifact_name): artifact_name
-        for artifact_name in tqdm(artifacts_to_index[:1000])
+        for artifact_name in tqdm(artifacts_to_index[:2000])
     }
     print("awaiting futures")
     for future in tqdm(as_completed(futures), total=len(futures)):
