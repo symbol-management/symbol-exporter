@@ -13,7 +13,7 @@ def is_package(directory: Path) -> bool:
 def parse(module: Path, module_path: str) -> dict:
     code = module.read_text()  # TODO: need to check for multiple encodings
     tree = ast.parse(code)
-    z = SymbolFinder(module_name=f"{module_path}.{module.name}")
+    z = SymbolFinder(module_name=f"{module_path}.{module.stem}")
     z.visit(tree)
     return z.post_process_symbols()
 
@@ -38,20 +38,27 @@ class DirectorySymbolFinder:
         symbols = [
             parse(module, self._module_path) for module in self._directory.glob("*.py")
         ]
-        merged = {}
+        merged = merge_dicts(*symbols)
         if self._is_package:
             sub_dirs = (d for d in self._directory.iterdir() if d.is_dir())
             for sub_dir in sub_dirs:
                 dsf = DirectorySymbolFinder(sub_dir, parent=self._module_path)
                 sub_symbols = dsf.extract_symbols()
-                merged = merge_dicts(*symbols, sub_symbols)
-                m2 = merged
+                merged = merge_dicts(merged, sub_symbols)
             return merged
         else:
             return merge_dicts(*symbols)
 
 
 if __name__ == "__main__":
-    dsf = DirectorySymbolFinder('/Users/daniel/devel/symbol-exporter/tests/numpy')
+    import argparse
+    from pprint import pprint
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filename")
+    args = parser.parse_args()
+
+    pprint(args.filename)
+    dsf = DirectorySymbolFinder(args.filename)
     symbols = dsf.extract_symbols()
-    print(symbols)
+    pprint(symbols)
