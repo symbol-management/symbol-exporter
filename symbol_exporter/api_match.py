@@ -21,10 +21,10 @@ def get_symbol_table(top_level_import):
     return request.json()["symbol table"]
 
 
-def get_supply(top_level_import, v_symbols):
+def get_supply(top_level_import, v_symbols, get_symbol_table_func=get_symbol_table):
     supplies = None
     bad_symbols = set()
-    symbol_table = get_symbol_table(top_level_import)
+    symbol_table = get_symbol_table_func(top_level_import)
     # TODO: handle star imports recursion here?
     for v_symbol in v_symbols:
         supply = symbol_table.get(v_symbol)
@@ -38,7 +38,7 @@ def get_supply(top_level_import, v_symbols):
     return supplies or set(), bad_symbols
 
 
-def find_supplying_version_set(volume):
+def find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table):
     supplying_versions = {}
 
     effective_volume = sorted(volume - builtin_symbols)
@@ -47,7 +47,7 @@ def find_supplying_version_set(volume):
 
     with ThreadPoolExecutor() as pool:
         futures = {
-            pool.submit(get_supply, top_level_import, list(v_symbols)): top_level_import
+            pool.submit(get_supply, top_level_import, list(v_symbols), get_symbol_table_func): top_level_import
             for top_level_import, v_symbols in symbol_by_top_level
         }
     for future in as_completed(futures):
