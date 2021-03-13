@@ -47,7 +47,9 @@ def find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table):
 
     with ThreadPoolExecutor() as pool:
         futures = {
-            pool.submit(get_supply, top_level_import, list(v_symbols), get_symbol_table_func): top_level_import
+            pool.submit(
+                get_supply, top_level_import, list(v_symbols), get_symbol_table_func
+            ): top_level_import
             for top_level_import, v_symbols in symbol_by_top_level
         }
     for future in as_completed(futures):
