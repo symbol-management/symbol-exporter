@@ -579,3 +579,21 @@ def test_self_is_callable():
         "mm.A.a": {"data": {"lineno": 3}, "type": "function"},
         "mm.A.b": {"data": {"lineno": 5}, "type": "function"},
     }
+
+
+def test_symbols_in_volume_names():
+    code = """
+    import ast
+    
+    z = [ast.Try]
+    """
+    z = process_code_str(code)
+    assert z.undeclared_symbols == set()
+    assert z.post_process_symbols() == {
+        "mm": {
+            "data": {"symbols_in_volume": {"ast.Try": {"line number": [4]}}},
+            "type": "module",
+        },
+        "mm.ast": {"data": {"shadows": "ast"}, "type": "import"},
+        "mm.z": {"data": {"lineno": 4}, "type": "constant"},
+    }
