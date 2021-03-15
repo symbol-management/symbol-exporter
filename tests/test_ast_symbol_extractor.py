@@ -586,12 +586,18 @@ def test_symbols_in_volume_names():
     import ast
     
     z = [ast.Try]
+    z.sort()
     """
     z = process_code_str(code)
     assert z.undeclared_symbols == set()
     assert z.post_process_symbols() == {
         "mm": {
-            "data": {"symbols_in_volume": {"ast.Try": {"line number": [4]}}},
+            "data": {
+                "symbols_in_volume": {
+                    "ast.Try": {"line number": [4]},
+                    "mm.z": {"line number": [5]},
+                }
+            },
             "type": "module",
         },
         "mm.ast": {"data": {"shadows": "ast"}, "type": "import"},
