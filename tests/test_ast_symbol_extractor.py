@@ -584,7 +584,7 @@ def test_self_is_callable():
 def test_symbols_in_volume_names():
     code = """
     import ast
-    
+
     z = [ast.Try]
     z.sort()
     """

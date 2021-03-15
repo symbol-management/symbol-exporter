@@ -165,7 +165,9 @@ class SymbolFinder(ast.NodeVisitor):
 
     def visit_Name(self, node: ast.Name) -> Any:
         def get_symbol_name(name):
-            return self._symbol_in_unshadowed_surface_area(name) or ".".join([name] + list(reversed(self.attr_stack)))
+            return self._symbol_in_unshadowed_surface_area(name) or ".".join(
+                [name] + list(reversed(self.attr_stack))
+            )
 
         name = self.aliases.get(node.id, node.id)
         if name in builtin_symbols:
