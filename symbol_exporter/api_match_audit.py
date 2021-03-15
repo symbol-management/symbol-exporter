@@ -85,7 +85,10 @@ def main(n_to_pull=1000):
             for artifact in artifacts[:n_to_pull]
         ]
         for future in tqdm(as_completed(futures), total=n_to_pull):
-            future.result()
+            try:
+                future.result()
+            except requests.exceptions.ConnectionError:
+                pass
 
 
 if __name__ == "__main__":
