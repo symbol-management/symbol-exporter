@@ -6,7 +6,7 @@ from enum import Enum
 
 # Increment when we need the database to be rebuilt (eg adding a new feature)
 NOT_A_DEFAULT_ARG = "~~NOT_A_DEFAULT~~"
-version = "1"  # must be an integer
+version = "2"  # must be an integer
 builtin_symbols = set(dir(builtins))
 
 
@@ -128,7 +128,7 @@ class SymbolFinder(ast.NodeVisitor):
             hasattr(node.func, "id")
             and node.func.id not in self.aliases
             and node.func.id not in builtin_symbols
-            and not self._symbol_in_surface_area(node.func.id)
+            and not self._symbol_in_unshadowed_surface_area(node.func.id)
             and not self._symbol_in_args_kwargs(node.func.id)
         ):
             self.undeclared_symbols.add(node.func.id)
@@ -165,7 +165,7 @@ class SymbolFinder(ast.NodeVisitor):
 
     def visit_Name(self, node: ast.Name) -> Any:
         def get_symbol_name(name):
-            return self._symbol_in_surface_area(name) or ".".join(
+            return self._symbol_in_unshadowed_surface_area(name) or ".".join(
                 [name] + list(reversed(self.attr_stack))
             )
 
@@ -203,12 +203,17 @@ class SymbolFinder(ast.NodeVisitor):
             symbol in self.imported_symbols
             or symbol in self.undeclared_symbols
             or symbol in builtin_symbols
-            or self._symbol_in_surface_area(symbol)
+            or self._symbol_in_unshadowed_surface_area(symbol)
         )
 
-    def _symbol_in_surface_area(self, symbol):
+    def _symbol_in_unshadowed_surface_area(self, symbol):
         fully_qualified_symbol_name = f"{self._module_name}.{symbol}"
-        if fully_qualified_symbol_name in self._symbols:
+
+        if (
+            fully_qualified_symbol_name in self._symbols
+            and "shadows"
+            not in self._symbols[fully_qualified_symbol_name].get("data", {})
+        ):
             return fully_qualified_symbol_name
         else:
             return None
