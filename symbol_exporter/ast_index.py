@@ -198,9 +198,9 @@ def inner_loop(artifact_name):
         metadata["version"] = version
         metadata.setdefault("indexed artifacts", []).append(artifact_name)
         # push back to server
-        # push_symbol_table(
-        #     top_level_name, {"symbol table": symbol_table, "metadata": metadata}
-        # )
+        push_symbol_table(
+            top_level_name, {"symbol table": symbol_table, "metadata": metadata}
+        )
         all_symbol_tables[top_level_name] = symbol_table
     return all_symbol_tables
 
