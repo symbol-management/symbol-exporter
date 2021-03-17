@@ -36,7 +36,9 @@ class WebDB:
 
     def push_symbol_table(self, top_level_name, symbol_table):
         url = f"/api/v{version}/symbol_table/{top_level_name}"
-        dumped_data = json.dumps(symbol_table, default=make_json_friendly, sort_keys=True)
+        dumped_data = json.dumps(
+            symbol_table, default=make_json_friendly, sort_keys=True
+        )
         r = requests.put(
             f"{self.host}{url}",
             data=dumped_data,
@@ -52,9 +54,9 @@ class WebDB:
         for symbol_entry in extracted_symbols:
             all_indexted_pkgs.update(
                 requests.get(f"{self.host}/api/v{version}/symbol_table/{symbol_entry}")
-                    .json()
-                    .get("metadata", {})
-                    .get("indexed artifacts", [])
+                .json()
+                .get("metadata", {})
+                .get("indexed artifacts", [])
             )
         return all_indexted_pkgs
 
