@@ -1,4 +1,9 @@
 """
+Perform a reverse index of the symbols, creating the symbol table that maps symbols to the artifacts
+that provide them from AST derived symbols.
+"""
+
+"""
 BSD 3-Clause License
 
 Copyright (c) 2018, Re(search) Gro(up)
@@ -29,120 +34,70 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-import json
-import os
-import shutil
+from concurrent.futures._base import as_completed
+from concurrent.futures.thread import ThreadPoolExecutor
 from itertools import groupby
+from random import shuffle
 
-from libcflib.jsonutils import dump, load
 from tqdm import tqdm
 
 from symbol_exporter.ast_symbol_extractor import version
 from symbol_exporter.db_access_model import WebDB
 
 
-def get_data(file):
-    with open(file) as f:
-        data = json.load(f)
-    if data:
-        return set(data)
-    else:
-        return set()
-
-
-def read_sharded_dict():
-    d = {}
-    for file in os.listdir("symbol_table"):
-        with open(file) as f:
-            d.update(load(f))
-    return d
-
-
-def write_out_maps(gn, import_map):
-    try:
-        with open(f"symbol_table/{gn}.json", "r") as f:
-            old_map = load(f)
-    except (FileNotFoundError, json.decoder.JSONDecodeError):
-        old_map = import_map
-    else:
-        for k in list(import_map):
-            old_map.setdefault(k, set()).update(import_map.pop(k))
-    with open(f"symbol_table/{gn}.json", "w") as f:
-        dump(old_map, f)
-
-
-def check_if_table_is_current(path):
-    if os.path.exists(os.path.join(path, "_inspection_version.txt")):
-        with open(os.path.join(path, "_inspection_version.txt")) as f:
-            db_version = f.read()
-    else:
-        db_version = ""
-    if db_version != version and os.path.exists(path):
-        shutil.rmtree(path)
-        with open(".indexed_files", "w") as f:
-            pass
-    if not os.path.exists(path):
-        os.makedirs(path)
-        with open(os.path.join(path, "_inspection_version.txt"), "w") as f:
-            f.write(version)
+def inner_loop(artifact_name):
+    web_interface = WebDB()
+    symbols = web_interface.get_artifact_symbols(artifact_name)
+    all_symbol_tables = {}
+    for top_level_name, keys in groupby(
+        sorted(symbols), lambda x: x.partition(".")[0].lower()
+    ):
+        print(top_level_name)
+        # carve out for star imports which don't have dots
+        if top_level_name == "*":
+            continue
+        # download the existing symbol table
+        symbol_table_with_metadata = web_interface.get_symbol_table(top_level_name)
+        symbol_table = symbol_table_with_metadata.get("symbol table", {})
+        metadata = symbol_table_with_metadata.get("metadata", {})
+        # update the symbol table
+        for k in list(symbols):
+            symbol_table.setdefault(k, []).append(artifact_name)
+        # add artifacts to metadata
+        metadata["version"] = version
+        metadata.setdefault("indexed artifacts", []).append(artifact_name)
+        # push back to server
+        web_interface.push_symbol_table(
+            top_level_name, {"symbol table": symbol_table, "metadata": metadata}
+        )
+        all_symbol_tables[top_level_name] = symbol_table
+    return all_symbol_tables
 
 
 if __name__ == "__main__":
     web_interface = WebDB()
-    # pull all the existing symbol tables, read the metadata for all artifacts read
     extracted_artifacts = web_interface.get_current_symbol_table_artifacts()
-    # pull all symbol listings
-    all_artifacts = web_interface.get_current_extracted_pkgs().values()
-    # check difference
-    artifacts_to_index = set(all_artifacts) - set(extracted_artifacts)
-    for artifact_name in tqdm(sorted(artifacts_to_index)):
-        print(artifact_name)
-        # get the data
-        symbols = web_interface.get_artifact_symbols(artifact_name)
-        for top_level_name, keys in groupby(
-            sorted(symbols), lambda x: x.partition(".")[0].lower()
-        ):
-            # carve out for star imports which don't have dots
-            if top_level_name == "*":
-                continue
-            # download the existing symbol table
-            symbol_table_with_metadata = web_interface.get_symbol_table(top_level_name)
-            symbol_table = symbol_table_with_metadata.get("symbol table", {})
-            metadata = symbol_table_with_metadata.get("metadata", {})
-            # update the symbol table
-            for k in list(symbols):
-                symbol_table.setdefault(k, []).append(artifact_name)
-            # add artifacts to metadata
-            metadata["version"] = version
-            metadata.setdefault("indexed artifacts", []).append(artifact_name)
-            # push back to server
-            web_interface.push_symbol_table(
-                top_level_name, {"symbol table": symbol_table, "metadata": metadata}
-            )
+    all_artifacts = web_interface.get_current_extracted_pkgs()
 
-    # import glob
-    # from collections import defaultdict
-    # from concurrent.futures import ThreadPoolExecutor
-    # from pathlib import Path
+    artifacts_to_index = list(set(all_artifacts) - set(extracted_artifacts))
+    print(f"Number of artifacts to index: {len(artifacts_to_index)}")
 
-    # symbol_table = defaultdict(set)
-    # path = "symbol_table"
-    #
-    # check_if_table_is_current(path)
-    #
-    # try:
-    #     with open(".indexed_files", "r") as f:
-    #         indexed_files = {ff.strip() for ff in f.readlines()}
-    # except FileNotFoundError:
-    #     indexed_files = set()
-    #
-    # futures = {}
-    # tpe = ThreadPoolExecutor()
-    # all_files = set(glob.glob("symbols/**/*.json", recursive=True))
-    # new_files = all_files - indexed_files
-    #
-    # for file in new_files:
-    #     artifact_name = Path(file).name.rsplit(".", 1)[0]
-    #     for symbol in get_data(file):
-    #         symbol_table[symbol].add(artifact_name)
-    #
+    # The shuffle here is to try to not have two threads running on the same symbol table json at once if possible
+    shuffle(artifacts_to_index)
+    pool = ThreadPoolExecutor()
+    # Note that this is a race condition here, two threads could try to write to the same symbol table
+    # however one of those will win so next round there will be one added safely and this continues
+    # until none are left to be added
+    print("issuing futures")
+    futures = {
+        pool.submit(inner_loop, artifact_name): artifact_name
+        for artifact_name in tqdm(artifacts_to_index[:2000])
+    }
+    print("awaiting futures")
+    for future in tqdm(as_completed(futures), total=len(futures)):
+        print(futures[future])
+        try:
+            future.result()
+        except Exception as e:
+            print(e)
+    pool.shutdown()

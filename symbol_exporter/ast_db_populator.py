@@ -1,3 +1,4 @@
+"""Stores the ast derived symbols in either github or CERN"""
 import ast
 import glob
 import io
@@ -5,12 +6,13 @@ import json
 import os
 import shutil
 import tarfile
-from concurrent.futures._base import as_completed
 from functools import partial
 from random import shuffle
 from tempfile import TemporaryDirectory
 
+import dask.bag as db
 import requests
+from dask.diagnostics import ProgressBar
 from libcflib.preloader import ReapFailure, fetch_upstream, existing
 from libcflib.tools import expand_file_and_mkdirs
 from tqdm import tqdm
@@ -22,9 +24,12 @@ from symbol_exporter.python_so_extractor import (
     c_symbols_to_datamodel,
     logger,
 )
-from symbol_exporter.tools import executor, diff
+from symbol_exporter.tools import diff
 
-logger.setLevel("WARNING")
+ProgressBar().register()
+
+
+logger.setLevel("ERROR")
 
 # TODO: push this into the web only branches so we don't require the secret to be set
 web_interface = WebDB()
@@ -56,7 +61,7 @@ def single_py_file_extraction(python_file, top_dir):
             code = f.read()
         s = parse_code(code, module_name=import_name)
     except Exception as e:
-        print(e)
+        print(python_file, repr(e))
         s = {}
     return s
 
@@ -69,7 +74,10 @@ def single_so_file_extraction(so_file):
     try:
         s = parse_so(so_file)
     except Exception as e:
-        print(e)
+        try:
+            print(so_file, repr(e))
+        except Exception as e:
+            print(f"Couldn't print exception for {so_file}, {e}")
         s = {}
     return s
 
@@ -125,7 +133,13 @@ def harvest_imports(io_like):
     if not found_sp:
         return None
 
-    return {"metadata": {"data model version": version}, "symbols": symbols}
+    return {
+        "metadata": {
+            "data model version": version,
+            "top level symbols": set(k.partition(".")[0] for k in symbols),
+        },
+        "symbols": symbols,
+    }
 
 
 def reap_symbols_send_to_webserver(
@@ -237,7 +251,7 @@ def reap(
     sorted_files = sorted_files[:number_to_reap]
 
     if single_thread:
-        futures = {
+        {
             fetch_and_run_function(
                 package,
                 dst,
@@ -248,25 +262,10 @@ def reap(
             if (src_url not in known_bad_packages)
         }
     else:
-        with executor(max_workers=5, kind="dask") as pool:
-            futures = {
-                pool.submit(
-                    fetch_and_run_function,
-                    package,
-                    dst,
-                    src_url,
-                    # progress.update
-                ): (package, dst, src_url)
-                for package, dst, src_url in sorted_files
-                if (src_url not in known_bad_packages)
-            }
-            for f in tqdm(as_completed(futures), total=len(sorted_files)):
-                try:
-                    f.result()
-                except ReapFailure as e:
-                    print(f"FAILURE {e.args}")
-                except Exception:
-                    pass
+        # This uses processes by default, which is most likely ok
+        db.from_sequence(sorted_files).map(
+            lambda x: fetch_and_run_function(*x)
+        ).compute()
 
 
 if __name__ == "__main__":

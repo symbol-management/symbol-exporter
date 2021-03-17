@@ -5,6 +5,7 @@ import pathlib
 import os
 
 os.environ["PWNLIB_NOTERM"] = "1"
+os.environ["PWNLIB_SILENT"] = "1"
 
 import pwn
 
