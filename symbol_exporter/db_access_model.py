@@ -10,9 +10,8 @@ from symbol_exporter.ast_symbol_extractor import version
 
 
 class WebDB:
-    host = "https://cf-ast-symbol-table.web.cern.ch"
-
-    def __init__(self):
+    def __init__(self, host="https://cf-ast-symbol-table.web.cern.ch"):
+        self.host = host
         self.secret_token = os.environ["STORAGE_SECRET_TOKEN"].encode("utf-8")
 
     def _setup_headers(self, dumped_data, url):
