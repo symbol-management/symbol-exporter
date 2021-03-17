@@ -33,6 +33,8 @@ def inner_loop(artifact):
     volume = set()
     for v in symbols.values():
         volume.update(v.get("data", {}).get("symbols_in_volume", set()))
+    # pull out self symbols, since we assume those are gotten locally and self consistent
+    volume -= set(symbols)
     deps, bad = find_supplying_version_set(volume)
     return deps, bad
 
