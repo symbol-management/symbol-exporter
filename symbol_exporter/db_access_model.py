@@ -15,9 +15,9 @@ from symbol_exporter.ast_symbol_extractor import version
 class WebDB:
     def __init__(self, host="https://cf-ast-symbol-table.web.cern.ch"):
         self.host = host
-        raw_token = os.environ.get("STORAGE_SECRET_TOKEN", b'')
-        if raw_token == b'':
-            print('No token only pulls allowed')
+        raw_token = os.environ.get("STORAGE_SECRET_TOKEN", b"")
+        if raw_token == b"":
+            print("No token only pulls allowed")
         self.secret_token = raw_token.encode("utf-8")
 
     def _setup_headers(self, dumped_data, url):
@@ -54,10 +54,11 @@ class WebDB:
 
     def get_current_symbol_table_artifacts(self):
         all_indexted_pkgs = set()
-        extracted_symbols = self.get_symbol_table('')
+        extracted_symbols = self.get_symbol_table("")
         with Client(threads_per_worker=100):
-            [all_indexted_pkgs.update(k) for k in
-                db.from_sequence(extracted_symbols)
+            [
+                all_indexted_pkgs.update(k)
+                for k in db.from_sequence(extracted_symbols)
                 .map(self.get_symbol_table)
                 .map(lambda x: x.get("metadata", {}).get("indexed artifacts", {}))
                 .compute()
