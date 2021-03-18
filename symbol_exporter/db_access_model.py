@@ -4,7 +4,10 @@ import json
 import os
 from datetime import datetime
 
+import dask.bag as db
+from dask.distributed import Client
 import requests
+from requests.exceptions import ChunkedEncodingError
 
 from symbol_exporter.ast_symbol_extractor import version
 
@@ -12,7 +15,10 @@ from symbol_exporter.ast_symbol_extractor import version
 class WebDB:
     def __init__(self, host="https://cf-ast-symbol-table.web.cern.ch"):
         self.host = host
-        self.secret_token = os.environ["STORAGE_SECRET_TOKEN"].encode("utf-8")
+        raw_token = os.environ.get("STORAGE_SECRET_TOKEN", b'')
+        if raw_token == b'':
+            print('No token only pulls allowed')
+        self.secret_token = raw_token.encode("utf-8")
 
     def _setup_headers(self, dumped_data, url):
         headers = {
@@ -48,21 +54,22 @@ class WebDB:
 
     def get_current_symbol_table_artifacts(self):
         all_indexted_pkgs = set()
-        symbol_table_url = f"/api/v{version}/symbol_table"
-        extracted_symbols = requests.get(f"{self.host}{symbol_table_url}").json()
-        # TODO: run in parallel on threads
-        for symbol_entry in extracted_symbols:
-            all_indexted_pkgs.update(
-                requests.get(f"{self.host}/api/v{version}/symbol_table/{symbol_entry}")
-                .json()
-                .get("metadata", {})
-                .get("indexed artifacts", [])
-            )
+        extracted_symbols = self.get_symbol_table('')
+        with Client(threads_per_worker=100):
+            [all_indexted_pkgs.update(k) for k in
+                db.from_sequence(extracted_symbols)
+                .map(self.get_symbol_table)
+                .map(lambda x: x.get("metadata", {}).get("indexed artifacts", {}))
+                .compute()
+            ]
         return all_indexted_pkgs
 
     def get_symbol_table(self, top_level_name):
         symbol_table_url = f"/api/v{version}/symbol_table/{top_level_name}"
-        return requests.get(f"{self.host}{symbol_table_url}").json()
+        try:
+            return requests.get(f"{self.host}{symbol_table_url}").json()
+        except (requests.exceptions.ConnectionError, ChunkedEncodingError):
+            return {}
 
     def get_artifact_symbols(self, artifact_name):
         artifact_symbols_url = f"/api/v{version}/symbols/{artifact_name}"
