@@ -1,6 +1,5 @@
 import ast
 from textwrap import dedent
-from operator import itemgetter
 
 from symbol_exporter.ast_symbol_extractor import SymbolFinder
 
