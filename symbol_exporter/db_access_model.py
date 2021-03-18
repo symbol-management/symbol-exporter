@@ -69,7 +69,11 @@ class WebDB:
         symbol_table_url = f"/api/v{version}/symbol_table/{top_level_name}"
         try:
             return requests.get(f"{self.host}{symbol_table_url}").json()
-        except (requests.exceptions.ConnectionError, ChunkedEncodingError):
+        except (
+            requests.exceptions.ConnectionError,
+            ChunkedEncodingError,
+            json.decoder.JSONDecodeError,
+        ):
             return {}
 
     def get_artifact_symbols(self, artifact_name):

@@ -1,7 +1,6 @@
 """tools for matching the volumes with artifacts that supply the symbols"""
 from concurrent.futures._base import as_completed
 from concurrent.futures.thread import ThreadPoolExecutor
-from functools import lru_cache
 from itertools import groupby
 
 from symbol_exporter.ast_symbol_extractor import builtin_symbols
@@ -10,15 +9,9 @@ from symbol_exporter.db_access_model import WebDB
 web_interface = WebDB()
 
 
-@lru_cache(maxsize=128)
-def get_symbol_table(top_level_import):
-    request = web_interface.get_symbol_table(top_level_import.lower())
-    if request.status_code != 200:
-        return {}
-    return request.json()["symbol table"]
-
-
-def get_supply(top_level_import, v_symbols, get_symbol_table_func=get_symbol_table):
+def get_supply(
+    top_level_import, v_symbols, get_symbol_table_func=web_interface.get_symbol_table
+):
     supplies = None
     bad_symbols = set()
     symbol_table = get_symbol_table_func(top_level_import)
@@ -35,7 +28,9 @@ def get_supply(top_level_import, v_symbols, get_symbol_table_func=get_symbol_tab
     return supplies or set(), bad_symbols
 
 
-def find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table):
+def find_supplying_version_set(
+    volume, get_symbol_table_func=web_interface.get_symbol_table
+):
     supplying_versions = {}
 
     effective_volume = sorted(volume - builtin_symbols)

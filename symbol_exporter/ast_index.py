@@ -77,7 +77,7 @@ def inner_loop(artifact_name):
 if __name__ == "__main__":
     web_interface = WebDB()
     extracted_artifacts = web_interface.get_current_symbol_table_artifacts()
-    all_artifacts = web_interface.get_current_extracted_pkgs()
+    all_artifacts = web_interface.get_current_extracted_pkgs().values()
 
     artifacts_to_index = list(set(all_artifacts) - set(extracted_artifacts))
     print(f"Number of artifacts to index: {len(artifacts_to_index)}")
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     print("issuing futures")
     futures = {
         pool.submit(inner_loop, artifact_name): artifact_name
-        for artifact_name in tqdm(artifacts_to_index[:2000])
+        for artifact_name in tqdm(artifacts_to_index[:10000])
     }
     print("awaiting futures")
     for future in tqdm(as_completed(futures), total=len(futures)):
