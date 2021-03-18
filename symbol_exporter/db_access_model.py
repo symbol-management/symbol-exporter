@@ -15,8 +15,8 @@ from symbol_exporter.ast_symbol_extractor import version
 class WebDB:
     def __init__(self, host="https://cf-ast-symbol-table.web.cern.ch"):
         self.host = host
-        raw_token = os.environ.get("STORAGE_SECRET_TOKEN", b"")
-        if raw_token == b"":
+        raw_token = os.environ.get("STORAGE_SECRET_TOKEN", "")
+        if raw_token == "":
             print("No token only pulls allowed")
         self.secret_token = raw_token.encode("utf-8")
 
