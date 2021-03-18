@@ -15,16 +15,17 @@ from symbol_exporter.ast_db_populator import (
     make_json_friendly,
 )
 from symbol_exporter.ast_symbol_extractor import version
+from symbol_exporter.db_access_model import WebDB
 
 audit_version = "1.1"
 
 complete_version = f"{version}_{audit_version}"
 
+web_interface = WebDB()
+
 
 def inner_loop(artifact):
-    host = "https://cf-ast-symbol-table.web.cern.ch"
-    artifact_symbols_url = f"/api/v{version}/symbols/{artifact}"
-    symbols_result = requests.get(f"{host}{artifact_symbols_url}").json()
+    symbols_result = web_interface.get_artifact_symbols(artifact)
     if not symbols_result:
         return None
     symbols = symbols_result["symbols"]
@@ -68,9 +69,7 @@ def main(n_to_pull=1000):
     with open(os.path.join(path, "_inspection_version.txt"), "w") as f:
         f.write(complete_version)
 
-    host = "https://cf-ast-symbol-table.web.cern.ch"
-    url = f"/api/v{version}/symbols"
-    all_extracted_artifacts = requests.get(f"{host}{url}").json()
+    all_extracted_artifacts = web_interface.get_current_extracted_pkgs()
     existing_artifacts = glob.glob(f"{path}/**/*.json", recursive=True)
     existing_artifact_names = {k.partition("/")[2] for k in existing_artifacts}
 

@@ -1,21 +1,18 @@
-""""""
+"""tools for matching the volumes with artifacts that supply the symbols"""
 from concurrent.futures._base import as_completed
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import lru_cache
 from itertools import groupby
 
-import requests
+from symbol_exporter.ast_symbol_extractor import builtin_symbols
+from symbol_exporter.db_access_model import WebDB
 
-from symbol_exporter.ast_symbol_extractor import builtin_symbols, version
-
-host = "https://cf-ast-symbol-table.web.cern.ch"
+web_interface = WebDB()
 
 
 @lru_cache(maxsize=128)
 def get_symbol_table(top_level_import):
-    symbol_table_url = f"/api/v{version}/symbol_table/{top_level_import.lower()}"
-    # TODO: pull io up/out? Or run in parallel or cache?
-    request = requests.get(f"{host}{symbol_table_url}")
+    request = web_interface.get_symbol_table(top_level_import.lower())
     if request.status_code != 200:
         return {}
     return request.json()["symbol table"]
@@ -55,11 +52,9 @@ def find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table):
     for future in as_completed(futures):
         top_level_import = futures[future]
         supplies, bad = future.result()
-
-        # print(top_level_import, supplies, bad)
         supplying_versions[top_level_import] = supplies
         bad_symbols.update(bad)
     # TODO: handle the case where multiple pkgs export the same symbols?
-    #  In that case we may want to merge thsoe together somehow
+    #  In that case we may want to merge those together somehow
     # TODO: handle case where no pkg supports the symbol?
     return supplying_versions, bad_symbols
