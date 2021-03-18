@@ -349,19 +349,6 @@ def test_relative_star_import():
     from ..numeric import *
     """
     z = process_code_str(code)
-    expected_relative_imports = [
-        {
-            "symbol": "core",
-            "level": 1,
-            "module": "mm",
-        },
-        {
-            "symbol": "numeric",
-            "level": 2,
-            "module": "mm",
-        },
-    ]
-
     assert z.symbols == {
         'mm': {'data': {}, 'type': 'module'},
         "mm.relative.*": {
