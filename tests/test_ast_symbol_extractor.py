@@ -361,10 +361,25 @@ def test_relative_star_import():
             "module": "mm",
         },
     ]
-    assert (
-        sorted(z.symbols["relative-*"]["data"]["imports"], key=itemgetter("symbol"))
-        == expected_relative_imports
-    )
+
+    assert z.symbols == {
+        'mm': {'data': {}, 'type': 'module'},
+        "mm.relative.*": {
+            "type": "relative-star-import",
+            "data": {"imports": [
+                {
+                    "symbol": "core",
+                    "level": 1,
+                    "module": "mm",
+                },
+                {
+                    "symbol": "numeric",
+                    "level": 2,
+                    "module": "mm",
+                },
+            ]},
+        }
+    }
 
 
 def test_undeclared_symbols():
