@@ -240,7 +240,8 @@ class SymbolFinder(ast.NodeVisitor):
         self, imported_symbol, symbol_type: SymbolType, level: int
     ):
         default = dict(type=symbol_type, data=dict(imports=[]))
-        self._symbols.setdefault("relative-*", default)["data"]["imports"].append(
+        symbol_name = f"{self._module_name}.relative.*"
+        self._symbols.setdefault(symbol_name, default)["data"]["imports"].append(
             dict(symbol=imported_symbol, level=level, module=self._module_name)
         )
 
