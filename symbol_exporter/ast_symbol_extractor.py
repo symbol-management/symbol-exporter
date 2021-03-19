@@ -10,6 +10,10 @@ version = "2"  # must be an integer
 builtin_symbols = set(dir(builtins))
 
 
+def is_relative_import(symbol) -> bool:
+    return symbol["type"] == SymbolType.RELATIVE_IMPORT
+
+
 class OrderedEnum(Enum):
     def __ge__(self, other):
         if self.__class__ is other.__class__:
