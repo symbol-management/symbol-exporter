@@ -56,7 +56,8 @@ def remove_shadowed_relative_imports(package_symbols: dict):
                 package_symbols[new_symbol] = symbol_info
             else:
                 print(
-                    f"{new_symbol} IS in symbols so it is also module - deleting '{k}' - keeping module which contains more information"
+                    f"{new_symbol} IS in symbols so it is also module - deleting '{k}'"
+                    f" - keeping module which contains more information"
                 )
                 del package_symbols[k]
 
