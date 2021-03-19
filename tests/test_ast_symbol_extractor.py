@@ -352,15 +352,15 @@ def test_relative_alias_import():
     assert z.symbols == {
         "mm": {"data": {}, "type": "module"},
         "mm.c": {
-            "type": "import",
+            "type": "relative-import",
             "data": {"shadows": "core", "level": 1},
         },
         "mm.c_ones": {
-            "type": "import",
+            "type": "relative-import",
             "data": {"shadows": "core.ones", "level": 1},
         },
         "mm.c_twos": {
-            "type": "import",
+            "type": "relative-import",
             "data": {"shadows": "core.twos", "level": 2},
         },
     }
