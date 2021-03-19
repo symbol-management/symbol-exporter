@@ -48,13 +48,17 @@ def remove_shadowed_relative_imports(package_symbols: dict):
                 print(
                     f"{new_symbol} IS NOT in symbols - adding to symbol table and deleting symbol {k}"
                 )
-                symbol_info = package_symbols.pop(
-                    k
-                )  # Do we want to keep the original? (numpy.__init__.getVersions)
+                # Do we want to keep the original? (numpy.__init__.getVersions)
+                symbol_info = package_symbols.pop(k)
                 symbol_info["data"]["shadows"] = dereference_relative_import(
                     new_symbol, symbol_info["data"]
                 )
                 package_symbols[new_symbol] = symbol_info
+            else:
+                print(
+                    f"{new_symbol} IS in symbols so it is also module - deleting '{k}' - keeping module which contains more information"
+                )
+                del package_symbols[k]
 
 
 class DirectorySymbolFinder:
@@ -91,6 +95,10 @@ expected = {
     "numpy.version": {"type": "module", "data": {}},
     "numpy.version.get_versions": {"type": "function", "data": {"lineno": 1}},
     "numpy.__init__": {"type": "module", "data": {}},
+    # "numpy.__init__.version": {
+    #     "type": "relative-import",
+    #     "data": {"shadows": "version", "level": 1},
+    # },
     # "numpy.__init__.get_versions": {
     #     "type": "relative-import",
     #     "data": {
@@ -98,10 +106,10 @@ expected = {
     #         "level": 1
     #     }
     # },
-    "numpy.__init__.core": {
-        "type": "relative-import",
-        "data": {"shadows": "core", "level": 1},
-    },
+    # "numpy.__init__.core": {
+    #     "type": "relative-import",
+    #     "data": {"shadows": "core", "level": 1},
+    # },
     "numpy.__init__.relative.*": {
         "type": "relative-star-import",
         "data": {
@@ -109,10 +117,10 @@ expected = {
         },
     },
     "numpy.core.__init__": {"type": "module", "data": {}},
-    "numpy.core.__init__.numeric": {
-        "type": "relative-import",
-        "data": {"shadows": "numeric", "level": 1},
-    },
+    # "numpy.core.__init__.numeric": {
+    #     "type": "relative-import",
+    #     "data": {"shadows": "numeric", "level": 1},
+    # },
     "numpy.core.__init__.relative.*": {
         "type": "relative-star-import",
         "data": {
@@ -125,6 +133,10 @@ expected = {
         "type": "import",
         "data": {"shadows": "numeric.absolute"},
     },
+    # "numpy.core.__init__.version": {
+    #     "type": "relative-import",
+    #     "data": {"shadows": "version", "level": 2},
+    # },
     "numpy.core.numeric": {"type": "module", "data": {}},
     "numpy.core.numeric.ones": {"type": "function", "data": {"lineno": 1}},
     "numpy.core.numeric.absolute": {
@@ -162,5 +174,5 @@ if __name__ == "__main__":
 #  - post process relative star imports
 #  - handle aliased relative imports.
 #     they are handled but the type from symbol extractor is "import" and not "relative-import"
-#     This may not be a problem since it is handled when we handle regular imports in __init__.py modules
+#     This will be a problem if relative import has more than 1 dot.
 #
