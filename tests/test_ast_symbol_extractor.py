@@ -1,6 +1,5 @@
 import ast
 from textwrap import dedent
-from operator import itemgetter
 
 from symbol_exporter.ast_symbol_extractor import SymbolFinder
 
@@ -349,22 +348,26 @@ def test_relative_star_import():
     from ..numeric import *
     """
     z = process_code_str(code)
-    expected_relative_imports = [
-        {
-            "symbol": "core",
-            "level": 1,
-            "module": "mm",
+    assert z.symbols == {
+        "mm": {"data": {}, "type": "module"},
+        "mm.relative.*": {
+            "type": "relative-star-import",
+            "data": {
+                "imports": [
+                    {
+                        "symbol": "core",
+                        "level": 1,
+                        "module": "mm",
+                    },
+                    {
+                        "symbol": "numeric",
+                        "level": 2,
+                        "module": "mm",
+                    },
+                ]
+            },
         },
-        {
-            "symbol": "numeric",
-            "level": 2,
-            "module": "mm",
-        },
-    ]
-    assert (
-        sorted(z.symbols["relative-*"]["data"]["imports"], key=itemgetter("symbol"))
-        == expected_relative_imports
-    )
+    }
 
 
 def test_undeclared_symbols():
