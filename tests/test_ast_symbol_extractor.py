@@ -353,9 +353,7 @@ def test_relative_alias_import():
         "mm": {"data": {}, "type": "module"},
         "mm.c": {
             "type": "import",
-            "data": {
-                "shadows": "core",
-            },
+            "data": {"shadows": "core"},
         },
         "mm.c_ones": {
             "type": "import",
