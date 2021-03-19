@@ -96,10 +96,12 @@ class SymbolFinder(ast.NodeVisitor):
             self.aliases[node.asname] = alias_name
             if self._relative_import_stack and self._relative_import_stack[0]:
                 level = self._relative_import_stack[0]
-                self._add_symbol_to_surface_area(SymbolType.RELATIVE_IMPORT,
-                                                 symbol=node.asname,
-                                                 shadows=alias_name,
-                                                 level=level)
+                self._add_symbol_to_surface_area(
+                    SymbolType.RELATIVE_IMPORT,
+                    symbol=node.asname,
+                    shadows=alias_name,
+                    level=level,
+                )
             else:
                 self._add_symbol_to_surface_area(
                     SymbolType.IMPORT, symbol=node.asname, shadows=alias_name
