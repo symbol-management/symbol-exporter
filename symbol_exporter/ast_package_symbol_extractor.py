@@ -41,10 +41,19 @@ def remove_shadowed_relative_imports(package_symbols: dict):
     for k, v in relative_imports(package_symbols):
         if "__init__" in k:
             new_symbol = k.replace(".__init__", "")
-            if new_symbol not in package_symbols and f"{new_symbol}.__init__" not in package_symbols:
-                print(f"{new_symbol} IS NOT in symbols - adding to symbol table and deleting symbol {k}")
-                symbol_info = package_symbols.pop(k)  # Do we want to keep the original? (numpy.__init__.getVersions)
-                symbol_info["data"]["shadows"] = dereference_relative_import(new_symbol, symbol_info["data"])
+            if (
+                new_symbol not in package_symbols
+                and f"{new_symbol}.__init__" not in package_symbols
+            ):
+                print(
+                    f"{new_symbol} IS NOT in symbols - adding to symbol table and deleting symbol {k}"
+                )
+                symbol_info = package_symbols.pop(
+                    k
+                )  # Do we want to keep the original? (numpy.__init__.getVersions)
+                symbol_info["data"]["shadows"] = dereference_relative_import(
+                    new_symbol, symbol_info["data"]
+                )
                 package_symbols[new_symbol] = symbol_info
 
 
@@ -79,20 +88,9 @@ class DirectorySymbolFinder:
 
 
 expected = {
-    "numpy.version": {
-        "type": "module",
-        "data": {}
-    },
-    "numpy.version.get_versions": {
-        "type": "function",
-        "data": {
-            "lineno": 1
-        }
-    },
-    "numpy.__init__": {
-        "type": "module",
-        "data": {}
-    },
+    "numpy.version": {"type": "module", "data": {}},
+    "numpy.version.get_versions": {"type": "function", "data": {"lineno": 1}},
+    "numpy.__init__": {"type": "module", "data": {}},
     # "numpy.__init__.get_versions": {
     #     "type": "relative-import",
     #     "data": {
@@ -102,89 +100,45 @@ expected = {
     # },
     "numpy.__init__.core": {
         "type": "relative-import",
-        "data": {
-            "shadows": "core",
-            "level": 1
-        }
+        "data": {"shadows": "core", "level": 1},
     },
     "numpy.__init__.relative.*": {
         "type": "relative-star-import",
         "data": {
-            "imports": [
-                {
-                    "symbol": "core",
-                    "level": 1,
-                    "module": "numpy.__init__"
-                }
-            ]
-        }
+            "imports": [{"symbol": "core", "level": 1, "module": "numpy.__init__"}]
+        },
     },
-    "numpy.core.__init__": {
-        "type": "module",
-        "data": {}
-    },
+    "numpy.core.__init__": {"type": "module", "data": {}},
     "numpy.core.__init__.numeric": {
         "type": "relative-import",
-        "data": {
-            "shadows": "numeric",
-            "level": 1
-        }
+        "data": {"shadows": "numeric", "level": 1},
     },
     "numpy.core.__init__.relative.*": {
         "type": "relative-star-import",
         "data": {
             "imports": [
-                {
-                    "symbol": "numeric",
-                    "level": 1,
-                    "module": "numpy.core.__init__"
-                }
+                {"symbol": "numeric", "level": 1, "module": "numpy.core.__init__"}
             ]
-        }
+        },
     },
     "numpy.core.__init__.abs": {
         "type": "import",
-        "data": {
-            "shadows": "numeric.absolute"
-        }
+        "data": {"shadows": "numeric.absolute"},
     },
-    "numpy.core.numeric": {
-        "type": "module",
-        "data": {}
-    },
-    "numpy.core.numeric.ones": {
-        "type": "function",
-        "data": {
-            "lineno": 1
-        }
-    },
+    "numpy.core.numeric": {"type": "module", "data": {}},
+    "numpy.core.numeric.ones": {"type": "function", "data": {"lineno": 1}},
     "numpy.core.numeric.absolute": {
         "type": "function",
-        "data": {
-            "lineno": 5,
-            "symbols_in_volume": {
-                "abs": {
-                    "line number": [
-                        6
-                    ]
-                }
-            }
-        }
+        "data": {"lineno": 5, "symbols_in_volume": {"abs": {"line number": [6]}}},
     },
     "numpy.get_versions": {
         "type": "relative-import",
-        "data": {
-            "shadows": "numpy.version.get_versions",
-            "level": 1
-        }
+        "data": {"shadows": "numpy.version.get_versions", "level": 1},
     },
     "numpy.core.version": {
         "type": "relative-import",
-        "data": {
-            "shadows": "numpy.version",
-            "level": 2
-        }
-    }
+        "data": {"shadows": "numpy.version", "level": 2},
+    },
 }
 
 if __name__ == "__main__":
