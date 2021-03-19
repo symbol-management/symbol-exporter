@@ -129,10 +129,10 @@ expected = {
             ]
         },
     },
-    "numpy.core.__init__.abs": {
-        "type": "import",
-        "data": {"shadows": "numeric.absolute"},
-    },
+    # "numpy.core.__init__.abs": {
+    #     "type": "import",
+    #     "data": {"shadows": "numeric.absolute"},
+    # },
     # "numpy.core.__init__.version": {
     #     "type": "relative-import",
     #     "data": {"shadows": "version", "level": 2},
@@ -148,6 +148,22 @@ expected = {
         "data": {"shadows": "numpy.version.get_versions", "level": 1},
     },
     "numpy.core.version": {
+        "type": "relative-import",
+        "data": {"shadows": "numpy.version", "level": 2},
+    },
+    "numpy.core.abs": {
+        "type": "relative-import",
+        "data": {"shadows": "numpy.core.numeric.absolute", "level": 1},
+    },
+    "numpy.core.get_versions": {
+        "type": "relative-import",
+        "data": {"shadows": "numpy.version.get_versions", "level": 2},
+    },
+    "numpy.core.alias_get_versions": {
+        "type": "relative-import",
+        "data": {"shadows": "numpy.version.get_versions", "level": 2},
+    },
+    "numpy.core.alias_version": {
         "type": "relative-import",
         "data": {"shadows": "numpy.version", "level": 2},
     },
