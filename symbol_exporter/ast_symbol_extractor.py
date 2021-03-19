@@ -38,6 +38,7 @@ class SymbolFinder(ast.NodeVisitor):
         self.undeclared_symbols = set()
         self.used_builtins = set()
         self.current_args_kwargs_stack = []
+        self._relative_import_stack = []
 
     @property
     def symbols(self):
@@ -85,15 +86,26 @@ class SymbolFinder(ast.NodeVisitor):
                         symbol_type=SymbolType.RELATIVE_STAR_IMPORT,
                         level=node.level,
                     )
+        self._relative_import_stack.append(node.level)
         self.generic_visit(node)
+        self._relative_import_stack.pop(-1)
 
     def visit_alias(self, node: ast.alias) -> Any:
         if node.asname:
             alias_name = self.aliases.get(node.name, node.name)
             self.aliases[node.asname] = alias_name
-            self._add_symbol_to_surface_area(
-                SymbolType.IMPORT, symbol=node.asname, shadows=alias_name
-            )
+            if self._relative_import_stack and self._relative_import_stack[0]:
+                level = self._relative_import_stack[0]
+                self._add_symbol_to_surface_area(
+                    SymbolType.RELATIVE_IMPORT,
+                    symbol=node.asname,
+                    shadows=alias_name,
+                    level=level,
+                )
+            else:
+                self._add_symbol_to_surface_area(
+                    SymbolType.IMPORT, symbol=node.asname, shadows=alias_name
+                )
 
     def visit_Attribute(self, node: ast.Attribute) -> Any:
         self.attr_stack.append(node.attr)

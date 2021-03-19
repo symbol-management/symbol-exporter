@@ -342,6 +342,30 @@ def test_relative_import():
     }
 
 
+def test_relative_alias_import():
+    code = """
+    from . import core as c
+    from .core import ones as c_ones
+    from ..core import twos as c_twos
+    """
+    z = process_code_str(code)
+    assert z.symbols == {
+        "mm": {"data": {}, "type": "module"},
+        "mm.c": {
+            "type": "relative-import",
+            "data": {"shadows": "core", "level": 1},
+        },
+        "mm.c_ones": {
+            "type": "relative-import",
+            "data": {"shadows": "core.ones", "level": 1},
+        },
+        "mm.c_twos": {
+            "type": "relative-import",
+            "data": {"shadows": "core.twos", "level": 2},
+        },
+    }
+
+
 def test_relative_star_import():
     code = """
     from .core import *
