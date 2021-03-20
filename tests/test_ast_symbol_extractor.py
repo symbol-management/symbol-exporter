@@ -301,7 +301,7 @@ def test_star_import():
     assert z.imported_symbols == ["numpy"]
     assert not z.used_symbols
     assert z.symbols == {
-        "*": {
+        "mm.*": {
             "type": "star-import",
             "data": {"imports": {"abc"}},
         },
@@ -384,7 +384,7 @@ def test_undeclared_symbols():
     assert z.used_symbols == {"numpy.ones", "twos"}
     assert z.undeclared_symbols == {"twos"}
     assert z.symbols == {
-        "*": {
+        "mm.*": {
             "type": "star-import",
             "data": {"imports": {"abc", "xyz"}},
         },
