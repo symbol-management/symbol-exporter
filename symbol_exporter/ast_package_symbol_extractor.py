@@ -94,7 +94,7 @@ class DirectorySymbolFinder:
 
 expected = {
     "numpy.version": {"type": "module", "data": {}},
-    "numpy.version.get_versions": {"type": "function", "data": {"lineno": 1}},
+    "numpy.version.get_versions": {"type": "function", "data": {"lineno": 4}},
     "numpy.__init__": {"type": "module", "data": {}},
     # "numpy.__init__.version": {
     #     "type": "relative-import",
@@ -168,7 +168,38 @@ expected = {
         "type": "relative-import",
         "data": {"shadows": "numpy.version", "level": 2},
     },
+    "numpy.core.__init__.*": {
+        "type": "star-import",
+        "data": {
+            "imports": {
+                "requests"
+            }
+        }
+    },
+    "numpy.__init__.*": {
+        "type": "star-import",
+        "data": {
+            "imports": {
+                "requests"
+            }
+        }
+    },
+    "numpy.version.*": {
+        "type": "star-import",
+        "data": {
+            "imports": {
+                "requests"
+            }
+        }
+    },
 }
+
+
+def make_json_friendly(data):
+    if isinstance(data, set):
+        return list(sorted(data))
+    return data
+
 
 if __name__ == "__main__":
     import argparse
@@ -183,13 +214,15 @@ if __name__ == "__main__":
     pprint(args.filename)
     dsf = DirectorySymbolFinder(args.filename)
     symbols = dsf.extract_symbols()
-    json.dump(symbols, sys.stdout, indent=2)
+    json.dump(symbols, sys.stdout, indent=2, default=make_json_friendly)
     assert symbols == expected
 
 # TODO:
 #  - handle relative imports in modules. i.e. not in __init__.py
 #  - post process relative star imports
-#  - handle aliased relative imports.
-#     they are handled but the type from symbol extractor is "import" and not "relative-import"
-#     This will be a problem if relative import has more than 1 dot.
-#
+#  - Iterate over symbols by type precedence and strip __init__
+#    - imports
+#    - packages
+#    - modules
+#    - others
+
