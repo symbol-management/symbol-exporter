@@ -11,6 +11,40 @@ def process_code_str(code, module_name="mm"):
     return z
 
 
+def test_package_name():
+    code = """
+     from abc import xyz
+     """
+    z = process_code_str(code, module_name="__init__")
+    assert z.symbols == {
+        "__init__": {
+            "type": "package",
+            "data": {},
+        },
+        "__init__.xyz": {
+            "type": "import",
+            "data": {"shadows": "abc.xyz"},
+        },
+    }
+
+
+def test_fully_qualified_package_names():
+    code = """
+     from abc import xyz
+     """
+    z = process_code_str(code, module_name="mm.__init__")
+    assert z.symbols == {
+        "mm.__init__": {
+            "type": "package",
+            "data": {},
+        },
+        "mm.__init__.xyz": {
+            "type": "import",
+            "data": {"shadows": "abc.xyz"},
+        },
+    }
+
+
 def test_fully_qualified_module_names():
     code = """
      from abc import xyz
