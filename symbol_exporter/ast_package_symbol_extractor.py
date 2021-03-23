@@ -2,7 +2,7 @@ import ast
 from pathlib import Path
 from typing import Union
 
-from symbol_exporter.ast_symbol_extractor import SymbolFinder, is_relative_import
+from symbol_exporter.ast_symbol_extractor import SymbolFinder, is_relative_import, SymbolType
 
 
 def is_package(directory: Path) -> bool:
@@ -29,6 +29,11 @@ def relative_imports(package_symbols: dict) -> list:
     return [(k, v) for k, v in package_symbols.items() if is_relative_import(v)]
 
 
+def ordered_by_type(symbols: dict):
+    for sym in sorted(symbols, key=lambda x: symbols[x]["type"]):
+        yield sym, symbols[sym]
+
+
 def dereference_relative_import(symbol_name: str, data: dict) -> str:
     """Expects data of a relative import"""
     shadows = data["shadows"]
@@ -38,8 +43,8 @@ def dereference_relative_import(symbol_name: str, data: dict) -> str:
 
 
 def remove_shadowed_relative_imports(package_symbols: dict):
-    for k, v in relative_imports(package_symbols):
-        if "__init__" in k:
+    for k, v in ordered_by_type(package_symbols):
+        if is_relative_import(v) and "__init__" in k:
             new_symbol = k.replace(".__init__", "")
             if (
                 new_symbol not in package_symbols
@@ -93,9 +98,9 @@ class DirectorySymbolFinder:
 
 
 expected = {
-    "numpy.version": {"type": "module", "data": {}},
-    "numpy.version.get_versions": {"type": "function", "data": {"lineno": 4}},
-    "numpy.__init__": {"type": "package", "data": {}},
+    "numpy.version": {"type": SymbolType.MODULE, "data": {}},
+    "numpy.version.get_versions": {"type": SymbolType.FUNCTION, "data": {"lineno": 4}},
+    "numpy.__init__": {"type": SymbolType.PACKAGE, "data": {}},
     # "numpy.__init__.version": {
     #     "type": "relative-import",
     #     "data": {"shadows": "version", "level": 1},
@@ -112,18 +117,18 @@ expected = {
     #     "data": {"shadows": "core", "level": 1},
     # },
     "numpy.__init__.relative.*": {
-        "type": "relative-star-import",
+        "type": SymbolType.RELATIVE_STAR_IMPORT,
         "data": {
             "imports": [{"symbol": "core", "level": 1, "module": "numpy.__init__"}]
         },
     },
-    "numpy.core.__init__": {"type": "package", "data": {}},
+    "numpy.core.__init__": {"type": SymbolType.PACKAGE, "data": {}},
     # "numpy.core.__init__.numeric": {
     #     "type": "relative-import",
     #     "data": {"shadows": "numeric", "level": 1},
     # },
     "numpy.core.__init__.relative.*": {
-        "type": "relative-star-import",
+        "type": SymbolType.RELATIVE_STAR_IMPORT,
         "data": {
             "imports": [
                 {"symbol": "numeric", "level": 1, "module": "numpy.core.__init__"}
@@ -138,38 +143,38 @@ expected = {
     #     "type": "relative-import",
     #     "data": {"shadows": "version", "level": 2},
     # },
-    "numpy.core.numeric": {"type": "module", "data": {}},
-    "numpy.core.numeric.ones": {"type": "function", "data": {"lineno": 1}},
+    "numpy.core.numeric": {"type": SymbolType.MODULE, "data": {}},
+    "numpy.core.numeric.ones": {"type": SymbolType.FUNCTION, "data": {"lineno": 1}},
     "numpy.core.numeric.absolute": {
-        "type": "function",
+        "type": SymbolType.FUNCTION,
         "data": {"lineno": 5, "symbols_in_volume": {"abs": {"line number": [6]}}},
     },
     "numpy.get_versions": {
-        "type": "relative-import",
+        "type": SymbolType.RELATIVE_IMPORT,
         "data": {"shadows": "numpy.version.get_versions", "level": 1},
     },
     "numpy.core.version": {
-        "type": "relative-import",
+        "type": SymbolType.RELATIVE_IMPORT,
         "data": {"shadows": "numpy.version", "level": 2},
     },
     "numpy.core.abs": {
-        "type": "relative-import",
+        "type": SymbolType.RELATIVE_IMPORT,
         "data": {"shadows": "numpy.core.numeric.absolute", "level": 1},
     },
     "numpy.core.get_versions": {
-        "type": "relative-import",
+        "type": SymbolType.RELATIVE_IMPORT,
         "data": {"shadows": "numpy.version.get_versions", "level": 2},
     },
     "numpy.core.alias_get_versions": {
-        "type": "relative-import",
+        "type": SymbolType.RELATIVE_IMPORT,
         "data": {"shadows": "numpy.version.get_versions", "level": 2},
     },
     "numpy.core.alias_version": {
-        "type": "relative-import",
+        "type": SymbolType.RELATIVE_IMPORT,
         "data": {"shadows": "numpy.version", "level": 2},
     },
     "numpy.core.__init__.*": {
-        "type": "star-import",
+        "type": SymbolType.STAR_IMPORT,
         "data": {
             "imports": {
                 "requests"
@@ -177,7 +182,7 @@ expected = {
         }
     },
     "numpy.__init__.*": {
-        "type": "star-import",
+        "type": SymbolType.STAR_IMPORT,
         "data": {
             "imports": {
                 "requests"
@@ -185,7 +190,7 @@ expected = {
         }
     },
     "numpy.version.*": {
-        "type": "star-import",
+        "type": SymbolType.STAR_IMPORT,
         "data": {
             "imports": {
                 "requests"
