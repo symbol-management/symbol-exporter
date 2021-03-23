@@ -95,7 +95,7 @@ class DirectorySymbolFinder:
 expected = {
     "numpy.version": {"type": "module", "data": {}},
     "numpy.version.get_versions": {"type": "function", "data": {"lineno": 4}},
-    "numpy.__init__": {"type": "module", "data": {}},
+    "numpy.__init__": {"type": "package", "data": {}},
     # "numpy.__init__.version": {
     #     "type": "relative-import",
     #     "data": {"shadows": "version", "level": 1},
@@ -117,7 +117,7 @@ expected = {
             "imports": [{"symbol": "core", "level": 1, "module": "numpy.__init__"}]
         },
     },
-    "numpy.core.__init__": {"type": "module", "data": {}},
+    "numpy.core.__init__": {"type": "package", "data": {}},
     # "numpy.core.__init__.numeric": {
     #     "type": "relative-import",
     #     "data": {"shadows": "numeric", "level": 1},
