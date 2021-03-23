@@ -19,7 +19,7 @@ from symbol_exporter.tools import executor
 
 
 def file_path_to_import(file_path: str):
-    return file_path.replace("/__init__.py", "").replace(".py", "").replace("/", ".")
+    return file_path.replace(".py", "").replace("/", ".")
 
 
 def single_file_extraction(file_name, top_dir):
