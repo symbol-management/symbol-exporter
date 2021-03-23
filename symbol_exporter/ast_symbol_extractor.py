@@ -14,6 +14,10 @@ def is_relative_import(symbol) -> bool:
     return symbol["type"] == SymbolType.RELATIVE_IMPORT
 
 
+def is_relative_star_import(symbol) -> bool:
+    return symbol["type"] == SymbolType.RELATIVE_STAR_IMPORT
+
+
 class OrderedEnum(Enum):
     def __ge__(self, other):
         if self.__class__ is other.__class__:

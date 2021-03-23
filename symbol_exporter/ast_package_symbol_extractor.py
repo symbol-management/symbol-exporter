@@ -2,7 +2,7 @@ import ast
 from pathlib import Path
 from typing import Union
 
-from symbol_exporter.ast_symbol_extractor import SymbolFinder, is_relative_import, SymbolType
+from symbol_exporter.ast_symbol_extractor import SymbolFinder, is_relative_import, SymbolType, is_relative_star_import
 
 
 def is_package(directory: Path) -> bool:
@@ -25,15 +25,6 @@ def merge_dicts(*dicts):
     return new_symbols
 
 
-def relative_imports(package_symbols: dict) -> list:
-    return [(k, v) for k, v in package_symbols.items() if is_relative_import(v)]
-
-
-def ordered_by_type(symbols: dict):
-    for sym in sorted(symbols, key=lambda x: symbols[x]["type"]):
-        yield sym, symbols[sym]
-
-
 def dereference_relative_import(symbol_name: str, data: dict) -> str:
     """Expects data of a relative import"""
     shadows = data["shadows"]
@@ -43,28 +34,20 @@ def dereference_relative_import(symbol_name: str, data: dict) -> str:
 
 
 def remove_shadowed_relative_imports(package_symbols: dict):
-    for k, v in ordered_by_type(package_symbols):
-        if is_relative_import(v) and "__init__" in k:
-            new_symbol = k.replace(".__init__", "")
-            if (
-                new_symbol not in package_symbols
-                and f"{new_symbol}.__init__" not in package_symbols
-            ):
-                print(
-                    f"{new_symbol} IS NOT in symbols - adding to symbol table and deleting symbol {k}"
-                )
-                # Do we want to keep the original? (numpy.__init__.getVersions)
-                symbol_info = package_symbols.pop(k)
-                symbol_info["data"]["shadows"] = dereference_relative_import(
-                    new_symbol, symbol_info["data"]
-                )
-                package_symbols[new_symbol] = symbol_info
-            else:
-                print(
-                    f"{new_symbol} IS in symbols so it is also module - deleting '{k}'"
-                    f" - keeping module which contains more information"
-                )
-                del package_symbols[k]
+    ret = {}
+    for k, v in sorted(package_symbols.items(), key=lambda x: x[1]["type"]):
+        new_symbol = k.replace(".__init__", "")
+        if is_relative_import(v):
+            shadows = dereference_relative_import(new_symbol, v["data"])
+            new_v = dict(v)
+            new_v["data"]["shadows"] = shadows
+            ret[new_symbol] = new_v
+        if is_relative_star_import(v):
+            # Do stuff here
+            ret[new_symbol] = v
+        else:
+            ret[new_symbol] = v
+    return ret
 
 
 class DirectorySymbolFinder:
@@ -77,8 +60,8 @@ class DirectorySymbolFinder:
 
     def extract_symbols(self) -> dict:
         package_symbols = self._get_all_symbols_in_package()
-        remove_shadowed_relative_imports(package_symbols)
-        return package_symbols
+        r = remove_shadowed_relative_imports(package_symbols)
+        return r
 
     def _get_all_symbols_in_package(self) -> dict:
         # TODO: Next line can be parallelized since all files are separate modules
@@ -100,7 +83,7 @@ class DirectorySymbolFinder:
 expected = {
     "numpy.version": {"type": SymbolType.MODULE, "data": {}},
     "numpy.version.get_versions": {"type": SymbolType.FUNCTION, "data": {"lineno": 4}},
-    "numpy.__init__": {"type": SymbolType.PACKAGE, "data": {}},
+    "numpy": {"type": SymbolType.PACKAGE, "data": {}},
     # "numpy.__init__.version": {
     #     "type": "relative-import",
     #     "data": {"shadows": "version", "level": 1},
@@ -116,18 +99,18 @@ expected = {
     #     "type": "relative-import",
     #     "data": {"shadows": "core", "level": 1},
     # },
-    "numpy.__init__.relative.*": {
+    "numpy.relative.*": {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
         "data": {
             "imports": [{"symbol": "core", "level": 1, "module": "numpy.__init__"}]
         },
     },
-    "numpy.core.__init__": {"type": SymbolType.PACKAGE, "data": {}},
+    "numpy.core": {"type": SymbolType.PACKAGE, "data": {}},
     # "numpy.core.__init__.numeric": {
     #     "type": "relative-import",
     #     "data": {"shadows": "numeric", "level": 1},
     # },
-    "numpy.core.__init__.relative.*": {
+    "numpy.core.relative.*": {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
         "data": {
             "imports": [
@@ -173,7 +156,7 @@ expected = {
         "type": SymbolType.RELATIVE_IMPORT,
         "data": {"shadows": "numpy.version", "level": 2},
     },
-    "numpy.core.__init__.*": {
+    "numpy.core.*": {
         "type": SymbolType.STAR_IMPORT,
         "data": {
             "imports": {
@@ -181,7 +164,7 @@ expected = {
             }
         }
     },
-    "numpy.__init__.*": {
+    "numpy.*": {
         "type": SymbolType.STAR_IMPORT,
         "data": {
             "imports": {
