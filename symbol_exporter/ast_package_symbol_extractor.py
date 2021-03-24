@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Union
 
 from symbol_exporter.ast_symbol_extractor import SymbolFinder, is_relative_import, SymbolType, is_relative_star_import
+from symbol_exporter.db_access_model import make_json_friendly
 
 
 def is_package(directory: Path) -> bool:
@@ -181,12 +182,6 @@ expected = {
         }
     },
 }
-
-
-def make_json_friendly(data):
-    if isinstance(data, set):
-        return list(sorted(data))
-    return data
 
 
 if __name__ == "__main__":
