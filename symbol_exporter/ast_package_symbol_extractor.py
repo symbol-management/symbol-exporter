@@ -203,8 +203,3 @@ if __name__ == "__main__":
 # TODO:
 #  - handle relative imports in modules. i.e. not in __init__.py
 #  - post process relative star imports
-#  - Iterate over symbols by type precedence and strip __init__
-#    - imports
-#    - packages
-#    - modules
-#    - others
