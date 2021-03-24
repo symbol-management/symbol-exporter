@@ -100,6 +100,7 @@ class SymbolFinder(ast.NodeVisitor):
                             symbol=k.name,
                             shadows=module_name,
                             level=node.level,
+                            module=self._module_name,
                         )
             else:
                 if not relative_import:
@@ -127,6 +128,7 @@ class SymbolFinder(ast.NodeVisitor):
                     symbol=node.asname,
                     shadows=alias_name,
                     level=level,
+                    module=self._module_name,
                 )
             else:
                 self._add_symbol_to_surface_area(
@@ -280,7 +282,7 @@ class SymbolFinder(ast.NodeVisitor):
         default = dict(type=symbol_type, data=dict(imports=[]))
         symbol_name = f"{self._module_name}.relative.*"
         self._symbols.setdefault(symbol_name, default)["data"]["imports"].append(
-            dict(symbol=imported_symbol, level=level, module=self._module_name)
+            dict(shadows=imported_symbol, level=level, module=self._module_name)
         )
 
     def post_process_symbols(self):
