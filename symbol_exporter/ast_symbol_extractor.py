@@ -246,7 +246,9 @@ class SymbolFinder(ast.NodeVisitor):
 
     def _add_symbol_to_star_imports(self, imported_symbol, symbol_type: SymbolType):
         default = dict(type=symbol_type, data=dict(imports=set()))
-        self._symbols.setdefault(f"{self._module_name}.*", default)["data"]["imports"].add(imported_symbol)
+        self._symbols.setdefault(f"{self._module_name}.*", default)["data"][
+            "imports"
+        ].add(imported_symbol)
 
     def _add_symbol_to_relative_star_imports(
         self, imported_symbol, symbol_type: SymbolType, level: int
