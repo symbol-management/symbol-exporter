@@ -26,11 +26,9 @@ def merge_dicts(*dicts):
     return new_symbols
 
 
-def dereference_relative_import(symbol_name: str, data: dict) -> str:
+def dereference_relative_import(module: str, level: int, shadows: str) -> str:
     """Expects data of a relative import"""
-    shadows = data["shadows"]
-    level = data["level"]
-    parent = symbol_name.split(".")[:-level]
+    parent = module.split(".")[:-level]
     return ".".join([*parent, shadows])
 
 
@@ -39,13 +37,9 @@ def remove_shadowed_relative_imports(package_symbols: dict):
     for k, v in sorted(package_symbols.items(), key=lambda x: x[1]["type"]):
         new_symbol = k.replace(".__init__", "")
         if is_relative_import(v):
-            shadows = dereference_relative_import(new_symbol, v["data"])
-            new_v = dict(v)
-            new_v["data"]["shadows"] = shadows
-            ret[new_symbol] = new_v
-        if is_relative_star_import(v):
-            # Do stuff here
-            ret[new_symbol] = v
+            shadows = dereference_relative_import(**v["data"])
+            data = dict(v, data=dict(shadows=shadows))
+            ret[new_symbol] = data
         else:
             ret[new_symbol] = v
     return ret
@@ -103,7 +97,7 @@ expected = {
     "numpy.relative.*": {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
         "data": {
-            "imports": [{"symbol": "core", "level": 1, "module": "numpy.__init__"}]
+            "imports": [{"shadows": "core", "level": 1, "module": "numpy.__init__"}]
         },
     },
     "numpy.core": {"type": SymbolType.PACKAGE, "data": {}},
@@ -115,7 +109,7 @@ expected = {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
         "data": {
             "imports": [
-                {"symbol": "numeric", "level": 1, "module": "numpy.core.__init__"}
+                {"shadows": "numeric", "level": 1, "module": "numpy.core.__init__"}
             ]
         },
     },
@@ -135,27 +129,27 @@ expected = {
     },
     "numpy.get_versions": {
         "type": SymbolType.RELATIVE_IMPORT,
-        "data": {"shadows": "numpy.version.get_versions", "level": 1},
+        "data": {"shadows": "numpy.version.get_versions"},
     },
     "numpy.core.version": {
         "type": SymbolType.RELATIVE_IMPORT,
-        "data": {"shadows": "numpy.version", "level": 2},
+        "data": {"shadows": "numpy.version"},
     },
     "numpy.core.abs": {
         "type": SymbolType.RELATIVE_IMPORT,
-        "data": {"shadows": "numpy.core.numeric.absolute", "level": 1},
+        "data": {"shadows": "numpy.core.numeric.absolute"},
     },
     "numpy.core.get_versions": {
         "type": SymbolType.RELATIVE_IMPORT,
-        "data": {"shadows": "numpy.version.get_versions", "level": 2},
+        "data": {"shadows": "numpy.version.get_versions"},
     },
     "numpy.core.alias_get_versions": {
         "type": SymbolType.RELATIVE_IMPORT,
-        "data": {"shadows": "numpy.version.get_versions", "level": 2},
+        "data": {"shadows": "numpy.version.get_versions"},
     },
     "numpy.core.alias_version": {
         "type": SymbolType.RELATIVE_IMPORT,
-        "data": {"shadows": "numpy.version", "level": 2},
+        "data": {"shadows": "numpy.version"},
     },
     "numpy.core.*": {
         "type": SymbolType.STAR_IMPORT,
