@@ -81,7 +81,7 @@ def invert_dict(d: dict):
     return_dict = defaultdict(set)
     for k, v in d.items():
         for vv in v:
-            return_dict[v].add(k)
+            return_dict[vv].add(k)
     return dict(return_dict)
 
 
