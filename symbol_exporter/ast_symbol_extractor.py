@@ -42,9 +42,9 @@ class OrderedEnum(Enum):
 
 class SymbolType(OrderedEnum):
     STAR_IMPORT = 1
-    RELATIVE_STAR_IMPORT = 2
-    IMPORT = 3
-    RELATIVE_IMPORT = 4
+    RELATIVE_STAR_IMPORT = 10
+    IMPORT = 2
+    RELATIVE_IMPORT = 3
     PACKAGE = 5
     MODULE = 6
     FUNCTION = 7
