@@ -3,6 +3,7 @@ import hmac
 import json
 import os
 from datetime import datetime
+from enum import Enum
 
 import dask.bag as db
 from dask.distributed import Client
@@ -136,4 +137,6 @@ class WebDB:
 def make_json_friendly(data):
     if isinstance(data, set):
         return list(sorted(data))
+    if isinstance(data, Enum):
+        return str(data)
     return data

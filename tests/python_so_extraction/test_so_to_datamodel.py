@@ -1,3 +1,4 @@
+from symbol_exporter.ast_symbol_extractor import SymbolType
 from symbol_exporter.python_so_extractor import c_symbols_to_datamodel
 
 
@@ -26,16 +27,16 @@ def test__regex_conversion():
         }
     )
     expected = {
-        "_regex": {"data": {}, "type": "module"},
-        "_regex.CODE_SIZE": {"data": {}, "type": "constant"},
-        "_regex.MAGIC": {"data": {}, "type": "constant"},
-        "_regex.compile": {"data": {}, "type": "function"},
-        "_regex.copyright": {"data": {}, "type": "constant"},
-        "_regex.fold_case": {"data": {}, "type": "function"},
-        "_regex.get_all_cases": {"data": {}, "type": "function"},
-        "_regex.get_code_size": {"data": {}, "type": "function"},
-        "_regex.get_expand_on_folding": {"data": {}, "type": "function"},
-        "_regex.get_properties": {"data": {}, "type": "function"},
-        "_regex.has_property_value": {"data": {}, "type": "function"},
+        "_regex": {"data": {}, "type": SymbolType.MODULE},
+        "_regex.CODE_SIZE": {"data": {}, "type": SymbolType.CONSTANT},
+        "_regex.MAGIC": {"data": {}, "type": SymbolType.CONSTANT},
+        "_regex.compile": {"data": {}, "type": SymbolType.FUNCTION},
+        "_regex.copyright": {"data": {}, "type": SymbolType.CONSTANT},
+        "_regex.fold_case": {"data": {}, "type": SymbolType.FUNCTION},
+        "_regex.get_all_cases": {"data": {}, "type": SymbolType.FUNCTION},
+        "_regex.get_code_size": {"data": {}, "type": SymbolType.FUNCTION},
+        "_regex.get_expand_on_folding": {"data": {}, SymbolType.FUNCTION},
+        "_regex.get_properties": {"data": {}, "type": SymbolType.FUNCTION},
+        "_regex.has_property_value": {"data": {}, "type": SymbolType.FUNCTION},
     }
     assert actual == expected

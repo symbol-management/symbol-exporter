@@ -10,16 +10,41 @@ version = "2"  # must be an integer
 builtin_symbols = set(dir(builtins))
 
 
-class SymbolType(str, Enum):
-    MODULE = "module"
-    IMPORT = "import"
-    FUNCTION = "function"
-    CONSTANT = "constant"
-    CLASS = "class"
-    STAR_IMPORT = "star-import"
-    RELATIVE_IMPORT = "relative-import"
-    RELATIVE_STAR_IMPORT = "relative-star-import"
-    PACKAGE = "package"
+class OrderedEnum(Enum):
+    def __ge__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value >= other.value
+        return NotImplemented
+
+    def __gt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value > other.value
+        return NotImplemented
+
+    def __le__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value <= other.value
+        return NotImplemented
+
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented
+
+
+class SymbolType(OrderedEnum):
+    STAR_IMPORT = 1
+    RELATIVE_STAR_IMPORT = 2
+    IMPORT = 3
+    RELATIVE_IMPORT = 4
+    PACKAGE = 5
+    MODULE = 6
+    FUNCTION = 7
+    CONSTANT = 8
+    CLASS = 9
+
+    def __str__(self):
+        return f"{self.name.lower().replace('_', '-')}"
 
 
 class SymbolFinder(ast.NodeVisitor):
