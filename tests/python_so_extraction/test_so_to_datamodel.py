@@ -35,7 +35,7 @@ def test__regex_conversion():
         "_regex.fold_case": {"data": {}, "type": SymbolType.FUNCTION},
         "_regex.get_all_cases": {"data": {}, "type": SymbolType.FUNCTION},
         "_regex.get_code_size": {"data": {}, "type": SymbolType.FUNCTION},
-        "_regex.get_expand_on_folding": {"data": {}, SymbolType.FUNCTION},
+        "_regex.get_expand_on_folding": {"data": {}, "type": SymbolType.FUNCTION},
         "_regex.get_properties": {"data": {}, "type": SymbolType.FUNCTION},
         "_regex.has_property_value": {"data": {}, "type": SymbolType.FUNCTION},
     }
