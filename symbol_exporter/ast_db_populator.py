@@ -36,7 +36,7 @@ web_interface = WebDB()
 
 
 def file_path_to_import(file_path: str):
-    return file_path.replace("/__init__.py", "").replace(".py", "").replace("/", ".")
+    return file_path.replace(".py", "").replace("/", ".")
 
 
 def parse_code(code, module_name):

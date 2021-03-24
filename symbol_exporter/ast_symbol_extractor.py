@@ -19,6 +19,7 @@ class SymbolType(str, Enum):
     STAR_IMPORT = "star-import"
     RELATIVE_IMPORT = "relative-import"
     RELATIVE_STAR_IMPORT = "relative-star-import"
+    PACKAGE = "package"
 
 
 class SymbolFinder(ast.NodeVisitor):
@@ -27,7 +28,7 @@ class SymbolFinder(ast.NodeVisitor):
         self.current_symbol_stack = [module_name]
         self._symbols = {
             module_name: {
-                "type": SymbolType.MODULE,
+                "type": SymbolType.PACKAGE if module_name.endswith("__init__") else SymbolType.MODULE,
                 "data": {},
             }
         }
