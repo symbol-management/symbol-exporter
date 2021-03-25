@@ -359,15 +359,15 @@ def test_relative_import():
     assert z.symbols == {
         "mm.core": {
             "type": SymbolType.RELATIVE_IMPORT,
-            "data": {"shadows": "core", "level": 1},
+            "data": {"shadows": "core", "level": 1, "module": "mm"},
         },
         "mm.ones": {
             "type": SymbolType.RELATIVE_IMPORT,
-            "data": {"shadows": "core.ones", "level": 1},
+            "data": {"shadows": "core.ones", "level": 1, "module": "mm"},
         },
         "mm.twos": {
             "type": SymbolType.RELATIVE_IMPORT,
-            "data": {"shadows": "core.twos", "level": 2},
+            "data": {"shadows": "core.twos", "level": 2, "module": "mm"},
         },
         "mm": {
             "type": SymbolType.MODULE,
@@ -387,15 +387,15 @@ def test_relative_alias_import():
         "mm": {"data": {}, "type": SymbolType.MODULE},
         "mm.c": {
             "type": SymbolType.RELATIVE_IMPORT,
-            "data": {"shadows": "core", "level": 1},
+            "data": {"shadows": "core", "level": 1, "module": "mm"},
         },
         "mm.c_ones": {
             "type": SymbolType.RELATIVE_IMPORT,
-            "data": {"shadows": "core.ones", "level": 1},
+            "data": {"shadows": "core.ones", "level": 1, "module": "mm"},
         },
         "mm.c_twos": {
             "type": SymbolType.RELATIVE_IMPORT,
-            "data": {"shadows": "core.twos", "level": 2},
+            "data": {"shadows": "core.twos", "level": 2, "module": "mm"},
         },
     }
 
@@ -413,12 +413,12 @@ def test_relative_star_import():
             "data": {
                 "imports": [
                     {
-                        "symbol": "core",
+                        "shadows": "core",
                         "level": 1,
                         "module": "mm",
                     },
                     {
-                        "symbol": "numeric",
+                        "shadows": "numeric",
                         "level": 2,
                         "module": "mm",
                     },
