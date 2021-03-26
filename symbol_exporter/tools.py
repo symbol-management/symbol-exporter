@@ -114,10 +114,6 @@ def diff(upstream, local):
         present_artifacts = local[package]
 
         missing_artifacts = set(upstream_artifacts) - set(present_artifacts)
-        missing_files.update(
-            (package, k, v)
-            for k, v in upstream_artifacts.items()
-            if k in missing_artifacts
-        )
+        missing_files.update((package, k, v) for k, v in upstream_artifacts.items() if k in missing_artifacts)
 
     return missing_files

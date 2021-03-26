@@ -9,9 +9,7 @@ from symbol_exporter.db_access_model import WebDB
 web_interface = WebDB()
 
 
-def get_supply(
-    top_level_import, v_symbols, get_symbol_table_func=web_interface.get_symbol_table
-):
+def get_supply(top_level_import, v_symbols, get_symbol_table_func=web_interface.get_symbol_table):
     supplies = None
     bad_symbols = set()
     symbol_table = get_symbol_table_func(top_level_import)
@@ -28,9 +26,7 @@ def get_supply(
     return supplies or set(), bad_symbols
 
 
-def find_supplying_version_set(
-    volume, get_symbol_table_func=web_interface.get_symbol_table
-):
+def find_supplying_version_set(volume, get_symbol_table_func=web_interface.get_symbol_table):
     supplying_versions = {}
 
     effective_volume = sorted(volume - builtin_symbols)
@@ -39,9 +35,7 @@ def find_supplying_version_set(
 
     with ThreadPoolExecutor() as pool:
         futures = {
-            pool.submit(
-                get_supply, top_level_import, list(v_symbols), get_symbol_table_func
-            ): top_level_import
+            pool.submit(get_supply, top_level_import, list(v_symbols), get_symbol_table_func): top_level_import
             for top_level_import, v_symbols in symbol_by_top_level
         }
     for future in as_completed(futures):

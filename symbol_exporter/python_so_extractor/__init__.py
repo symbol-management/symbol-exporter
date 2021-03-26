@@ -85,18 +85,14 @@ class CompiledPythonLib:
                 current_value = registers.get(destination, "0x0")
                 # FIXME (current_value and)
                 if current_value and current_value != Tracers.UNKNOWN:
-                    registers[destination] = hex(
-                        int(current_value, 16) + int(source, 16)
-                    )
+                    registers[destination] = hex(int(current_value, 16) + int(source, 16))
 
             elif instruction.instruction in ["sub"]:
                 destination, source = map(str.strip, instruction.args.split(","))
                 current_value = registers.get(destination, "0x0")
                 # FIXME (current_value and)
                 if current_value and current_value != Tracers.UNKNOWN:
-                    registers[destination] = hex(
-                        int(current_value, 16) - int(source, 16)
-                    )
+                    registers[destination] = hex(int(current_value, 16) - int(source, 16))
 
             elif instruction.instruction in ["xor"]:
                 destination, source = map(str.strip, instruction.args.split(","))
@@ -132,24 +128,16 @@ class CompiledPythonLib:
                             if registers[offset_reg] == Tracers.UNKNOWN:
                                 idx = Tracers.UNKNOWN
                             elif int(registers[offset_reg], 16) > 0:
-                                idx += self.elf.u64(
-                                    int(registers[offset_reg], 16)
-                                ) * int(multiplier)
+                                idx += self.elf.u64(int(registers[offset_reg], 16)) * int(multiplier)
 
                         if idx == Tracers.UNKNOWN:
                             registers[destination] = Tracers.UNKNOWN
                         elif idx > 0:
-                            registers[destination] = hex(
-                                getattr(
-                                    self.elf, {"DWORD": "u32", "QWORD": "u64"}[size]
-                                )(idx)
-                            )
+                            registers[destination] = hex(getattr(self.elf, {"DWORD": "u32", "QWORD": "u64"}[size])(idx))
                         else:
                             raise Exception()
                 except Exception:
-                    logger.warning(
-                        "Failed to fill %r from %r", destination, instruction
-                    )
+                    logger.warning("Failed to fill %r from %r", destination, instruction)
                     registers[destination] = Tracers.UNKNOWN
 
             elif instruction.instruction in ["push"]:
@@ -210,9 +198,7 @@ class CompiledPythonLib:
             return
 
         module_struct_data = self.elf.read(int(module, base=16), PYMODULE_STRUCT.size)
-        logger.debug(
-            "parse_module: module_struct_data is %s", list(map(hex, module_struct_data))
-        )
+        logger.debug("parse_module: module_struct_data is %s", list(map(hex, module_struct_data)))
         name, docs, size, methods_idx = PYMODULE_STRUCT.unpack(module_struct_data)
         assert name != 0, name
         name = self.elf.string(name).decode()
@@ -269,9 +255,7 @@ class CompiledPythonLib:
             self._results["objects"].append({"name": object_name})
             logger.info("_parse_add_object: Found %s", object_name)
         else:
-            logger.warning(
-                "Called _parse_add_object with rdi=%s", self._registers["rdi"]
-            )
+            logger.warning("Called _parse_add_object with rdi=%s", self._registers["rdi"])
 
     def _PyModule_GetDict(self, call: AssemblyInstruction):
         if self._registers["rdi"] == Tracers.MODULE:
@@ -295,11 +279,7 @@ def c_symbols_to_datamodel(symbols):
     top_level_import = symbols["name"]
     output_data = {top_level_import: {"type": SymbolType.MODULE, "data": {}}}
     for method in symbols["methods"]:
-        output_data[f"{top_level_import}.{method['name']}"] = dict(
-            type=SymbolType.FUNCTION, data={}
-        )
+        output_data[f"{top_level_import}.{method['name']}"] = dict(type=SymbolType.FUNCTION, data={})
     for object in symbols["objects"]:
-        output_data[f"{top_level_import}.{object['name']}"] = dict(
-            type=SymbolType.CONSTANT, data={}
-        )
+        output_data[f"{top_level_import}.{object['name']}"] = dict(type=SymbolType.CONSTANT, data={})
     return output_data
