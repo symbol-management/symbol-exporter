@@ -59,8 +59,13 @@ def remove_shadowed_relative_imports(package_symbols: dict):
     return ret
 
 
+def symbol_in_namespace(symbol: str, namespace: str) -> bool:
+    parts = symbol.partition(f"{namespace}.")
+    return namespace in parts[1] and '.' not in parts[2]
+
+
 def deref_star(package_symbols: dict) -> dict:
-    ret = {}
+    ret = dict(package_symbols)
     star_imports = (
         (k, v) for k, v in package_symbols.items() if is_relative_star_import(v)
     )
@@ -71,49 +76,51 @@ def deref_star(package_symbols: dict) -> dict:
             namespace = rel_import["module"].replace(".__init__", "")
             print(f"Looking at symbol {k} with data {v} which shadows: {shadows}")
             for symbol in package_symbols:
-                print(f"looking at symbol {symbol}")
-                if symbol.startswith(shadows):
+                if symbol_in_namespace(symbol, shadows):
                     symbol_type = get_symbol_type(package_symbols[symbol])
-                    print(f"found symbol {symbol} for shadow {shadows}")
                     s: str = symbol.removeprefix(f"{shadows}")
                     new_symbol = f"{namespace}{s}"
-                    # print(f"adding {new_symbol} as star imported symbol")
-                    print(f"looking for v {package_symbols[symbol]}")
                     if is_relative_import(package_symbols[symbol]):
-                        print(f"{new_symbol} exists and is {symbol_type}")
+                        print(f"found {symbol} and is {symbol_type}")
                         dereferenced_shadows = package_symbols[symbol]["data"][
                             "shadows"
                         ]
-                        # print(f"rel import shadows {dereferenced_shadows}")
                         if new_symbol != dereferenced_shadows:
-                            # do not add new symbol if same, it is circular reference
                             print(
                                 f"adding symbol {new_symbol} shadowing {dereferenced_shadows}"
                             )
+                            data = dict(type=SymbolType.RELATIVE_IMPORT, data=dict(shadows=dereferenced_shadows))
+                            ret[new_symbol] = data
                         else:
                             print(
                                 f"found possible circular reference: {new_symbol} is already in volume of "
                                 f"{rel_import['module']}, it is also exposed through import {shadows}.*"
                             )
                     elif symbol_type is SymbolType.RELATIVE_STAR_IMPORT:
-                        print(f"{new_symbol} exists and is {symbol_type}")
-                        print("TODO: Deref the relative star imports add.")
-                        # Deref the relative star imports.
-                        # May want to use lookup table of all relative star imports.
+                        # TODO: Deref the relative star imports.
+                        # May need to do an initial pass and create lookup table of all relative star imports.
+                        print(f"found {symbol} and is {symbol_type}", end=" - ")
+                        print("TODO: Deref relative star imports.")
                     elif symbol_type is SymbolType.STAR_IMPORT:
-                        print(f"{new_symbol} exists and is {symbol_type}")
+                        # TODO: Merge star import into new symbol's * imports
+                        print(f"found {symbol} and is {symbol_type}", end=" - ")
                         print(
-                            f"TODO: Need to merge these star imports into the current symbols star imports set."
+                            f"TODO: Merge star imports into the {new_symbol} star imports set."
                         )
                     elif symbol_type in {SymbolType.PACKAGE, SymbolType.MODULE}:
-                        print(
-                            f"{new_symbol} exists and is {symbol_type}. Doing nothing"
-                        )
+                        print(f"found {symbol} and is {symbol_type}.")
+                        if new_symbol == symbol:
+                            print(f"Doing nothing. {new_symbol} already exists, most likely a package.")
+                        else:
+                            print(f"adding symbol {new_symbol} shadowing {symbol}")
+                            data = dict(type=SymbolType.RELATIVE_IMPORT, data=dict(shadows=symbol))
+                            ret[new_symbol] = data
                     else:
+                        print(f"found {symbol} and is {symbol_type}.")
                         print(f"adding symbol {new_symbol} shadowing {symbol}")
-            data = dict(v, data=dict(shadows=shadows))
-            ret[new_symbol] = data
-    return package_symbols
+                        data = dict(type=SymbolType.RELATIVE_IMPORT, data=dict(shadows=symbol))
+                        ret[new_symbol] = data
+    return ret
 
 
 class DirectorySymbolFinder:
