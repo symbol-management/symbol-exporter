@@ -2,6 +2,7 @@
 Perform a reverse index of the symbols, creating the symbol table that maps symbols to the artifacts
 that provide them from AST derived symbols.
 """
+from collections import defaultdict
 
 """
 BSD 3-Clause License
@@ -40,6 +41,8 @@ from itertools import groupby
 from random import shuffle
 
 from tqdm import tqdm
+import dask.bag as db
+from dask.distributed import Client
 
 from symbol_exporter.ast_symbol_extractor import version
 from symbol_exporter.db_access_model import WebDB
@@ -74,12 +77,36 @@ def inner_loop(artifact_name):
     return all_symbol_tables
 
 
+def invert_dict(d: dict):
+    return_dict = defaultdict(set)
+    for k, v in d.items():
+        for vv in v:
+            return_dict[vv].add(k)
+    return dict(return_dict)
+
+
 if __name__ == "__main__":
     web_interface = WebDB()
-    extracted_artifacts = web_interface.get_current_symbol_table_artifacts()
+    indexed_artifacts_by_top_symbol = (
+        web_interface.get_current_symbol_table_artifacts_by_top_level()
+    )
     all_artifacts = web_interface.get_current_extracted_pkgs().values()
+    # TODO: parallel run
+    with Client(threads_per_worker=100):
+        compute = (
+            db.from_sequence(all_artifacts)
+            .map(web_interface.get_top_level_symbols)
+            .compute()
+        )
+    all_symbols_by_artifact = {k: v for k, v in zip(all_artifacts, compute)}
+    all_artifacts_by_symbol = invert_dict(all_symbols_by_artifact)
 
-    artifacts_to_index = list(set(all_artifacts) - set(extracted_artifacts))
+    artifacts_to_index = set()
+    for symbol, artifacts_set in all_artifacts_by_symbol.items():
+        artifacts_to_index.update(
+            artifacts_set - indexed_artifacts_by_top_symbol.get(symbol, set())
+        )
+    artifacts_to_index = list(artifacts_to_index)
     print(f"Number of artifacts to index: {len(artifacts_to_index)}")
 
     # The shuffle here is to try to not have two threads running on the same symbol table json at once if possible

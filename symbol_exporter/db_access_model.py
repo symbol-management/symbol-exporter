@@ -53,16 +53,19 @@ class WebDB:
         )
         r.raise_for_status()
 
-    def get_current_symbol_table_artifacts(self):
-        all_indexted_pkgs = set()
+    def get_current_symbol_table_artifacts_by_top_level(self):
+        all_indexted_pkgs = {}
         extracted_symbols = self.get_symbol_table("")
         with Client(threads_per_worker=100):
             [
-                all_indexted_pkgs.update(k)
-                for k in db.from_sequence(extracted_symbols)
-                .map(self.get_symbol_table)
-                .map(lambda x: x.get("metadata", {}).get("indexed artifacts", {}))
-                .compute()
+                all_indexted_pkgs.update({k: set(v)})
+                for k, v in zip(
+                    extracted_symbols,
+                    db.from_sequence(extracted_symbols)
+                    .map(self.get_symbol_table)
+                    .map(lambda x: x.get("metadata", {}).get("indexed artifacts", {}))
+                    .compute(),
+                )
             ]
         return all_indexted_pkgs
 
@@ -76,6 +79,20 @@ class WebDB:
             json.decoder.JSONDecodeError,
         ):
             return {}
+
+    def get_artifact_metadata(self, artifact_name):
+        artifact_symbols_url = f"/api/v{version}/symbols/{artifact_name}"
+        result = requests.get(f"{self.host}{artifact_symbols_url}").json()
+        return result.get("metadata", {}) if result else {}
+
+    def get_top_level_symbols(self, artifact_name):
+        artifact_symbols_url = f"/api/v{version}/symbols/{artifact_name}"
+        result = requests.get(f"{self.host}{artifact_symbols_url}").json()
+        if not result:
+            return set()
+        return result.get("metadata", {}).get("top level symbols") or {
+            kk.partition(".")[0] for kk in result.get("symbols", {})
+        }
 
     def get_artifact_symbols(self, artifact_name):
         artifact_symbols_url = f"/api/v{version}/symbols/{artifact_name}"
