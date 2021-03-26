@@ -100,9 +100,13 @@ def deref_star(package_symbols: dict) -> dict:
                         # Deref the relative star imports.
                         # May want to use lookup table of all relative star imports.
                     elif symbol_type is SymbolType.STAR_IMPORT:
-                        print(f"TODO: Need to merge these star imports into the current symbols star imports set.")
+                        print(
+                            f"TODO: Need to merge these star imports into the current symbols star imports set."
+                        )
                     elif symbol_type in {SymbolType.PACKAGE, SymbolType.MODULE}:
-                        print(f"{new_symbol} exists and is {symbol_type}. Doing nothing")
+                        print(
+                            f"{new_symbol} exists and is {symbol_type}. Doing nothing"
+                        )
                     else:
                         print(f"adding symbol {new_symbol} shadowing {symbol}")
             data = dict(v, data=dict(shadows=shadows))
