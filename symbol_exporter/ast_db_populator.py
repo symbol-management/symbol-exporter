@@ -25,6 +25,7 @@ from symbol_exporter.python_so_extractor import (
     logger,
 )
 from symbol_exporter.tools import diff
+from dask.distributed import Client
 
 ProgressBar().register()
 
@@ -83,11 +84,6 @@ def single_so_file_extraction(so_file):
 
 
 def get_all_symbol_names(top_dir):
-    # Note Jedi seems to pick up things that are protected by a
-    # __name__ == '__main__' if statement
-    # this could cause some over-reporting of viable imports this
-    # shouldn't cause issues with an audit since we don't expect 3rd parties
-    # to depend on those
     symbols_dict = {}
     # walk all the files looking for python files
     py_glob_glob = glob.glob(f"{top_dir}/**/*.py", recursive=True)
@@ -142,57 +138,39 @@ def harvest_imports(io_like):
     }
 
 
-def reap_symbols_send_to_webserver(
-    package, dst_path, src_url, filelike, progress_callback=None
-):
-    if progress_callback:
-        progress_callback()
-    try:
-        harvested_data = harvest_imports(filelike)
-        web_interface.send_to_webserver(harvested_data, package, dst_path)
-        del harvested_data
-    except Exception as e:
-        raise ReapFailure(package, src_url, str(e))
-
-
-def reap_imports(
-    root_path, package, dst_path, src_url, filelike, progress_callback=None
-):
-    if progress_callback:
-        progress_callback()
-    try:
-        harvested_data = harvest_imports(filelike)
-        with open(
-            expand_file_and_mkdirs(os.path.join(root_path, package, dst_path)), "w"
-        ) as fo:
-            json.dump(
-                harvested_data, fo, indent=1, sort_keys=True, default=make_json_friendly
-            )
-        del harvested_data
-    except Exception as e:
-        raise ReapFailure(package, src_url, str(e))
-
-
 def fetch_artifact(src_url):
     resp = requests.get(src_url, timeout=60 * 2)
     filelike = io.BytesIO(resp.content)
     return filelike
 
 
-def fetch_and_run(path, pkg, dst, src_url, progess_callback=None):
+def fetch_and_run(path, pkg, dst, src_url):
     print(dst)
     filelike = fetch_artifact(src_url)
-    reap_imports(path, pkg, dst, src_url, filelike, progress_callback=progess_callback)
-    filelike.close()
+    try:
+        harvested_data = harvest_imports(filelike)
+        filelike.close()
+        with open(
+                expand_file_and_mkdirs(os.path.join(path, pkg, dst)), "w"
+        ) as fo:
+            json.dump(
+                harvested_data, fo, indent=1, sort_keys=True, default=make_json_friendly
+            )
+        del harvested_data
+    except Exception as e:
+        raise ReapFailure(pkg, src_url, str(e))
 
 
-def fetch_and_run_web(pkg, dst, src_url, progess_callback=None):
+def fetch_and_run_web(pkg, dst, src_url):
     print(dst)
     filelike = fetch_artifact(src_url)
-    reap_symbols_send_to_webserver(
-        pkg, dst, src_url, filelike, progress_callback=progess_callback
-    )
-    filelike.close()
+    try:
+        harvested_data = harvest_imports(filelike)
+        filelike.close()
+        web_interface.send_to_webserver(harvested_data, pkg, dst)
+        del harvested_data
+    except Exception as e:
+        raise ReapFailure(pkg, src_url, str(e))
 
 
 # todo pull this from the og list but reorder that list first
@@ -263,9 +241,10 @@ def reap(
         }
     else:
         # This uses processes by default, which is most likely ok
-        db.from_sequence(sorted_files).map(
-            lambda x: fetch_and_run_function(*x)
-        ).compute()
+        with Client():
+            db.from_sequence(sorted_files).map(
+                lambda x: fetch_and_run_function(*x)
+            ).compute()
 
 
 if __name__ == "__main__":
