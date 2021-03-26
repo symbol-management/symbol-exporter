@@ -14,20 +14,14 @@ ASM_PATTERN = re.compile(
     re.MULTILINE,
 )
 RE_ASM_EXPRESSION = re.compile(
-    r"([DQ]WORD) PTR \["
-    r"([a-z0-9]{3})"
-    r"(?:\+([a-z0-9]{3})\*([\d+]))?"
-    r"(?:\+(0x[0-9a-f]+))?"
-    r"\]"
+    r"([DQ]WORD) PTR \[" r"([a-z0-9]{3})" r"(?:\+([a-z0-9]{3})\*([\d+]))?" r"(?:\+(0x[0-9a-f]+))?" r"\]"
 )
 PYMODULE_STRUCT = struct.Struct("x" * 40 + "LLlL")
 PYMETHOD_STRUCT = struct.Struct("LLixxxxL")
 
 
 handler = colorlog.StreamHandler()
-handler.setFormatter(
-    colorlog.ColoredFormatter("%(log_color)s%(levelname)s:%(name)s:%(message)s")
-)
+handler.setFormatter(colorlog.ColoredFormatter("%(log_color)s%(levelname)s:%(name)s:%(message)s"))
 logger = logging.getLogger("pyso_extract")
 handler.setLevel(logging.DEBUG)
 logger.setLevel(logging.DEBUG)

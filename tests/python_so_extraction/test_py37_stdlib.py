@@ -18,9 +18,7 @@ def test__sha1():
 
 def test__sha256():
     expected = {"SHA224Type", "SHA256Type", "sha224", "sha256"}
-    compare(
-        "lib/python3.7/lib-dynload/_sha256.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_sha256.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test__sha3():
@@ -39,9 +37,7 @@ def test__sha3():
 
 def test__sha512():
     expected = {"SHA384Type", "SHA512Type", "sha384", "sha512"}
-    compare(
-        "lib/python3.7/lib-dynload/_sha512.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_sha512.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_zlib():
@@ -525,9 +521,7 @@ def test_binascii():
         "rledecode_hqx",
         "unhexlify",
     }
-    compare(
-        "lib/python3.7/lib-dynload/binascii.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/binascii.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_ctypes():
@@ -628,9 +622,7 @@ def test_blake2():
         "BLAKE2B_MAX_KEY_SIZE",
         "BLAKE2B_MAX_DIGEST_SIZE",
     }
-    compare(
-        "lib/python3.7/lib-dynload/_blake2.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_blake2.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_nis():
@@ -656,9 +648,7 @@ def test_parser():
         "ParserError",
         "st2list",
     }
-    compare(
-        "lib/python3.7/lib-dynload/parser.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/parser.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_pickle():
@@ -673,9 +663,7 @@ def test_pickle():
         "Unpickler",
         "dumps",
     }
-    compare(
-        "lib/python3.7/lib-dynload/_pickle.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_pickle.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_pyexpat():
@@ -696,16 +684,12 @@ def test_pyexpat():
         "ExpatError",
         "version_info",
     }
-    compare(
-        "lib/python3.7/lib-dynload/pyexpat.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/pyexpat.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_random():
     expected = {"Random"}
-    compare(
-        "lib/python3.7/lib-dynload/_random.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_random.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_select():
@@ -742,9 +726,7 @@ def test_select():
         "error",
         "EPOLL_CLOEXEC",
     }
-    compare(
-        "lib/python3.7/lib-dynload/select.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/select.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_asyncio():
@@ -762,16 +744,12 @@ def test_asyncio():
         "_current_tasks",
         "get_running_loop",
     }
-    compare(
-        "lib/python3.7/lib-dynload/_asyncio.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_asyncio.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_bisect():
     expected = {"bisect_right", "insort_left", "insort_right", "bisect_left"}
-    compare(
-        "lib/python3.7/lib-dynload/_bisect.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_bisect.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 @pytest.mark.xfail(
@@ -876,9 +854,7 @@ def test_contextvars():
 
 def test_crypt():
     expected = {"crypt"}
-    compare(
-        "lib/python3.7/lib-dynload/_crypt.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_crypt.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_ctypes_test():
@@ -917,9 +893,7 @@ def test_datetime():
         "date",
         "datetime_CAPI",
     }
-    compare(
-        "lib/python3.7/lib-dynload/_datetime.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_datetime.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_decimal():
@@ -993,9 +967,7 @@ def test_hashlib():
         "new",
         "openssl_sha256",
     }
-    compare(
-        "lib/python3.7/lib-dynload/_hashlib.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_hashlib.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_heapq():
@@ -1010,16 +982,12 @@ def test_heapq():
         "heapify",
         "heappushpop",
     }
-    compare(
-        "lib/python3.7/lib-dynload/_heapq.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_heapq.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_lsprof():
     expected = {"profiler_entry", "Profiler", "profiler_subentry"}
-    compare(
-        "lib/python3.7/lib-dynload/_lsprof.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_lsprof.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_lzma():
@@ -1087,9 +1055,7 @@ def test_multiprocessing():
 
 def test_opcode():
     expected = {"stack_effect"}
-    compare(
-        "lib/python3.7/lib-dynload/_opcode.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_opcode.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_posixsubprocess():
@@ -1102,9 +1068,7 @@ def test_posixsubprocess():
 
 def test_queue():
     expected = {"Empty", "SimpleQueue"}
-    compare(
-        "lib/python3.7/lib-dynload/_queue.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_queue.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_socket():
@@ -1397,9 +1361,7 @@ def test_socket():
         "SOMAXCONN",
         "gethostbyname_ex",
     }
-    compare(
-        "lib/python3.7/lib-dynload/_socket.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_socket.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_sqlite3():
@@ -1613,9 +1575,7 @@ def test_struct():
         "unpack_from",
         "error",
     }
-    compare(
-        "lib/python3.7/lib-dynload/_struct.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_struct.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_testbuffer():
@@ -1881,9 +1841,7 @@ def test_testcapi():
         "test_with_docstring",
         "test_decref_doesnt_leak",
     }
-    compare(
-        "lib/python3.7/lib-dynload/_testcapi.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_testcapi.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_testimportmultiple():
@@ -1933,9 +1891,7 @@ def test_tkinter():
         "READABLE",
         "FILE_EVENTS",
     }
-    compare(
-        "lib/python3.7/lib-dynload/_tkinter.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/_tkinter.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_xxtestfuzz():
@@ -1985,9 +1941,7 @@ def test_audioop():
         "max",
         "mul",
     }
-    compare(
-        "lib/python3.7/lib-dynload/audioop.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/audioop.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_fcntl():
@@ -2235,9 +2189,7 @@ def test_readline():
         "clear_history",
         "set_completion_display_matches_hook",
     }
-    compare(
-        "lib/python3.7/lib-dynload/readline.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/readline.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_resource():
@@ -2268,9 +2220,7 @@ def test_resource():
         "error",
         "RUSAGE_SELF",
     }
-    compare(
-        "lib/python3.7/lib-dynload/resource.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/resource.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_spwd():
@@ -2320,9 +2270,7 @@ def test_syslog():
         "LOG_ALERT",
         "LOG_NEWS",
     }
-    compare(
-        "lib/python3.7/lib-dynload/syslog.cpython-37m-x86_64-linux-gnu.so", expected
-    )
+    compare("lib/python3.7/lib-dynload/syslog.cpython-37m-x86_64-linux-gnu.so", expected)
 
 
 def test_termios():

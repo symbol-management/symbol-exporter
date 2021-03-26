@@ -24,9 +24,7 @@ class WebDB:
     def _setup_headers(self, dumped_data, url):
         headers = {
             "X-Signature-Timestamp": datetime.utcnow().isoformat(),
-            "X-Body-Signature": hmac.new(
-                self.secret_token, dumped_data.encode(), hashlib.sha256
-            ).hexdigest(),
+            "X-Body-Signature": hmac.new(self.secret_token, dumped_data.encode(), hashlib.sha256).hexdigest(),
         }
         headers["X-Headers-Signature"] = hmac.new(
             self.secret_token,
@@ -43,9 +41,7 @@ class WebDB:
 
     def push_symbol_table(self, top_level_name, symbol_table):
         url = f"/api/v{version}/symbol_table/{top_level_name}"
-        dumped_data = json.dumps(
-            symbol_table, default=make_json_friendly, sort_keys=True
-        )
+        dumped_data = json.dumps(symbol_table, default=make_json_friendly, sort_keys=True)
         r = requests.put(
             f"{self.host}{url}",
             data=dumped_data,

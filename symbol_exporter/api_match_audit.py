@@ -73,18 +73,13 @@ def main(n_to_pull=1000):
     existing_artifacts = glob.glob(f"{path}/**/*.json", recursive=True)
     existing_artifact_names = {k.partition("/")[2] for k in existing_artifacts}
 
-    artifacts = sorted(
-        list(set(all_extracted_artifacts) - set(existing_artifact_names))
-    )
+    artifacts = sorted(list(set(all_extracted_artifacts) - set(existing_artifact_names)))
 
     # Don't have the artifacts in alphabetical order
     shuffle(artifacts)
 
     with ThreadPoolExecutor() as pool:
-        futures = [
-            pool.submit(inner_loop_and_write, artifact)
-            for artifact in artifacts[:n_to_pull]
-        ]
+        futures = [pool.submit(inner_loop_and_write, artifact) for artifact in artifacts[:n_to_pull]]
         for future in tqdm(as_completed(futures), total=n_to_pull):
             try:
                 future.result()

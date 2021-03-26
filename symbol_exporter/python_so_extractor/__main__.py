@@ -22,12 +22,8 @@ def parse_args():
         module = importlib.import_module(args.compare)
         pattern = re.compile(r"__.+__")
         expected = {s for s in dir(module) if not pattern.fullmatch(s)}
-        actual = {
-            x["name"] for x in results["methods"] if not pattern.fullmatch(x["name"])
-        }
-        actual |= {
-            x["name"] for x in results["objects"] if not pattern.fullmatch(x["name"])
-        }
+        actual = {x["name"] for x in results["methods"] if not pattern.fullmatch(x["name"])}
+        actual |= {x["name"] for x in results["objects"] if not pattern.fullmatch(x["name"])}
         if actual - expected:
             raise NotImplementedError("Found unexpected keys", actual - expected)
         if expected - actual:

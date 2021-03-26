@@ -108,10 +108,7 @@ def harvest_imports(io_like):
     # TODO: push dir allocation into thread?
     with TemporaryDirectory() as f:
         py_members = [
-            m
-            for m in tf.getmembers()
-            if m.name.endswith(".py")
-            or (".cpython" in m.name and m.name.endswith(".so"))
+            m for m in tf.getmembers() if m.name.endswith(".py") or (".cpython" in m.name and m.name.endswith(".so"))
         ]
         tf.extractall(path=f, members=py_members)
         symbols = {}
@@ -120,10 +117,7 @@ def harvest_imports(io_like):
             # only run if we have a site packages file or it is python itself
             # todo pull up list of python versions or pull it from somewhere else
             if root.lower().endswith("site-packages") or (
-                any(
-                    root.lower().endswith(f"python{k}")
-                    for k in ["2.7", "3.5", "3.6", "3.7", "3.8", "3.9"]
-                )
+                any(root.lower().endswith(f"python{k}") for k in ["2.7", "3.5", "3.6", "3.7", "3.8", "3.9"])
                 and "site-packages" not in subdirs
             ):
                 found_sp = True
@@ -142,9 +136,7 @@ def harvest_imports(io_like):
     }
 
 
-def reap_symbols_send_to_webserver(
-    package, dst_path, src_url, filelike, progress_callback=None
-):
+def reap_symbols_send_to_webserver(package, dst_path, src_url, filelike, progress_callback=None):
     if progress_callback:
         progress_callback()
     try:
@@ -155,19 +147,13 @@ def reap_symbols_send_to_webserver(
         raise ReapFailure(package, src_url, str(e))
 
 
-def reap_imports(
-    root_path, package, dst_path, src_url, filelike, progress_callback=None
-):
+def reap_imports(root_path, package, dst_path, src_url, filelike, progress_callback=None):
     if progress_callback:
         progress_callback()
     try:
         harvested_data = harvest_imports(filelike)
-        with open(
-            expand_file_and_mkdirs(os.path.join(root_path, package, dst_path)), "w"
-        ) as fo:
-            json.dump(
-                harvested_data, fo, indent=1, sort_keys=True, default=make_json_friendly
-            )
+        with open(expand_file_and_mkdirs(os.path.join(root_path, package, dst_path)), "w") as fo:
+            json.dump(harvested_data, fo, indent=1, sort_keys=True, default=make_json_friendly)
         del harvested_data
     except Exception as e:
         raise ReapFailure(package, src_url, str(e))
@@ -189,9 +175,7 @@ def fetch_and_run(path, pkg, dst, src_url, progess_callback=None):
 def fetch_and_run_web(pkg, dst, src_url, progess_callback=None):
     print(dst)
     filelike = fetch_artifact(src_url)
-    reap_symbols_send_to_webserver(
-        pkg, dst, src_url, filelike, progress_callback=progess_callback
-    )
+    reap_symbols_send_to_webserver(pkg, dst, src_url, filelike, progress_callback=progess_callback)
     filelike.close()
 
 
@@ -263,9 +247,7 @@ def reap(
         }
     else:
         # This uses processes by default, which is most likely ok
-        db.from_sequence(sorted_files).map(
-            lambda x: fetch_and_run_function(*x)
-        ).compute()
+        db.from_sequence(sorted_files).map(lambda x: fetch_and_run_function(*x)).compute()
 
 
 if __name__ == "__main__":
@@ -281,9 +263,7 @@ if __name__ == "__main__":
         "--debug",
         help="run without dask for debugging/speed testing",
     )
-    parser.add_argument(
-        "--n_artifacts", help="number of artifacts to inspect", default=5000
-    )
+    parser.add_argument("--n_artifacts", help="number of artifacts to inspect", default=5000)
     parser.add_argument("--local", help="to local disk for storage", default=False)
 
     args = parser.parse_args()

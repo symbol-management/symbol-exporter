@@ -33,9 +33,7 @@ def single_file_extraction(file_name, top_dir):
     import_name = file_path_to_import(folder_path)
     module_import = import_name.split(".")[0]
     try:
-        data = jedi.Script(
-            path=file_name, project=jedi.Project("".join(top_dir))
-        ).complete()
+        data = jedi.Script(path=file_name, project=jedi.Project("".join(top_dir))).complete()
     except Exception as e:
         print(import_name, str(e))
         errors_dict[import_name] = {
@@ -54,9 +52,7 @@ def single_file_extraction(file_name, top_dir):
     }
 
     # cull statements within functions and classes, which are not importable
-    classes_and_functions = {
-        k for k, v in symbols_from_script.items() if v in ["class", "function"]
-    }
+    classes_and_functions = {k for k, v in symbols_from_script.items() if v in ["class", "function"]}
     for k in list(symbols_from_script):
         for cf in classes_and_functions:
             if k != cf and k.startswith(cf) and k in symbols_from_script:
@@ -97,9 +93,7 @@ def harvest_imports(io_like):
     tf = tarfile.open(fileobj=io_like, mode="r:bz2")
     # TODO: push dir allocation into thread?
     with TemporaryDirectory() as f:
-        tf.extractall(
-            path=f, members=[m for m in tf.getmembers() if m.name.endswith(".py")]
-        )
+        tf.extractall(path=f, members=[m for m in tf.getmembers() if m.name.endswith(".py")])
         symbols = set()
         errors = {}
         found_sp = False
@@ -116,16 +110,12 @@ def harvest_imports(io_like):
     return output
 
 
-def reap_imports(
-    root_path, package, dst_path, src_url, filelike, progress_callback=None
-):
+def reap_imports(root_path, package, dst_path, src_url, filelike, progress_callback=None):
     if progress_callback:
         progress_callback()
     try:
         harvested_data = harvest_imports(filelike)
-        with open(
-            expand_file_and_mkdirs(os.path.join(root_path, package, dst_path)), "w"
-        ) as fo:
+        with open(expand_file_and_mkdirs(os.path.join(root_path, package, dst_path)), "w") as fo:
             json.dump(harvested_data, fo, indent=1, sort_keys=True)
         del harvested_data
     except Exception as e:

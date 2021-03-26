@@ -77,9 +77,7 @@ class SymbolFinder(ast.NodeVisitor):
         self.imported_symbols.extend(k.name for k in node.names)
         for k in node.names:
             if not k.asname:
-                self._add_symbol_to_surface_area(
-                    SymbolType.IMPORT, symbol=k.name, shadows=k.name
-                )
+                self._add_symbol_to_surface_area(SymbolType.IMPORT, symbol=k.name, shadows=k.name)
         self.generic_visit(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> Any:
@@ -91,9 +89,7 @@ class SymbolFinder(ast.NodeVisitor):
                 self.imported_symbols.append(module_name)
                 if not k.asname:
                     if not relative_import:
-                        self._add_symbol_to_surface_area(
-                            SymbolType.IMPORT, symbol=k.name, shadows=module_name
-                        )
+                        self._add_symbol_to_surface_area(SymbolType.IMPORT, symbol=k.name, shadows=module_name)
                     else:
                         self._add_symbol_to_surface_area(
                             SymbolType.RELATIVE_IMPORT,
@@ -104,9 +100,7 @@ class SymbolFinder(ast.NodeVisitor):
                         )
             else:
                 if not relative_import:
-                    self._add_symbol_to_star_imports(
-                        node.module, symbol_type=SymbolType.STAR_IMPORT
-                    )
+                    self._add_symbol_to_star_imports(node.module, symbol_type=SymbolType.STAR_IMPORT)
                 else:
                     self._add_symbol_to_relative_star_imports(
                         node.module,
@@ -131,9 +125,7 @@ class SymbolFinder(ast.NodeVisitor):
                     module=self._module_name,
                 )
             else:
-                self._add_symbol_to_surface_area(
-                    SymbolType.IMPORT, symbol=node.asname, shadows=alias_name
-                )
+                self._add_symbol_to_surface_area(SymbolType.IMPORT, symbol=node.asname, shadows=alias_name)
 
     def visit_Attribute(self, node: ast.Attribute) -> Any:
         self.attr_stack.append(node.attr)
@@ -195,9 +187,7 @@ class SymbolFinder(ast.NodeVisitor):
     def visit_ClassDef(self, node: ast.ClassDef) -> Any:
         self.current_symbol_stack.append(node.name)
         symbol_name = self._symbol_stack_to_symbol_name()
-        self._add_symbol_to_surface_area(
-            SymbolType.CLASS, symbol_name, lineno=node.lineno
-        )
+        self._add_symbol_to_surface_area(SymbolType.CLASS, symbol_name, lineno=node.lineno)
         # self.aliases["self"] = node.name
         self.generic_visit(node)
         self.current_symbol_stack.pop(-1)
@@ -205,9 +195,7 @@ class SymbolFinder(ast.NodeVisitor):
 
     def visit_Name(self, node: ast.Name) -> Any:
         def get_symbol_name(name):
-            return self._symbol_in_unshadowed_surface_area(name) or ".".join(
-                [name] + list(reversed(self.attr_stack))
-            )
+            return self._symbol_in_unshadowed_surface_area(name) or ".".join([name] + list(reversed(self.attr_stack)))
 
         name = self.aliases.get(node.id, node.id)
         if name in builtin_symbols:
@@ -249,11 +237,9 @@ class SymbolFinder(ast.NodeVisitor):
     def _symbol_in_unshadowed_surface_area(self, symbol):
         fully_qualified_symbol_name = f"{self._module_name}.{symbol}"
 
-        if (
-            fully_qualified_symbol_name in self._symbols
-            and "shadows"
-            not in self._symbols[fully_qualified_symbol_name].get("data", {})
-        ):
+        if fully_qualified_symbol_name in self._symbols and "shadows" not in self._symbols[
+            fully_qualified_symbol_name
+        ].get("data", {}):
             return fully_qualified_symbol_name
         else:
             return None
@@ -274,13 +260,9 @@ class SymbolFinder(ast.NodeVisitor):
 
     def _add_symbol_to_star_imports(self, imported_symbol, symbol_type: SymbolType):
         default = dict(type=symbol_type, data=dict(imports=set()))
-        self._symbols.setdefault(f"{self._module_name}.*", default)["data"][
-            "imports"
-        ].add(imported_symbol)
+        self._symbols.setdefault(f"{self._module_name}.*", default)["data"]["imports"].add(imported_symbol)
 
-    def _add_symbol_to_relative_star_imports(
-        self, imported_symbol, symbol_type: SymbolType, level: int
-    ):
+    def _add_symbol_to_relative_star_imports(self, imported_symbol, symbol_type: SymbolType, level: int):
         default = dict(type=symbol_type, data=dict(imports=[]))
         symbol_name = f"{self._module_name}.relative.*"
         self._symbols.setdefault(symbol_name, default)["data"]["imports"].append(
@@ -289,9 +271,7 @@ class SymbolFinder(ast.NodeVisitor):
 
     def post_process_symbols(self):
         stripped_names = {
-            k.split(f"{self._module_name}.")[1]: k
-            for k in self._symbols
-            if k != self._module_name and "*" not in k
+            k.split(f"{self._module_name}.")[1]: k for k in self._symbols if k != self._module_name and "*" not in k
         }
         output_symbols = self._symbols
         for k, v in output_symbols.items():
@@ -313,12 +293,8 @@ class SymbolFinder(ast.NodeVisitor):
             output[arguments.kwarg.arg] = {"type": "kwarg"}
 
         # args/defaults
-        arg_defaults = [NOT_A_DEFAULT_ARG] * (
-            len(arguments.args) - len(arguments.defaults)
-        ) + arguments.defaults
-        for arg, default, position in zip(
-            arguments.args, arg_defaults, range(len(arguments.args))
-        ):
+        arg_defaults = [NOT_A_DEFAULT_ARG] * (len(arguments.args) - len(arguments.defaults)) + arguments.defaults
+        for arg, default, position in zip(arguments.args, arg_defaults, range(len(arguments.args))):
             d = {"type": "arg", "position": position}
             # if default != NOT_A_DEFAULT_ARG:
             #     d.update(default=default)
@@ -333,9 +309,7 @@ class SymbolFinder(ast.NodeVisitor):
         return output
 
     def _symbol_in_args_kwargs(self, id):
-        return (
-            self.current_args_kwargs_stack and id in self.current_args_kwargs_stack[-1]
-        )
+        return self.current_args_kwargs_stack and id in self.current_args_kwargs_stack[-1]
 
 
 # 1. get all the imports and their aliases (which includes imported things)
