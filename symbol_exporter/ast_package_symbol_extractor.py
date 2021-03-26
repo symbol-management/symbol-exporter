@@ -8,7 +8,6 @@ from symbol_exporter.ast_symbol_extractor import (
     SymbolType,
     is_relative_star_import,
 )
-from symbol_exporter.db_access_model import make_json_friendly
 
 
 # Move this to ast_symbol_extractor module
@@ -81,6 +80,7 @@ def deref_star(package_symbols: dict) -> dict:
                     # print(f"adding {new_symbol} as star imported symbol")
                     print(f"looking for v {package_symbols[symbol]}")
                     if is_relative_import(package_symbols[symbol]):
+                        print(f"{new_symbol} exists and is {symbol_type}")
                         dereferenced_shadows = package_symbols[symbol]["data"][
                             "shadows"
                         ]
@@ -96,10 +96,12 @@ def deref_star(package_symbols: dict) -> dict:
                                 f"{rel_import['module']}, it is also exposed through import {shadows}.*"
                             )
                     elif symbol_type is SymbolType.RELATIVE_STAR_IMPORT:
-                        print(f"TODO: Deref the relative star imports add.")
+                        print(f"{new_symbol} exists and is {symbol_type}")
+                        print("TODO: Deref the relative star imports add.")
                         # Deref the relative star imports.
                         # May want to use lookup table of all relative star imports.
                     elif symbol_type is SymbolType.STAR_IMPORT:
+                        print(f"{new_symbol} exists and is {symbol_type}")
                         print(
                             f"TODO: Need to merge these star imports into the current symbols star imports set."
                         )
