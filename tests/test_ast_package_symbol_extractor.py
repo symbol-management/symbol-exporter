@@ -14,21 +14,6 @@ expected = {
     "numpy.absolute": {"type": SymbolType.RELATIVE_IMPORT, "data": {"shadows": "numpy.core.numeric.absolute"}},
     "numpy.core.absolute": {"type": SymbolType.RELATIVE_IMPORT, "data": {"shadows": "numpy.core.numeric.absolute"}},
     "numpy.core.ones": {"type": SymbolType.RELATIVE_IMPORT, "data": {"shadows": "numpy.core.numeric.ones"}},
-    # "numpy.__init__.version": {
-    #     "type": "relative-import",
-    #     "data": {"shadows": "version", "level": 1},
-    # },
-    # "numpy.__init__.get_versions": {
-    #     "type": "relative-import",
-    #     "data": {
-    #         "shadows": "version.get_versions",
-    #         "level": 1
-    #     }
-    # },
-    # "numpy.__init__.core": {
-    #     "type": "relative-import",
-    #     "data": {"shadows": "core", "level": 1},
-    # },
     "numpy.relative.*": {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
         "data": {
@@ -36,10 +21,6 @@ expected = {
         },
     },
     "numpy.core": {"type": SymbolType.PACKAGE, "data": {}},
-    # "numpy.core.__init__.numeric": {
-    #     "type": "relative-import",
-    #     "data": {"shadows": "numeric", "level": 1},
-    # },
     "numpy.core.relative.*": {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
         "data": {
@@ -48,14 +29,6 @@ expected = {
             ]
         },
     },
-    # "numpy.core.__init__.abs": {
-    #     "type": "import",
-    #     "data": {"shadows": "numeric.absolute"},
-    # },
-    # "numpy.core.__init__.version": {
-    #     "type": "relative-import",
-    #     "data": {"shadows": "version", "level": 2},
-    # },
     "numpy.core.numeric": {"type": SymbolType.MODULE, "data": {}},
     "numpy.core.numeric.ones": {"type": SymbolType.FUNCTION, "data": {"lineno": 1}},
     "numpy.core.numeric.absolute": {
