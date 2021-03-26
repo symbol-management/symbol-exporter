@@ -11,6 +11,15 @@ from symbol_exporter.ast_symbol_extractor import (
 from symbol_exporter.db_access_model import make_json_friendly
 
 
+# Move this to ast_symbol_extractor module
+def is_star_import(symbol) -> bool:
+    return symbol["type"] == SymbolType.STAR_IMPORT
+
+
+def get_symbol_type(symbol) -> SymbolType:
+    return symbol["type"]
+
+
 def is_package(directory: Path) -> bool:
     # Only handles regular packages, not namespace packages. See PEP-420.
     return (directory / "__init__.py").exists()
@@ -64,14 +73,8 @@ def deref_star(package_symbols: dict) -> dict:
             print(f"Looking at symbol {k} with data {v} which shadows: {shadows}")
             for symbol in package_symbols:
                 print(f"looking at symbol {symbol}")
-                if symbol.startswith(shadows) and package_symbols[symbol][
-                    "type"
-                ] not in {
-                    SymbolType.PACKAGE,
-                    SymbolType.MODULE,
-                    SymbolType.STAR_IMPORT,
-                    SymbolType.RELATIVE_STAR_IMPORT,
-                }:
+                if symbol.startswith(shadows):
+                    symbol_type = get_symbol_type(package_symbols[symbol])
                     print(f"found symbol {symbol} for shadow {shadows}")
                     s: str = symbol.removeprefix(f"{shadows}")
                     new_symbol = f"{namespace}{s}"
@@ -89,15 +92,22 @@ def deref_star(package_symbols: dict) -> dict:
                             )
                         else:
                             print(
-                                f"found circular reference: {new_symbol} is already in volume of "
+                                f"found possible circular reference: {new_symbol} is already in volume of "
                                 f"{rel_import['module']}, it is also exposed through import {shadows}.*"
                             )
+                    elif symbol_type is SymbolType.RELATIVE_STAR_IMPORT:
+                        print(f"TODO: Deref the relative star imports add.")
+                        # Deref the relative star imports.
+                        # May want to use lookup table of all relative star imports.
+                    elif symbol_type is SymbolType.STAR_IMPORT:
+                        print(f"TODO: Need to merge these star imports into the current symbols star imports set.")
+                    elif symbol_type in {SymbolType.PACKAGE, SymbolType.MODULE}:
+                        print(f"{new_symbol} exists and is {symbol_type}. Doing nothing")
                     else:
                         print(f"adding symbol {new_symbol} shadowing {symbol}")
             data = dict(v, data=dict(shadows=shadows))
             ret[new_symbol] = data
-        # ret[new_symbol] = v
-    return ret
+    return package_symbols
 
 
 class DirectorySymbolFinder:
@@ -130,107 +140,6 @@ class DirectorySymbolFinder:
         else:
             return merge_dicts(*symbols)
 
-
-expected = {
-    "numpy.version": {"type": SymbolType.MODULE, "data": {}},
-    "numpy.version.get_versions": {"type": SymbolType.FUNCTION, "data": {"lineno": 4}},
-    "numpy": {"type": SymbolType.PACKAGE, "data": {}},
-    # "numpy.__init__.version": {
-    #     "type": "relative-import",
-    #     "data": {"shadows": "version", "level": 1},
-    # },
-    # "numpy.__init__.get_versions": {
-    #     "type": "relative-import",
-    #     "data": {
-    #         "shadows": "version.get_versions",
-    #         "level": 1
-    #     }
-    # },
-    # "numpy.__init__.core": {
-    #     "type": "relative-import",
-    #     "data": {"shadows": "core", "level": 1},
-    # },
-    "numpy.relative.*": {
-        "type": SymbolType.RELATIVE_STAR_IMPORT,
-        "data": {
-            "imports": [{"shadows": "core", "level": 1, "module": "numpy.__init__"}]
-        },
-    },
-    "numpy.core": {"type": SymbolType.PACKAGE, "data": {}},
-    # "numpy.core.__init__.numeric": {
-    #     "type": "relative-import",
-    #     "data": {"shadows": "numeric", "level": 1},
-    # },
-    "numpy.core.relative.*": {
-        "type": SymbolType.RELATIVE_STAR_IMPORT,
-        "data": {
-            "imports": [
-                {"shadows": "numeric", "level": 1, "module": "numpy.core.__init__"}
-            ]
-        },
-    },
-    # "numpy.core.__init__.abs": {
-    #     "type": "import",
-    #     "data": {"shadows": "numeric.absolute"},
-    # },
-    # "numpy.core.__init__.version": {
-    #     "type": "relative-import",
-    #     "data": {"shadows": "version", "level": 2},
-    # },
-    "numpy.core.numeric": {"type": SymbolType.MODULE, "data": {}},
-    "numpy.core.numeric.ones": {"type": SymbolType.FUNCTION, "data": {"lineno": 1}},
-    "numpy.core.numeric.absolute": {
-        "type": SymbolType.FUNCTION,
-        "data": {"lineno": 5, "symbols_in_volume": {"abs": {"line number": [6]}}},
-    },
-    "numpy.get_versions": {
-        "type": SymbolType.RELATIVE_IMPORT,
-        "data": {"shadows": "numpy.version.get_versions"},
-    },
-    "numpy.core.version": {
-        "type": SymbolType.RELATIVE_IMPORT,
-        "data": {"shadows": "numpy.version"},
-    },
-    "numpy.core.abs": {
-        "type": SymbolType.RELATIVE_IMPORT,
-        "data": {"shadows": "numpy.core.numeric.absolute"},
-    },
-    "numpy.core.get_versions": {
-        "type": SymbolType.RELATIVE_IMPORT,
-        "data": {"shadows": "numpy.version.get_versions"},
-    },
-    "numpy.core.alias_get_versions": {
-        "type": SymbolType.RELATIVE_IMPORT,
-        "data": {"shadows": "numpy.version.get_versions"},
-    },
-    "numpy.core.alias_version": {
-        "type": SymbolType.RELATIVE_IMPORT,
-        "data": {"shadows": "numpy.version"},
-    },
-    "numpy.core.*": {"type": SymbolType.STAR_IMPORT, "data": {"imports": {"requests"}}},
-    "numpy.*": {"type": SymbolType.STAR_IMPORT, "data": {"imports": {"requests"}}},
-    "numpy.version.*": {
-        "type": SymbolType.STAR_IMPORT,
-        "data": {"imports": {"requests"}},
-    },
-}
-
-
-if __name__ == "__main__":
-    import argparse
-    import json
-    import sys
-    from pprint import pprint
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("filename")
-    args = parser.parse_args()
-
-    pprint(args.filename)
-    dsf = DirectorySymbolFinder(args.filename)
-    symbols = dsf.extract_symbols()
-    json.dump(symbols, sys.stdout, indent=2, default=make_json_friendly)
-    assert symbols == expected
 
 # TODO:
 #  - handle relative imports in modules. i.e. not in __init__.py
