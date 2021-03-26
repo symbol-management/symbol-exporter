@@ -6,14 +6,38 @@ expected = {
     "numpy.version": {"type": SymbolType.MODULE, "data": {}},
     "numpy.version.get_versions": {"type": SymbolType.FUNCTION, "data": {"lineno": 4}},
     "numpy": {"type": SymbolType.PACKAGE, "data": {}},
-    "numpy.numeric": {"type": SymbolType.RELATIVE_IMPORT, "data": {"shadows": "numpy.core.numeric"}},
-    "numpy.abs": {"type": SymbolType.RELATIVE_IMPORT, "data": {"shadows": "numpy.core.numeric.absolute"}},
-    "numpy.alias_version": {"type": SymbolType.RELATIVE_IMPORT, "data": {"shadows": "numpy.version"}},
-    "numpy.alias_get_versions": {"type": SymbolType.RELATIVE_IMPORT, "data": {"shadows": "numpy.version.get_versions"}},
-    "numpy.ones": {"type": SymbolType.RELATIVE_IMPORT, "data": {"shadows": "numpy.core.numeric.ones"}},
-    "numpy.absolute": {"type": SymbolType.RELATIVE_IMPORT, "data": {"shadows": "numpy.core.numeric.absolute"}},
-    "numpy.core.absolute": {"type": SymbolType.RELATIVE_IMPORT, "data": {"shadows": "numpy.core.numeric.absolute"}},
-    "numpy.core.ones": {"type": SymbolType.RELATIVE_IMPORT, "data": {"shadows": "numpy.core.numeric.ones"}},
+    "numpy.numeric": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.core.numeric"},
+    },
+    "numpy.abs": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.core.numeric.absolute"},
+    },
+    "numpy.alias_version": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.version"},
+    },
+    "numpy.alias_get_versions": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.version.get_versions"},
+    },
+    "numpy.ones": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.core.numeric.ones"},
+    },
+    "numpy.absolute": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.core.numeric.absolute"},
+    },
+    "numpy.core.absolute": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.core.numeric.absolute"},
+    },
+    "numpy.core.ones": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.core.numeric.ones"},
+    },
     "numpy.relative.*": {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
         "data": {

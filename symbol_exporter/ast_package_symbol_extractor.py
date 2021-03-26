@@ -61,7 +61,7 @@ def remove_shadowed_relative_imports(package_symbols: dict):
 
 def symbol_in_namespace(symbol: str, namespace: str) -> bool:
     parts = symbol.partition(f"{namespace}.")
-    return namespace in parts[1] and '.' not in parts[2]
+    return namespace in parts[1] and "." not in parts[2]
 
 
 def deref_star(package_symbols: dict) -> dict:
@@ -89,7 +89,10 @@ def deref_star(package_symbols: dict) -> dict:
                             print(
                                 f"adding symbol {new_symbol} shadowing {dereferenced_shadows}"
                             )
-                            data = dict(type=SymbolType.RELATIVE_IMPORT, data=dict(shadows=dereferenced_shadows))
+                            data = dict(
+                                type=SymbolType.RELATIVE_IMPORT,
+                                data=dict(shadows=dereferenced_shadows),
+                            )
                             ret[new_symbol] = data
                         else:
                             print(
@@ -110,15 +113,22 @@ def deref_star(package_symbols: dict) -> dict:
                     elif symbol_type in {SymbolType.PACKAGE, SymbolType.MODULE}:
                         print(f"found {symbol} and is {symbol_type}.")
                         if new_symbol == symbol:
-                            print(f"Doing nothing. {new_symbol} already exists, most likely a package.")
+                            print(
+                                f"Doing nothing. {new_symbol} already exists, most likely a package."
+                            )
                         else:
                             print(f"adding symbol {new_symbol} shadowing {symbol}")
-                            data = dict(type=SymbolType.RELATIVE_IMPORT, data=dict(shadows=symbol))
+                            data = dict(
+                                type=SymbolType.RELATIVE_IMPORT,
+                                data=dict(shadows=symbol),
+                            )
                             ret[new_symbol] = data
                     else:
                         print(f"found {symbol} and is {symbol_type}.")
                         print(f"adding symbol {new_symbol} shadowing {symbol}")
-                        data = dict(type=SymbolType.RELATIVE_IMPORT, data=dict(shadows=symbol))
+                        data = dict(
+                            type=SymbolType.RELATIVE_IMPORT, data=dict(shadows=symbol)
+                        )
                         ret[new_symbol] = data
     return ret
 
