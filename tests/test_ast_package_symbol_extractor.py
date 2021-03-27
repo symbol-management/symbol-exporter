@@ -40,18 +40,12 @@ expected = {
     },
     "numpy.relative.*": {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
-        "data": {
-            "imports": [{"shadows": "core", "level": 1, "module": "numpy.__init__"}]
-        },
+        "data": {"imports": [{"shadows": "core", "level": 1, "module": "numpy.__init__"}]},
     },
     "numpy.core": {"type": SymbolType.PACKAGE, "data": {}},
     "numpy.core.relative.*": {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
-        "data": {
-            "imports": [
-                {"shadows": "numeric", "level": 1, "module": "numpy.core.__init__"}
-            ]
-        },
+        "data": {"imports": [{"shadows": "numeric", "level": 1, "module": "numpy.core.__init__"}]},
     },
     "numpy.core.numeric": {"type": SymbolType.MODULE, "data": {}},
     "numpy.core.numeric.ones": {"type": SymbolType.FUNCTION, "data": {"lineno": 1}},

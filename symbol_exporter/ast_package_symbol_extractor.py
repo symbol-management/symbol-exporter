@@ -66,9 +66,7 @@ def symbol_in_namespace(symbol: str, namespace: str) -> bool:
 
 def deref_star(package_symbols: dict) -> dict:
     ret = dict(package_symbols)
-    star_imports = (
-        (k, v) for k, v in package_symbols.items() if is_relative_star_import(v)
-    )
+    star_imports = ((k, v) for k, v in package_symbols.items() if is_relative_star_import(v))
     for k, v in star_imports:
         imports = v["data"]["imports"]
         for rel_import in imports:
@@ -82,13 +80,9 @@ def deref_star(package_symbols: dict) -> dict:
                     new_symbol = f"{namespace}{s}"
                     if is_relative_import(package_symbols[symbol]):
                         print(f"found {symbol} and is {symbol_type}")
-                        dereferenced_shadows = package_symbols[symbol]["data"][
-                            "shadows"
-                        ]
+                        dereferenced_shadows = package_symbols[symbol]["data"]["shadows"]
                         if new_symbol != dereferenced_shadows:
-                            print(
-                                f"adding symbol {new_symbol} shadowing {dereferenced_shadows}"
-                            )
+                            print(f"adding symbol {new_symbol} shadowing {dereferenced_shadows}")
                             data = dict(
                                 type=SymbolType.RELATIVE_IMPORT,
                                 data=dict(shadows=dereferenced_shadows),
@@ -107,15 +101,11 @@ def deref_star(package_symbols: dict) -> dict:
                     elif symbol_type is SymbolType.STAR_IMPORT:
                         # TODO: Merge star import into new symbol's * imports
                         print(f"found {symbol} and is {symbol_type}", end=" - ")
-                        print(
-                            f"TODO: Merge star imports into the {new_symbol} star imports set."
-                        )
+                        print(f"TODO: Merge star imports into the {new_symbol} star imports set.")
                     elif symbol_type in {SymbolType.PACKAGE, SymbolType.MODULE}:
                         print(f"found {symbol} and is {symbol_type}.")
                         if new_symbol == symbol:
-                            print(
-                                f"Doing nothing. {new_symbol} already exists, most likely a package."
-                            )
+                            print(f"Doing nothing. {new_symbol} already exists, most likely a package.")
                         else:
                             print(f"adding symbol {new_symbol} shadowing {symbol}")
                             data = dict(
@@ -126,9 +116,7 @@ def deref_star(package_symbols: dict) -> dict:
                     else:
                         print(f"found {symbol} and is {symbol_type}.")
                         print(f"adding symbol {new_symbol} shadowing {symbol}")
-                        data = dict(
-                            type=SymbolType.RELATIVE_IMPORT, data=dict(shadows=symbol)
-                        )
+                        data = dict(type=SymbolType.RELATIVE_IMPORT, data=dict(shadows=symbol))
                         ret[new_symbol] = data
     return ret
 
@@ -137,9 +125,7 @@ class DirectorySymbolFinder:
     def __init__(self, directory_name: Union[str, Path], parent: str = None):
         self._directory = Path(directory_name)
         self._is_package = is_package(self._directory)
-        self._module_path = (
-            f"{parent}.{self._directory.name}" if parent else self._directory.name
-        )
+        self._module_path = f"{parent}.{self._directory.name}" if parent else self._directory.name
 
     def extract_symbols(self) -> dict:
         package_symbols = self._get_all_symbols_in_package()
@@ -149,9 +135,7 @@ class DirectorySymbolFinder:
 
     def _get_all_symbols_in_package(self) -> dict:
         # TODO: Next line can be parallelized since all files are separate modules
-        symbols = [
-            parse(module, self._module_path) for module in self._directory.glob("*.py")
-        ]
+        symbols = [parse(module, self._module_path) for module in self._directory.glob("*.py")]
         merged = merge_dicts(*symbols)
         if self._is_package:
             sub_dirs = (d for d in self._directory.iterdir() if d.is_dir())
