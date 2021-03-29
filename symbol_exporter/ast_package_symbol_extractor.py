@@ -60,8 +60,8 @@ def remove_shadowed_relative_imports(package_symbols: dict):
 
 
 def symbol_in_namespace(symbol: str, namespace: str) -> bool:
-    parts = symbol.partition(f"{namespace}.")
-    return namespace in parts[1] and "." not in parts[2]
+    parts = symbol.partition(f"{namespace}")
+    return namespace in parts[1] and "." not in parts[2][1:]
 
 
 def deref_star(package_symbols: dict) -> dict:
@@ -74,7 +74,7 @@ def deref_star(package_symbols: dict) -> dict:
             namespace = rel_import["module"].replace(".__init__", "")
             print(f"Looking at symbol {k} with data {v} which shadows: {shadows}")
             for symbol in package_symbols:
-                if symbol_in_namespace(symbol, shadows):
+                if symbol_in_namespace(symbol.replace(".relative", ""), shadows):
                     symbol_type = get_symbol_type(package_symbols[symbol])
                     s: str = symbol.removeprefix(f"{shadows}")
                     new_symbol = f"{namespace}{s}"
@@ -104,7 +104,7 @@ def deref_star(package_symbols: dict) -> dict:
                         print(f"TODO: Merge star imports into the {new_symbol} star imports set.")
                     elif symbol_type in {SymbolType.PACKAGE, SymbolType.MODULE}:
                         print(f"found {symbol} and is {symbol_type}.")
-                        if new_symbol == symbol:
+                        if new_symbol in package_symbols:
                             print(f"Doing nothing. {new_symbol} already exists, most likely a package.")
                         else:
                             print(f"adding symbol {new_symbol} shadowing {symbol}")
