@@ -78,7 +78,7 @@ expected = {
         "data": {"shadows": "numpy.version"},
     },
     "numpy.core.*": {"type": SymbolType.STAR_IMPORT, "data": {"imports": {"json"}}},
-    "numpy.*": {"type": SymbolType.STAR_IMPORT, "data": {"imports": {"requests"}}},
+    "numpy.*": {"type": SymbolType.STAR_IMPORT, "data": {"imports": {"requests", "json"}}},
     "numpy.version.*": {
         "type": SymbolType.STAR_IMPORT,
         "data": {"imports": {"os"}},

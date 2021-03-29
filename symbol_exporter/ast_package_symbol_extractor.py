@@ -101,7 +101,10 @@ def deref_star(package_symbols: dict) -> dict:
                     elif symbol_type is SymbolType.STAR_IMPORT:
                         # TODO: Merge star import into new symbol's * imports
                         print(f"found {symbol} and is {symbol_type}", end=" - ")
-                        print(f"TODO: Merge star imports into the {new_symbol} star imports set.")
+                        print(f"Merging star imports into the {new_symbol} star imports set.")
+                        imports: set = ret[new_symbol]["data"]["imports"]
+                        inherited_imports = ret[symbol]["data"]["imports"]
+                        imports.update(inherited_imports)
                     elif symbol_type in {SymbolType.PACKAGE, SymbolType.MODULE}:
                         print(f"found {symbol} and is {symbol_type}.")
                         if new_symbol in package_symbols:
