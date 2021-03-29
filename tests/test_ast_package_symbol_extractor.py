@@ -91,7 +91,7 @@ expected_does_not_handle_multiple_level_relative_imports = {
 
 
 def test_relative_imports_does_not_handle_multiple_levels():
-    dsf = DirectorySymbolFinder("../tests/numpy")
+    dsf = DirectorySymbolFinder("tests/numpy")
     symbols = dsf.extract_symbols()
     assert symbols == expected_does_not_handle_multiple_level_relative_imports
 
