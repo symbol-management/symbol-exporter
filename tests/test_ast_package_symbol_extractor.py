@@ -5,7 +5,7 @@ from symbol_exporter.ast_symbol_extractor import SymbolType
 
 expected_does_not_handle_multiple_level_relative_imports = {
     "numpy.version": {"type": SymbolType.MODULE, "data": {}},
-    "numpy.version.get_versions": {"type": SymbolType.FUNCTION, "data": {"lineno": 4}},
+    "numpy.version.get_versions": {"type": SymbolType.FUNCTION, "data": {"lineno": 5}},
     "numpy": {"type": SymbolType.PACKAGE, "data": {}},
     "numpy.numeric": {
         "type": SymbolType.RELATIVE_IMPORT,
@@ -102,7 +102,7 @@ def test_relative_imports_does_not_handle_multiple_levels():
 
 expected = {
     "numpy.version": {"type": SymbolType.MODULE, "data": {}},
-    "numpy.version.get_versions": {"type": SymbolType.FUNCTION, "data": {"lineno": 4}},
+    "numpy.version.get_versions": {"type": SymbolType.FUNCTION, "data": {"lineno": 5}},
     "numpy": {"type": SymbolType.PACKAGE, "data": {}},
     "numpy.numeric": {
         "type": SymbolType.RELATIVE_IMPORT,
