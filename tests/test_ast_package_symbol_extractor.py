@@ -11,6 +11,10 @@ expected_does_not_handle_multiple_level_relative_imports = {
         "type": SymbolType.RELATIVE_IMPORT,
         "data": {"shadows": "numpy.core.numeric"},
     },
+    "numpy.version.numeric": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.core.numeric"},
+    },
     "numpy.abs": {
         "type": SymbolType.RELATIVE_IMPORT,
         "data": {"shadows": "numpy.core.numeric.absolute"},
@@ -182,6 +186,6 @@ expected = {
 
 @pytest.mark.skip(reason="work in progress")
 def test_relative_imports_with_multiple_levels():
-    dsf = DirectorySymbolFinder("../tests/numpy")
+    dsf = DirectorySymbolFinder("tests/numpy")
     symbols = dsf.extract_symbols()
     assert symbols == expected

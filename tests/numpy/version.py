@@ -1,4 +1,5 @@
 from os import *
+from .core import numeric
 
 
 def get_versions():
