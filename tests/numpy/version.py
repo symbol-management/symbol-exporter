@@ -1,4 +1,4 @@
-from requests import *
+from os import *
 
 
 def get_versions():
