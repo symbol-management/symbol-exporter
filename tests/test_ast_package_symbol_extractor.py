@@ -88,7 +88,8 @@ expected = {
         "type": SymbolType.STAR_IMPORT,
         "data": {"imports": {"os"}},
     },
-    "numpy.c2.triple": {"type": SymbolType.MODULE, "data": {}},
+    "numpy.c2.triplegit status"
+    "git": {"type": SymbolType.MODULE, "data": {}},
     "numpy.c2.triple.version": {
         "type": SymbolType.RELATIVE_IMPORT,
         "data": {"shadows": "numpy.version"},

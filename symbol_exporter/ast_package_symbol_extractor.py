@@ -211,7 +211,8 @@ def add_referenced_symbols(imports, namespace, namespaces, package_symbols, ret)
             elif symbol_type is SymbolType.STAR_IMPORT:
                 print(f"found {symbol} and is {symbol_type}", end=" - ")
                 print(f"Merging star imports into the {new_symbol} star imports set.")
-                imports: set = ret.setdefault(new_symbol, {}).setdefault("data", {}).setdefault("imports", set())
+                default_volume = dict(type=SymbolType.STAR_IMPORT, data=dict(imports=set()))
+                imports: set = ret.setdefault(new_symbol, default_volume).get("data", {}).get("imports", set())
                 inherited_imports = volume["data"]["imports"]
                 imports.update(inherited_imports)
             elif symbol_type in {SymbolType.PACKAGE, SymbolType.MODULE}:
