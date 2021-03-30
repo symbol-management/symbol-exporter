@@ -48,12 +48,12 @@ expected_does_not_handle_multiple_level_relative_imports = {
     },
     "numpy.relative.*": {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
-        "data": {"imports": [{"shadows": "core", "level": 1, "module": "numpy.__init__"}]},
+        "data": {"imports": ["numpy.core"]},
     },
     "numpy.core": {"type": SymbolType.PACKAGE, "data": {}},
     "numpy.core.relative.*": {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
-        "data": {"imports": [{"shadows": "numeric", "level": 1, "module": "numpy.core.__init__"}]},
+        "data": {"imports": ["numpy.core.numeric"]},
     },
     "numpy.core.numeric": {"type": SymbolType.MODULE, "data": {}},
     "numpy.core.numeric.ones": {"type": SymbolType.FUNCTION, "data": {"lineno": 1}},
@@ -138,12 +138,12 @@ expected = {
     },
     "numpy.relative.*": {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
-        "data": {"imports": [{"shadows": "core", "level": 1, "module": "numpy.__init__"}]},
+        "data": {"imports": ["numpy.core"]},
     },
     "numpy.core": {"type": SymbolType.PACKAGE, "data": {}},
     "numpy.core.relative.*": {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
-        "data": {"imports": [{"shadows": "numeric", "level": 1, "module": "numpy.core.__init__"}]},
+        "data": {"imports": ["numpy.core.numeric"]},
     },
     "numpy.core.numeric": {"type": SymbolType.MODULE, "data": {}},
     "numpy.core.numeric.ones": {"type": SymbolType.FUNCTION, "data": {"lineno": 1}},
