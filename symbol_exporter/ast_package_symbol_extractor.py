@@ -1,4 +1,5 @@
 import ast
+from graphlib import TopologicalSorter
 from pathlib import Path
 from typing import Union
 
@@ -48,6 +49,8 @@ def dereference_relative_import(module: str, level: int, shadows: str) -> str:
 def normalize_and_sort_symbols(package_symbols: dict) -> dict:
     """Removes __init__.py from symbols and returns dict sorted by symbol type"""
     ret = {}
+    topological_sorter = TopologicalSorter()
+    relative_star_imports_volume = {}
     for k, v in sorted(package_symbols.items(), key=lambda x: x[1]["type"]):
         new_symbol = k.replace(".__init__", "")
         if is_relative_import(v):
@@ -58,9 +61,13 @@ def normalize_and_sort_symbols(package_symbols: dict) -> dict:
         elif is_relative_star_import(v):
             imports = [dereference_relative_import(**data) for data in v["data"]["imports"]]
             data = dict(v, data=dict(imports=imports))
-            ret[new_symbol] = data
+            topological_sorter.add(new_symbol, *[f"{imp}.relative.*" for imp in imports])
+            relative_star_imports_volume[new_symbol] = data
         else:
             ret[new_symbol] = v
+    for rel_import in topological_sorter.static_order():
+        if rel_import in relative_star_imports_volume:
+            ret[rel_import] = relative_star_imports_volume[rel_import]
     return ret
 
 
@@ -78,10 +85,10 @@ def deref_star(package_symbols: dict) -> dict:
             namespace = k.partition(".relative")[0]
             for symbol, volume in package_symbols.items():
                 if symbol_in_namespace(symbol.replace(".relative", ""), rel_import):
-                    symbol_type = get_symbol_type(package_symbols[symbol])
+                    symbol_type = get_symbol_type(volume)
                     s: str = symbol.removeprefix(f"{rel_import}")
                     new_symbol = f"{namespace}{s}"
-                    if is_relative_import(volume):
+                    if symbol_type is SymbolType.RELATIVE_IMPORT:
                         print(f"found {symbol} and is {symbol_type}")
                         dereferenced_shadows = volume["data"]["shadows"]
                         if new_symbol not in package_symbols:
