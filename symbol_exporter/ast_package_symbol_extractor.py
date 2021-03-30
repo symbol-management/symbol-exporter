@@ -45,7 +45,8 @@ def dereference_relative_import(module: str, level: int, shadows: str) -> str:
     return ".".join([*parent, shadows])
 
 
-def remove_shadowed_relative_imports(package_symbols: dict):
+def normalize_and_sort_symbols(package_symbols: dict) -> dict:
+    """Removes __init__.py from symbols and returns dict sorted by symbol type"""
     ret = {}
     for k, v in sorted(package_symbols.items(), key=lambda x: x[1]["type"]):
         new_symbol = k.replace(".__init__", "")
@@ -53,6 +54,10 @@ def remove_shadowed_relative_imports(package_symbols: dict):
             shadows = dereference_relative_import(**v["data"])
             print(f"derefing {k} which is {new_symbol} and shadows {shadows}")
             data = dict(v, data=dict(shadows=shadows))
+            ret[new_symbol] = data
+        elif is_relative_star_import(v):
+            imports = [dereference_relative_import(**data) for data in v["data"]["imports"]]
+            data = dict(v, data=dict(imports=imports))
             ret[new_symbol] = data
         else:
             ret[new_symbol] = v
@@ -70,18 +75,16 @@ def deref_star(package_symbols: dict) -> dict:
     for k, v in star_imports:
         imports = v["data"]["imports"]
         for rel_import in imports:
-            shadows = dereference_relative_import(**rel_import)
-            namespace = rel_import["module"].replace(".__init__", "")
-            print(f"Looking at symbol {k} with data {v} which shadows: {shadows}")
-            for symbol in package_symbols:
-                if symbol_in_namespace(symbol.replace(".relative", ""), shadows):
+            namespace = k.partition(".relative")[0]
+            for symbol, volume in package_symbols.items():
+                if symbol_in_namespace(symbol.replace(".relative", ""), rel_import):
                     symbol_type = get_symbol_type(package_symbols[symbol])
-                    s: str = symbol.removeprefix(f"{shadows}")
+                    s: str = symbol.removeprefix(f"{rel_import}")
                     new_symbol = f"{namespace}{s}"
-                    if is_relative_import(package_symbols[symbol]):
+                    if is_relative_import(volume):
                         print(f"found {symbol} and is {symbol_type}")
-                        dereferenced_shadows = package_symbols[symbol]["data"]["shadows"]
-                        if new_symbol != dereferenced_shadows:
+                        dereferenced_shadows = volume["data"]["shadows"]
+                        if new_symbol not in package_symbols:
                             print(f"adding symbol {new_symbol} shadowing {dereferenced_shadows}")
                             data = dict(
                                 type=SymbolType.RELATIVE_IMPORT,
@@ -91,7 +94,7 @@ def deref_star(package_symbols: dict) -> dict:
                         else:
                             print(
                                 f"found possible circular reference: {new_symbol} is already in volume of "
-                                f"{rel_import['module']}, it is also exposed through import {shadows}.*"
+                                f"{namespace}, it is also exposed through import of {rel_import}.*"
                             )
                     elif symbol_type is SymbolType.RELATIVE_STAR_IMPORT:
                         # TODO: Deref the relative star imports.
@@ -99,7 +102,6 @@ def deref_star(package_symbols: dict) -> dict:
                         print(f"found {symbol} and is {symbol_type}", end=" - ")
                         print("TODO: Deref relative star imports.")
                     elif symbol_type is SymbolType.STAR_IMPORT:
-                        # TODO: Merge star import into new symbol's * imports
                         print(f"found {symbol} and is {symbol_type}", end=" - ")
                         print(f"Merging star imports into the {new_symbol} star imports set.")
                         imports: set = ret[new_symbol]["data"]["imports"]
@@ -132,7 +134,7 @@ class DirectorySymbolFinder:
 
     def extract_symbols(self) -> dict:
         package_symbols = self._get_all_symbols_in_package()
-        r = remove_shadowed_relative_imports(package_symbols)
+        r = normalize_and_sort_symbols(package_symbols)
         s = deref_star(r)
         return s
 
