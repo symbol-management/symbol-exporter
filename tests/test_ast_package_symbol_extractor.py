@@ -88,6 +88,51 @@ expected = {
         "type": SymbolType.STAR_IMPORT,
         "data": {"imports": {"os"}},
     },
+    "numpy.c2.triple": {"type": SymbolType.MODULE, "data": {}},
+    "numpy.c2.triple.version": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.version"},
+    },
+    "numpy.c2.triple.get_versions": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.version.get_versions"},
+    },
+    "numpy.c2.triple.core": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.core"},
+    },
+    "numpy.c2.triple.numeric": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.core.numeric"},
+    },
+    "numpy.c2.triple.abs": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.core.numeric.absolute"},
+    },
+    "numpy.c2.triple.alias_version": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.version"},
+    },
+    "numpy.c2.triple.alias_get_versions": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.version.get_versions"},
+    },
+    "numpy.c2.triple.*": {
+        "type": SymbolType.STAR_IMPORT,
+        "data": {"imports": {"requests", "json"}},
+    },
+    "numpy.c2.triple.relative.*": {
+        "type": SymbolType.RELATIVE_STAR_IMPORT,
+        "data": {"imports": ["numpy"]},
+    },
+    "numpy.c2.triple.ones": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.core.numeric.ones"},
+    },
+    "numpy.c2.triple.absolute": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.core.numeric.absolute"},
+    },
 }
 
 
