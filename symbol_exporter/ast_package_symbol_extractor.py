@@ -84,7 +84,6 @@ def normalize_and_sort_symbols(package_symbols: dict):
     for rel_import in topological_sorter.static_order():
         if rel_import in relative_star_imports_volume:
             ret[rel_import] = relative_star_imports_volume[rel_import]
-    print(f"NAMESPACES")
     for ns, symbols in namespaces.items():
         print(f"==== {ns} ====")
         print(symbols)
