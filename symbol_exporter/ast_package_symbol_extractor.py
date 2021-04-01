@@ -88,17 +88,19 @@ def normalize_and_sort_symbols(package_symbols: dict):
 
 
 def dereference_star_imports(package_symbols: dict, namespaces: dict) -> dict:
-    ret = dict(package_symbols)
+    ret = {}
     star_imports = ((k, v) for k, v in package_symbols.items() if is_relative_star_import(v))
     for k, v in star_imports:
         print(f"IN STARIMPORT is {k}=>{v}")
         namespace = k.partition(".relative")[0]
         imports = v["data"]["imports"]
-        add_referenced_symbols(imports, namespace, namespaces, package_symbols, ret)
+        r = add_referenced_symbols(imports, namespace, namespaces, package_symbols)
+        ret |= r
     return ret
 
 
-def add_referenced_symbols(imports, namespace, namespaces, package_symbols, ret):
+def add_referenced_symbols(imports, namespace, namespaces, package_symbols):
+    ret = dict(package_symbols)
     for rel_star_import in imports:
         print(f"LOOKING for {rel_star_import} in {namespaces}")
         symbols_to_import = namespaces[rel_star_import]
@@ -131,7 +133,7 @@ def add_referenced_symbols(imports, namespace, namespaces, package_symbols, ret)
                 relative_imports = volume["data"]["imports"]
                 print(f"will try to import all symbols in {relative_imports}")
                 print(f"Will add symbols {[namespaces[imp] for imp in relative_imports]} to {namespace}")
-                add_referenced_symbols(relative_imports, namespace, namespaces, package_symbols, ret)
+                ret |= add_referenced_symbols(relative_imports, namespace, namespaces, ret)
             elif symbol_type is SymbolType.STAR_IMPORT:
                 print(f"found {symbol} and is {symbol_type}", end=" - ")
                 print(f"Merging star imports into the {new_symbol} star imports set.")
@@ -155,6 +157,7 @@ def add_referenced_symbols(imports, namespace, namespaces, package_symbols, ret)
                 print(f"adding symbol {new_symbol} shadowing {symbol}")
                 data = dict(type=SymbolType.RELATIVE_IMPORT, data=dict(shadows=symbol))
                 ret[new_symbol] = data
+    return ret
 
 
 class DirectorySymbolFinder:
