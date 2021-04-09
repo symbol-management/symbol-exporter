@@ -64,7 +64,7 @@ class _RelativeImportsResolver:
                 shadows = resolve_relative_import(**v["data"])
                 data = dict(v, data=dict(shadows=shadows))
                 tmp_sorted[new_symbol] = data
-                namespace, _ symbol = new_symbol.rpartition(".")
+                namespace, _, symbol = new_symbol.rpartition(".")
                 namespaces[namespace].append(new_symbol)
             elif is_relative_star_import(v):
                 imports = [resolve_relative_import(**data) for data in v["data"]["imports"]]
