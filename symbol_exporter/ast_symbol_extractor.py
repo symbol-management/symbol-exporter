@@ -6,6 +6,7 @@ from enum import Enum
 
 # Increment when we need the database to be rebuilt (eg adding a new feature)
 NOT_A_DEFAULT_ARG = "~~NOT_A_DEFAULT~~"
+RELATIVE_IMPORT_IDENTIFIER = "~~RELATIVE~~"
 version = "2"  # must be an integer
 builtin_symbols = set(dir(builtins))
 
@@ -283,7 +284,7 @@ class SymbolFinder(ast.NodeVisitor):
 
     def _add_symbol_to_relative_star_imports(self, imported_symbol, symbol_type: SymbolType, level: int):
         default = dict(type=symbol_type, data=dict(imports=[]))
-        symbol_name = f"{self._module_name}.relative.*"
+        symbol_name = f"{self._module_name}.{RELATIVE_IMPORT_IDENTIFIER}.*"
         self._symbols.setdefault(symbol_name, default)["data"]["imports"].append(
             dict(shadows=imported_symbol, level=level, module=self._module_name)
         )

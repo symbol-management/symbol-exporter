@@ -8,7 +8,7 @@ from symbol_exporter.ast_symbol_extractor import (
     SymbolFinder,
     is_relative_import,
     SymbolType,
-    is_relative_star_import,
+    is_relative_star_import, RELATIVE_IMPORT_IDENTIFIER,
 )
 
 
@@ -69,9 +69,9 @@ class _RelativeImportsResolver:
             elif is_relative_star_import(v):
                 imports = [resolve_relative_import(**data) for data in v["data"]["imports"]]
                 data = dict(v, data=dict(imports=imports))
-                topological_sorter.add(new_symbol, *[f"{imp}.relative.*" for imp in imports])
+                topological_sorter.add(new_symbol, *[f"{imp}.{RELATIVE_IMPORT_IDENTIFIER}.*" for imp in imports])
                 relative_star_imports_volume[new_symbol] = data
-                namespace, _, symbol = new_symbol.partition(".relative")
+                namespace, _, symbol = new_symbol.partition(f".{RELATIVE_IMPORT_IDENTIFIER}")
                 namespaces[namespace].append(new_symbol)
             else:
                 tmp_sorted[new_symbol] = v
@@ -88,7 +88,7 @@ class _RelativeImportsResolver:
         resolved_symbols = {}
         star_imports = ((k, v) for k, v in self._sorted_symbols.items() if is_relative_star_import(v))
         for symbol, volume in star_imports:
-            namespace = symbol.partition(".relative")[0]
+            namespace = symbol.partition(f".{RELATIVE_IMPORT_IDENTIFIER}")[0]
             imports = volume["data"]["imports"]
             resolved_symbols |= self._add_referenced_symbols(imports, namespace)
         return resolved_symbols

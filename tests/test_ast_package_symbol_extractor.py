@@ -43,12 +43,12 @@ expected = {
         "type": SymbolType.RELATIVE_IMPORT,
         "data": {"shadows": "numpy.core.numeric.ones"},
     },
-    "numpy.relative.*": {
+    "numpy.~~RELATIVE~~.*": {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
         "data": {"imports": ["numpy.core"]},
     },
     "numpy.core": {"type": SymbolType.PACKAGE, "data": {}},
-    "numpy.core.relative.*": {
+    "numpy.core.~~RELATIVE~~.*": {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
         "data": {"imports": ["numpy.core.numeric"]},
     },
@@ -121,7 +121,7 @@ expected = {
         "type": SymbolType.STAR_IMPORT,
         "data": {"imports": {"requests", "json"}},
     },
-    "numpy.c2.triple.relative.*": {
+    "numpy.c2.triple.~~RELATIVE~~.*": {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
         "data": {"imports": ["numpy"]},
     },
