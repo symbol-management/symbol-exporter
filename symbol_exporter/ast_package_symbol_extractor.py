@@ -86,12 +86,15 @@ class _RelativeImportsResolver:
 
     def _resolve_star_imports(self):
         resolved_symbols = {}
-        star_imports = ((k, v) for k, v in self._sorted_symbols.items() if is_relative_star_import(v))
-        for symbol, volume in star_imports:
-            namespace = symbol.partition(f".{RELATIVE_IMPORT_IDENTIFIER}")[0]
-            imports = volume["data"]["imports"]
-            resolved_symbols |= self._add_referenced_symbols(imports, namespace)
-        return resolved_symbols
+        star_imports = [(k, v) for k, v in self._sorted_symbols.items() if is_relative_star_import(v)]
+        if not star_imports:
+            return self._sorted_symbols
+        else:
+            for symbol, volume in star_imports:
+                namespace = symbol.partition(f".{RELATIVE_IMPORT_IDENTIFIER}")[0]
+                imports = volume["data"]["imports"]
+                resolved_symbols |= self._add_referenced_symbols(imports, namespace)
+            return resolved_symbols
 
     def _add_referenced_symbols(self, imports, namespace, symbols=None):
         symbols = dict(self._sorted_symbols) if not symbols else symbols
