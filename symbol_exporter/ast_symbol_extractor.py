@@ -41,6 +41,17 @@ class OrderedEnum(Enum):
 
 
 class SymbolType(OrderedEnum):
+    """
+    Symbol are ordered in reverse order of precedence.
+    Higher order symbols types will take precedence if two symbol types have the same name.
+
+    As an example, ff directory 'dir1' has '__init__.py' that imports '.module2', there will be two instances
+    of symbol `dir1.module2', one of type IMPORT and another of type MODULE.
+    The IMPORT type is the exposed symbol in '__init__.py' while the MODULE type is the actual module 'module2'
+    with its corresponding surface area and volume.
+    In this examples the MODULE symbol takes precedence over the IMPORT symbol.
+    i.e. we will report the module's surface area and volume in the final extracted symbol results.
+    """
     STAR_IMPORT = 1
     RELATIVE_STAR_IMPORT = 10
     IMPORT = 2
