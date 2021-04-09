@@ -408,7 +408,7 @@ def test_relative_star_import():
     z = process_code_str(code)
     assert z.symbols == {
         "mm": {"data": {}, "type": SymbolType.MODULE},
-        "mm.relative.*": {
+        "mm.~~RELATIVE~~.*": {
             "type": SymbolType.RELATIVE_STAR_IMPORT,
             "data": {
                 "imports": [
