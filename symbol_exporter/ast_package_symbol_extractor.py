@@ -71,7 +71,7 @@ class _RelativeImportsResolver:
                 data = dict(v, data=dict(imports=imports))
                 topological_sorter.add(new_symbol, *[f"{imp}.relative.*" for imp in imports])
                 relative_star_imports_volume[new_symbol] = data
-                namespace, symbol = new_symbol.partition(".relative")[:3:2]
+                namespace, _, symbol = new_symbol.partition(".relative")
                 namespaces[namespace].append(new_symbol)
             else:
                 tmp_sorted[new_symbol] = v
