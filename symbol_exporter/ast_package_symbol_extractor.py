@@ -22,12 +22,24 @@ def is_package(directory: Path) -> bool:
     return (directory / "__init__.py").exists()
 
 
-def parse(module: Path, module_path: str) -> dict:
-    code = module.read_text()  # TODO: need to check for multiple encodings
+def parse_code(code: str, module_name: str) -> dict:
     tree = ast.parse(code)
-    z = SymbolFinder(module_name=f"{module_path}.{module.stem}")
+    z = SymbolFinder(module_name=module_name)
     z.visit(tree)
     return z.post_process_symbols()
+
+
+def parse(module: Path, module_path: str) -> dict:
+    module_name = f"{module_path}.{module.stem}"
+    try:
+        code = module.read_text(encoding="utf-8")
+        return parse_code(code, module_name=module_name)
+    except SyntaxError:
+        code = module.read_text(encoding="utf-8-sig")
+        return parse_code(code, module_name=module_name)
+    except Exception as e:
+        print(f"Unable to parse file {module.resolve()}. {repr(e)}")
+        return {}
 
 
 def merge_dicts(*dicts):
