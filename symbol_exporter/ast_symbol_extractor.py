@@ -53,6 +53,7 @@ class SymbolType(OrderedEnum):
     In this examples the MODULE symbol takes precedence over the IMPORT symbol.
     i.e. we will report the module's surface area and volume in the final extracted symbol results.
     """
+
     STAR_IMPORT = 1
     RELATIVE_STAR_IMPORT = 10
     IMPORT = 2

@@ -8,7 +8,8 @@ from symbol_exporter.ast_symbol_extractor import (
     SymbolFinder,
     is_relative_import,
     SymbolType,
-    is_relative_star_import, RELATIVE_IMPORT_IDENTIFIER,
+    is_relative_star_import,
+    RELATIVE_IMPORT_IDENTIFIER,
 )
 
 
