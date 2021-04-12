@@ -4,10 +4,10 @@ import builtins
 from typing import Any
 from enum import Enum
 
-# Increment when we need the database to be rebuilt (eg adding a new feature)
 NOT_A_DEFAULT_ARG = "~~NOT_A_DEFAULT~~"
 RELATIVE_IMPORT_IDENTIFIER = "~~RELATIVE~~"
-version = "2"  # must be an integer
+# Increment when we need the database to be rebuilt (eg adding a new feature)
+version = "3"  # must be an integer
 builtin_symbols = set(dir(builtins))
 
 
