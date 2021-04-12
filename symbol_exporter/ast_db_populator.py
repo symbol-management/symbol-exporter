@@ -1,12 +1,11 @@
 """Stores the ast derived symbols in either github or CERN"""
-import ast
-import glob
 import io
 import json
 import os
 import shutil
 import tarfile
 from functools import partial
+from pathlib import Path
 from random import shuffle
 from tempfile import TemporaryDirectory
 
@@ -17,7 +16,8 @@ from libcflib.preloader import ReapFailure, fetch_upstream, existing
 from libcflib.tools import expand_file_and_mkdirs
 from tqdm import tqdm
 
-from symbol_exporter.ast_symbol_extractor import SymbolFinder, version
+from symbol_exporter.ast_package_symbol_extractor import DirectorySymbolFinder
+from symbol_exporter.ast_symbol_extractor import version
 from symbol_exporter.db_access_model import make_json_friendly, WebDB
 from symbol_exporter.python_so_extractor import (
     CompiledPythonLib,
@@ -33,37 +33,6 @@ logger.setLevel("ERROR")
 
 # TODO: push this into the web only branches so we don't require the secret to be set
 web_interface = WebDB()
-
-
-def file_path_to_import(file_path: str):
-    return file_path.replace(".py", "").replace("/", ".")
-
-
-def parse_code(code, module_name):
-    try:
-        tree = ast.parse(code)
-    except SyntaxError:
-        return {}
-    z = SymbolFinder(module_name)
-    z.visit(tree)
-    return z.post_process_symbols()
-
-
-def single_py_file_extraction(python_file, top_dir):
-    folder_path = python_file.rpartition(top_dir + "/")[-1]
-    import_name = file_path_to_import(folder_path)
-    try:
-        with open(python_file, "r") as f:
-            code = f.read()
-        s = parse_code(code, module_name=import_name)
-    except SyntaxError:
-        with open(python_file, "r", encoding="utf-8-sig") as f:
-            code = f.read()
-        s = parse_code(code, module_name=import_name)
-    except Exception as e:
-        print(python_file, repr(e))
-        s = {}
-    return s
 
 
 def parse_so(filename):
@@ -90,13 +59,13 @@ def get_all_symbol_names(top_dir):
     # to depend on those
     symbols_dict = {}
     # walk all the files looking for python files
-    py_glob_glob = glob.glob(f"{top_dir}/**/*.py", recursive=True)
-    for file_name in [k for k in py_glob_glob]:
-        sd = single_py_file_extraction(file_name, top_dir)
-        symbols_dict.update(sd)
+    site = Path(top_dir)
+    for package in site.iterdir():
+        dsf = DirectorySymbolFinder(package)
+        symbols = dsf.extract_symbols()
+        symbols_dict.update(symbols)
 
-    py_glob_glob = glob.glob(f"{top_dir}/**/*.so", recursive=True)
-    for file_name in [k for k in py_glob_glob]:
+    for file_name in site.rglob("*.so"):
         sd = single_so_file_extraction(file_name)
         symbols_dict.update(sd)
 
