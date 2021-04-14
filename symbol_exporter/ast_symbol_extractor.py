@@ -4,10 +4,10 @@ import builtins
 from typing import Any
 from enum import Enum
 
-# Increment when we need the database to be rebuilt (eg adding a new feature)
 NOT_A_DEFAULT_ARG = "~~NOT_A_DEFAULT~~"
 RELATIVE_IMPORT_IDENTIFIER = "~~RELATIVE~~"
-version = "2"  # must be an integer
+# Increment when we need the database to be rebuilt (eg adding a new feature)
+version = "3"  # must be an integer
 builtin_symbols = set(dir(builtins))
 
 
@@ -53,6 +53,7 @@ class SymbolType(OrderedEnum):
     In this examples the MODULE symbol takes precedence over the IMPORT symbol.
     i.e. we will report the module's surface area and volume in the final extracted symbol results.
     """
+
     STAR_IMPORT = 1
     RELATIVE_STAR_IMPORT = 10
     IMPORT = 2
