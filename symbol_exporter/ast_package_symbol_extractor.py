@@ -143,7 +143,7 @@ class _RelativeImportsResolver:
                     logger.info(f"will add all symbols in {relative_imports} to {namespace} namespace")
                     symbols |= self._add_referenced_symbols(relative_imports, namespace, symbols=symbols)
                 elif symbol_type is SymbolType.STAR_IMPORT:
-                    logger.info(f"found {symbol} and is {symbol_type}", end=" - ")
+                    logger.info(f"found {symbol} and is {symbol_type}")
                     logger.info(f"Merging star imports into the {new_symbol} star imports set.")
                     default_volume = dict(type=SymbolType.STAR_IMPORT, data=dict(imports=set()))
                     imports: set = symbols.setdefault(new_symbol, default_volume).get("data", {}).get("imports", set())
