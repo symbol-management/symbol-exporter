@@ -469,7 +469,9 @@ def test__curses_py37():
         "qiflush",
     }
     compare(
-        "lib/python3.7/lib-dynload/_curses.cpython-37m-x86_64-linux-gnu.so", expected, xmissing=True,
+        "lib/python3.7/lib-dynload/_curses.cpython-37m-x86_64-linux-gnu.so",
+        expected,
+        xmissing=True,
     )
 
 
@@ -492,7 +494,9 @@ def test__csv_py37():
         "list_dialects",
     }
     compare(
-        "lib/python3.7/lib-dynload/_csv.cpython-37m-x86_64-linux-gnu.so", expected, xmissing=True,
+        "lib/python3.7/lib-dynload/_csv.cpython-37m-x86_64-linux-gnu.so",
+        expected,
+        xmissing=True,
     )
 
 
@@ -563,7 +567,9 @@ def test_ctypes():
         "resize",
     }
     compare(
-        "lib/python3.7/lib-dynload/_ctypes.cpython-37m-x86_64-linux-gnu.so", expected, xmissing=True,
+        "lib/python3.7/lib-dynload/_ctypes.cpython-37m-x86_64-linux-gnu.so",
+        expected,
+        xmissing=True,
     )
 
 
@@ -758,7 +764,9 @@ def test__codecs_cn():
         "__map_gbkext",
     }
     compare(
-        "lib/python3.7/lib-dynload/_codecs_cn.cpython-37m-x86_64-linux-gnu.so", expected, xmissing=True,
+        "lib/python3.7/lib-dynload/_codecs_cn.cpython-37m-x86_64-linux-gnu.so",
+        expected,
+        xmissing=True,
     )
 
 
@@ -773,14 +781,17 @@ def test__codecs_hk():
         "__map_big5hkscs",
     }
     compare(
-        "lib/python3.7/lib-dynload/_codecs_hk.cpython-37m-x86_64-linux-gnu.so", expected, xmissing=True,
+        "lib/python3.7/lib-dynload/_codecs_hk.cpython-37m-x86_64-linux-gnu.so",
+        expected,
+        xmissing=True,
     )
 
 
 def test__codecs_iso2022():
     expected = {"getcodec"}
     compare(
-        "lib/python3.7/lib-dynload/_codecs_iso2022.cpython-37m-x86_64-linux-gnu.so", expected,
+        "lib/python3.7/lib-dynload/_codecs_iso2022.cpython-37m-x86_64-linux-gnu.so",
+        expected,
     )
 
 
@@ -803,7 +814,9 @@ def test__codecs_jp():
         "__map_jisx0213_1_bmp",
     }
     compare(
-        "lib/python3.7/lib-dynload/_codecs_jp.cpython-37m-x86_64-linux-gnu.so", expected, xmissing=True,
+        "lib/python3.7/lib-dynload/_codecs_jp.cpython-37m-x86_64-linux-gnu.so",
+        expected,
+        xmissing=True,
     )
 
 
@@ -813,7 +826,9 @@ def test__codecs_jp():
 def test__codecs_kr():
     expected = {"__map_ksx1001", "__map_cp949ext", "__map_cp949", "getcodec"}
     compare(
-        "lib/python3.7/lib-dynload/_codecs_kr.cpython-37m-x86_64-linux-gnu.so", expected, xmissing=True,
+        "lib/python3.7/lib-dynload/_codecs_kr.cpython-37m-x86_64-linux-gnu.so",
+        expected,
+        xmissing=True,
     )
 
 
@@ -823,14 +838,17 @@ def test__codecs_kr():
 def test__codecs_tw():
     expected = {"getcodec", "__map_cp950ext", "__map_big5"}
     compare(
-        "lib/python3.7/lib-dynload/_codecs_tw.cpython-37m-x86_64-linux-gnu.so", expected, xmissing=True,
+        "lib/python3.7/lib-dynload/_codecs_tw.cpython-37m-x86_64-linux-gnu.so",
+        expected,
+        xmissing=True,
     )
 
 
 def test_contextvars():
     expected = {"copy_context", "ContextVar", "Token", "Context"}
     compare(
-        "lib/python3.7/lib-dynload/_contextvars.cpython-37m-x86_64-linux-gnu.so", expected,
+        "lib/python3.7/lib-dynload/_contextvars.cpython-37m-x86_64-linux-gnu.so",
+        expected,
     )
 
 
@@ -842,7 +860,8 @@ def test_crypt():
 def test_ctypes_test():
     expected = {"func", "func_si"}
     compare(
-        "lib/python3.7/lib-dynload/_ctypes_test.cpython-37m-x86_64-linux-gnu.so", expected,
+        "lib/python3.7/lib-dynload/_ctypes_test.cpython-37m-x86_64-linux-gnu.so",
+        expected,
     )
 
 
@@ -856,7 +875,9 @@ def test_curses_panel():
         "bottom_panel",
     }
     compare(
-        "lib/python3.7/lib-dynload/_curses_panel.cpython-37m-x86_64-linux-gnu.so", expected, xmissing=True,
+        "lib/python3.7/lib-dynload/_curses_panel.cpython-37m-x86_64-linux-gnu.so",
+        expected,
+        xmissing=True,
     )
 
 
@@ -917,14 +938,17 @@ def test_decimal():
         "ROUND_HALF_EVEN",
     }
     compare(
-        "lib/python3.7/lib-dynload/_decimal.cpython-37m-x86_64-linux-gnu.so", expected, xmissing=True,
+        "lib/python3.7/lib-dynload/_decimal.cpython-37m-x86_64-linux-gnu.so",
+        expected,
+        xmissing=True,
     )
 
 
 def test_elementtree():
     expected = {"TreeBuilder", "XMLParser", "SubElement", "Element", "ParseError"}
     compare(
-        "lib/python3.7/lib-dynload/_elementtree.cpython-37m-x86_64-linux-gnu.so", expected,
+        "lib/python3.7/lib-dynload/_elementtree.cpython-37m-x86_64-linux-gnu.so",
+        expected,
     )
 
 
@@ -1015,14 +1039,17 @@ def test_multibytecodec():
         "MultibyteStreamReader",
     }
     compare(
-        "lib/python3.7/lib-dynload/_multibytecodec.cpython-37m-x86_64-linux-gnu.so", expected, xmissing=True,
+        "lib/python3.7/lib-dynload/_multibytecodec.cpython-37m-x86_64-linux-gnu.so",
+        expected,
+        xmissing=True,
     )
 
 
 def test_multiprocessing():
     expected = {"flags", "sem_unlink", "SemLock"}
     compare(
-        "lib/python3.7/lib-dynload/_multiprocessing.cpython-37m-x86_64-linux-gnu.so", expected,
+        "lib/python3.7/lib-dynload/_multiprocessing.cpython-37m-x86_64-linux-gnu.so",
+        expected,
     )
 
 
@@ -1034,7 +1061,8 @@ def test_opcode():
 def test_posixsubprocess():
     expected = {"fork_exec"}
     compare(
-        "lib/python3.7/lib-dynload/_posixsubprocess.cpython-37m-x86_64-linux-gnu.so", expected,
+        "lib/python3.7/lib-dynload/_posixsubprocess.cpython-37m-x86_64-linux-gnu.so",
+        expected,
     )
 
 
@@ -1407,7 +1435,9 @@ def test_sqlite3():
         "InterfaceError",
     }
     compare(
-        "lib/python3.7/lib-dynload/_sqlite3.cpython-37m-x86_64-linux-gnu.so", expected, xmissing=True,
+        "lib/python3.7/lib-dynload/_sqlite3.cpython-37m-x86_64-linux-gnu.so",
+        expected,
+        xmissing=True,
     )
 
 
@@ -1589,7 +1619,8 @@ def test_testbuffer():
         "PyBUF_ANY_CONTIGUOUS",
     }
     compare(
-        "lib/python3.7/lib-dynload/_testbuffer.cpython-37m-x86_64-linux-gnu.so", expected,
+        "lib/python3.7/lib-dynload/_testbuffer.cpython-37m-x86_64-linux-gnu.so",
+        expected,
     )
 
 
@@ -1816,7 +1847,8 @@ def test_testcapi():
 def test_testimportmultiple():
     expected = set()
     compare(
-        "lib/python3.7/lib-dynload/_testimportmultiple.cpython-37m-x86_64-linux-gnu.so", expected,
+        "lib/python3.7/lib-dynload/_testimportmultiple.cpython-37m-x86_64-linux-gnu.so",
+        expected,
     )
 
 
@@ -1831,7 +1863,9 @@ def test_testmultiphase():
         "error",
     }
     compare(
-        "lib/python3.7/lib-dynload/_testmultiphase.cpython-37m-x86_64-linux-gnu.so", expected, xmissing=True,
+        "lib/python3.7/lib-dynload/_testmultiphase.cpython-37m-x86_64-linux-gnu.so",
+        expected,
+        xmissing=True,
     )
 
 
@@ -1863,14 +1897,17 @@ def test_tkinter():
 def test_xxtestfuzz():
     expected = {"run"}
     compare(
-        "lib/python3.7/lib-dynload/_xxtestfuzz.cpython-37m-x86_64-linux-gnu.so", expected,
+        "lib/python3.7/lib-dynload/_xxtestfuzz.cpython-37m-x86_64-linux-gnu.so",
+        expected,
     )
 
 
 def test_array():
     expected = {"typecodes", "ArrayType", "_array_reconstructor", "array"}
     compare(
-        "lib/python3.7/lib-dynload/array.cpython-37m-x86_64-linux-gnu.so", expected, xmissing=True,
+        "lib/python3.7/lib-dynload/array.cpython-37m-x86_64-linux-gnu.so",
+        expected,
+        xmissing=True,
     )
 
 
@@ -2114,7 +2151,8 @@ def test_ossaudiodev():
         "open",
     }
     compare(
-        "lib/python3.7/lib-dynload/ossaudiodev.cpython-37m-x86_64-linux-gnu.so", expected,
+        "lib/python3.7/lib-dynload/ossaudiodev.cpython-37m-x86_64-linux-gnu.so",
+        expected,
     )
 
 
@@ -2477,7 +2515,9 @@ def test_termios():
         "EXTA",
     }
     compare(
-        "lib/python3.7/lib-dynload/termios.cpython-37m-x86_64-linux-gnu.so", expected, xmissing=True,
+        "lib/python3.7/lib-dynload/termios.cpython-37m-x86_64-linux-gnu.so",
+        expected,
+        xmissing=True,
     )
 
 
@@ -2501,12 +2541,15 @@ def test_unicodedata():
         "digit",
     }
     compare(
-        "lib/python3.7/lib-dynload/unicodedata.cpython-37m-x86_64-linux-gnu.so", expected,
+        "lib/python3.7/lib-dynload/unicodedata.cpython-37m-x86_64-linux-gnu.so",
+        expected,
     )
 
 
 def test_xxlimited():
     expected = {"Xxo", "Null", "Str", "roj", "new", "error", "foo"}
     compare(
-        "lib/python3.7/lib-dynload/xxlimited.cpython-37m-x86_64-linux-gnu.so", expected, xmissing=True,
+        "lib/python3.7/lib-dynload/xxlimited.cpython-37m-x86_64-linux-gnu.so",
+        expected,
+        xmissing=True,
     )

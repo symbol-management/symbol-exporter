@@ -28,7 +28,13 @@ class WebDB:
         }
         headers["X-Headers-Signature"] = hmac.new(
             self.secret_token,
-            b"".join([url.encode(), headers["X-Signature-Timestamp"].encode(), headers["X-Body-Signature"].encode(),]),
+            b"".join(
+                [
+                    url.encode(),
+                    headers["X-Signature-Timestamp"].encode(),
+                    headers["X-Body-Signature"].encode(),
+                ]
+            ),
             hashlib.sha256,
         ).hexdigest()
         return headers
@@ -36,7 +42,11 @@ class WebDB:
     def push_symbol_table(self, top_level_name, symbol_table):
         url = f"/api/v{version}/symbol_table/{top_level_name}"
         dumped_data = json.dumps(symbol_table, default=make_json_friendly, sort_keys=True)
-        r = requests.put(f"{self.host}{url}", data=dumped_data, headers=self._setup_headers(dumped_data, url=url),)
+        r = requests.put(
+            f"{self.host}{url}",
+            data=dumped_data,
+            headers=self._setup_headers(dumped_data, url=url),
+        )
         r.raise_for_status()
 
     def get_current_symbol_table_artifacts_by_top_level(self):
@@ -129,7 +139,11 @@ class WebDB:
         dumped_data = json.dumps(data, default=make_json_friendly, sort_keys=True)
 
         # Upload the data
-        r = requests.put(f"{self.host}{url}", data=dumped_data, headers=self._setup_headers(dumped_data, url),)
+        r = requests.put(
+            f"{self.host}{url}",
+            data=dumped_data,
+            headers=self._setup_headers(dumped_data, url),
+        )
         r.raise_for_status()
 
 

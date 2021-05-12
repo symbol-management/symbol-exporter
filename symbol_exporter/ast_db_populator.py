@@ -98,7 +98,10 @@ def harvest_imports(io_like):
         return None
 
     return {
-        "metadata": {"data model version": version, "top level symbols": set(k.partition(".")[0] for k in symbols),},
+        "metadata": {
+            "data model version": version,
+            "top level symbols": set(k.partition(".")[0] for k in symbols),
+        },
         "symbols": symbols,
     }
 
@@ -159,7 +162,11 @@ sort_arch_ordering = [
 
 
 def reap(
-    path, known_bad_packages=(), number_to_reap=1000, single_thread=False, webserver=True,
+    path,
+    known_bad_packages=(),
+    number_to_reap=1000,
+    single_thread=False,
+    webserver=True,
 ):
     upstream = fetch_upstream()
     if not webserver:
@@ -219,10 +226,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("root_path")
     parser.add_argument(
-        "--known-bad-packages", help="name of a json file containing a list of urls to be skipped",
+        "--known-bad-packages",
+        help="name of a json file containing a list of urls to be skipped",
     )
     parser.add_argument(
-        "--debug", help="run without dask for debugging/speed testing",
+        "--debug",
+        help="run without dask for debugging/speed testing",
     )
     parser.add_argument("--n_artifacts", help="number of artifacts to inspect", default=5000)
     parser.add_argument("--local", help="to local disk for storage", default=False)
