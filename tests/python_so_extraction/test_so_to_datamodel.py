@@ -19,11 +19,7 @@ def test__regex_conversion():
                 {"docstring": None, "name": "get_all_cases"},
             ],
             "name": "_regex",
-            "objects": [
-                {"name": "MAGIC"},
-                {"name": "CODE_SIZE"},
-                {"name": "copyright"},
-            ],
+            "objects": [{"name": "MAGIC"}, {"name": "CODE_SIZE"}, {"name": "copyright"},],
         }
     )
     expected = {

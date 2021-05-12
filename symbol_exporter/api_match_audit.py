@@ -11,9 +11,7 @@ import requests
 from tqdm import tqdm
 
 from symbol_exporter.api_match import find_supplying_version_set
-from symbol_exporter.ast_db_populator import (
-    make_json_friendly,
-)
+from symbol_exporter.ast_db_populator import make_json_friendly
 from symbol_exporter.ast_symbol_extractor import version
 from symbol_exporter.db_access_model import WebDB
 

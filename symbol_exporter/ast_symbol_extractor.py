@@ -124,9 +124,7 @@ class SymbolFinder(ast.NodeVisitor):
                     self._add_symbol_to_star_imports(node.module, symbol_type=SymbolType.STAR_IMPORT)
                 else:
                     self._add_symbol_to_relative_star_imports(
-                        node.module,
-                        symbol_type=SymbolType.RELATIVE_STAR_IMPORT,
-                        level=node.level,
+                        node.module, symbol_type=SymbolType.RELATIVE_STAR_IMPORT, level=node.level,
                     )
         self._relative_import_stack.append(node.level)
         self.generic_visit(node)
@@ -163,9 +161,7 @@ class SymbolFinder(ast.NodeVisitor):
                 self.current_symbol_stack.append(target.id)
                 symbol_name = self._symbol_stack_to_symbol_name()
                 self._add_symbol_to_surface_area(
-                    SymbolType.CONSTANT,
-                    symbol_name,
-                    lineno=node.lineno,
+                    SymbolType.CONSTANT, symbol_name, lineno=node.lineno,
                 )
             self.generic_visit(node)
             if hasattr(target, "id"):
@@ -197,9 +193,7 @@ class SymbolFinder(ast.NodeVisitor):
         # TODO: add args kwargs dict to symbols description
         self.current_args_kwargs_stack.append(args_kwargs_dict)
         self._add_symbol_to_surface_area(
-            SymbolType.FUNCTION,
-            symbol_name,
-            lineno=node.lineno,
+            SymbolType.FUNCTION, symbol_name, lineno=node.lineno,
         )
         self.generic_visit(node)
         self.current_symbol_stack.pop(-1)
@@ -232,15 +226,11 @@ class SymbolFinder(ast.NodeVisitor):
                 lineno = node.lineno
                 if self._is_constant(surface_symbol):
                     self._add_symbol_to_volume(
-                        surface_symbol=self._module_name,
-                        volume_symbol=symbol_name,
-                        lineno=lineno,
+                        surface_symbol=self._module_name, volume_symbol=symbol_name, lineno=lineno,
                     )
                 else:
                     self._add_symbol_to_volume(
-                        surface_symbol=surface_symbol,
-                        volume_symbol=symbol_name,
-                        lineno=lineno,
+                        surface_symbol=surface_symbol, volume_symbol=symbol_name, lineno=lineno,
                     )
         self.generic_visit(node)
 

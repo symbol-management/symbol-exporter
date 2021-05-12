@@ -38,9 +38,7 @@ def single_file_extraction(file_name, top_dir):
         print(import_name, str(e))
         errors_dict[import_name] = {
             "exception": str(e),
-            "traceback": str(traceback.format_exc()).split(
-                "\n",
-            ),
+            "traceback": str(traceback.format_exc()).split("\n",),
         }
         data = []
 
@@ -136,9 +134,7 @@ def fetch_and_run(path, pkg, dst, src_url, progess_callback=None):
 
 
 def reap(
-    path,
-    known_bad_packages=(),
-    number_to_reap=1000,
+    path, known_bad_packages=(), number_to_reap=1000,
 ):
     if not os.path.exists(path):
         os.makedirs(path)
@@ -174,8 +170,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("root_path")
     parser.add_argument(
-        "--known-bad-packages",
-        help="name of a json file containing a list of urls to be skipped",
+        "--known-bad-packages", help="name of a json file containing a list of urls to be skipped",
     )
 
     args = parser.parse_args()

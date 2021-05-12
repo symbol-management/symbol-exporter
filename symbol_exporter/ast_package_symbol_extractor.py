@@ -79,13 +79,18 @@ class _RelativeImportsResolver:
         for k, v in sorted(self._original_symbols.items(), key=lambda x: x[1]["type"]):
             new_symbol = k.replace(".__init__", "")
             if is_relative_import(v):
-                shadows = resolve_relative_import(**{k: v for k, v in v["data"].items() if k in {'module', 'level', 'shadows'}})
+                shadows = resolve_relative_import(
+                    **{k: v for k, v in v["data"].items() if k in {"module", "level", "shadows"}}
+                )
                 data = dict(v, data=dict(shadows=shadows))
                 tmp_sorted[new_symbol] = data
                 namespace, _, symbol = new_symbol.rpartition(".")
                 namespaces[namespace].append(new_symbol)
             elif is_relative_star_import(v):
-                imports = [resolve_relative_import(**{k: v for k, v in data.items() if k in {'module', 'level', 'shadows'}}) for data in v["data"]["imports"]]
+                imports = [
+                    resolve_relative_import(**{k: v for k, v in data.items() if k in {"module", "level", "shadows"}})
+                    for data in v["data"]["imports"]
+                ]
                 data = dict(v, data=dict(imports=imports))
                 topological_sorter.add(new_symbol, *[f"{imp}.{RELATIVE_IMPORT_IDENTIFIER}.*" for imp in imports])
                 relative_star_imports_volume[new_symbol] = data

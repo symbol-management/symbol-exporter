@@ -53,13 +53,7 @@ def compute_symbol_compat_table(pkg):
         os.makedirs(f"symbol_counts/{pkg}", exist_ok=True)
         with open(f"symbol_counts/{pkg}/{arch}.csv", "w") as csvfile:
             writer = csv.DictWriter(
-                csvfile,
-                fieldnames=[
-                    "version",
-                    "number of symbols",
-                    "added symbols",
-                    "removed symbols",
-                ],
+                csvfile, fieldnames=["version", "number of symbols", "added symbols", "removed symbols",],
             )
             writer.writeheader()
             for data in reversed(csv_data):
