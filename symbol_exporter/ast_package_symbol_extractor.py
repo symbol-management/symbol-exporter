@@ -1,4 +1,5 @@
 import ast
+import logging
 from collections import defaultdict
 from graphlib import TopologicalSorter
 from pathlib import Path
@@ -11,6 +12,9 @@ from symbol_exporter.ast_symbol_extractor import (
     is_relative_star_import,
     RELATIVE_IMPORT_IDENTIFIER,
 )
+
+logger = logging.getLogger("package_symbol_extractor")
+logger.setLevel(logging.DEBUG)
 
 
 def get_symbol_type(symbol) -> SymbolType:
@@ -31,15 +35,16 @@ def parse_code(code: str, module_name: str) -> dict:
 
 def parse(module: Path, module_path: str) -> dict:
     module_name = f"{module_path}.{module.stem}"
-    try:
-        code = module.read_text(encoding="utf-8")
-        return parse_code(code, module_name=module_name)
-    except SyntaxError:
-        code = module.read_text(encoding="utf-8-sig")
-        return parse_code(code, module_name=module_name)
-    except Exception as e:
-        print(f"Unable to parse file {module.resolve()}. {repr(e)}")
-        return {}
+    for encoding in ["utf-8", "utf-8-sig"]:
+        try:
+            code = module.read_text(encoding=encoding)
+            return parse_code(code, module_name=module_name)
+        except SyntaxError:
+            pass
+        except Exception as e:
+            logger.warning(f"Unable to parse file {module.resolve()}. {repr(e)}")
+            break
+    return {}
 
 
 def merge_dicts(*dicts):
@@ -74,13 +79,18 @@ class _RelativeImportsResolver:
         for k, v in sorted(self._original_symbols.items(), key=lambda x: x[1]["type"]):
             new_symbol = k.replace(".__init__", "")
             if is_relative_import(v):
-                shadows = resolve_relative_import(**v["data"])
+                shadows = resolve_relative_import(
+                    **{k: v for k, v in v["data"].items() if k in {"module", "level", "shadows"}}
+                )
                 data = dict(v, data=dict(shadows=shadows))
                 tmp_sorted[new_symbol] = data
                 namespace, _, symbol = new_symbol.rpartition(".")
                 namespaces[namespace].append(new_symbol)
             elif is_relative_star_import(v):
-                imports = [resolve_relative_import(**data) for data in v["data"]["imports"]]
+                imports = [
+                    resolve_relative_import(**{k: v for k, v in data.items() if k in {"module", "level", "shadows"}})
+                    for data in v["data"]["imports"]
+                ]
                 data = dict(v, data=dict(imports=imports))
                 topological_sorter.add(new_symbol, *[f"{imp}.{RELATIVE_IMPORT_IDENTIFIER}.*" for imp in imports])
                 relative_star_imports_volume[new_symbol] = data
@@ -119,37 +129,37 @@ class _RelativeImportsResolver:
                 s: str = symbol.removeprefix(f"{rel_star_import}")
                 new_symbol = f"{namespace}{s}"
                 if symbol_type is SymbolType.RELATIVE_IMPORT:
-                    print(f"found {symbol} and is {symbol_type}")
+                    logger.info(f"found {symbol} and is {symbol_type}")
                     resolved_shadows = volume["data"]["shadows"]
                     if new_symbol not in symbols:
-                        print(f"adding symbol {new_symbol} shadowing {resolved_shadows}")
+                        logger.info(f"adding symbol {new_symbol} shadowing {resolved_shadows}")
                         data = dict(type=SymbolType.RELATIVE_IMPORT, data=dict(shadows=resolved_shadows))
                         symbols[new_symbol] = data
                     else:
-                        print(f"Doing nothing. {new_symbol} is already in surface area of {namespace}")
+                        logger.info(f"Doing nothing. {new_symbol} is already in surface area of {namespace}")
                 elif symbol_type is SymbolType.RELATIVE_STAR_IMPORT:
-                    print(f"found {symbol} and is {symbol_type}")
+                    logger.info(f"found {symbol} and is {symbol_type}")
                     relative_imports = volume["data"]["imports"]
-                    print(f"will add all symbols in {relative_imports} to {namespace} namespace")
+                    logger.info(f"will add all symbols in {relative_imports} to {namespace} namespace")
                     symbols |= self._add_referenced_symbols(relative_imports, namespace, symbols=symbols)
                 elif symbol_type is SymbolType.STAR_IMPORT:
-                    print(f"found {symbol} and is {symbol_type}", end=" - ")
-                    print(f"Merging star imports into the {new_symbol} star imports set.")
+                    logger.info(f"found {symbol} and is {symbol_type}")
+                    logger.info(f"Merging star imports into the {new_symbol} star imports set.")
                     default_volume = dict(type=SymbolType.STAR_IMPORT, data=dict(imports=set()))
                     imports: set = symbols.setdefault(new_symbol, default_volume).get("data", {}).get("imports", set())
                     inherited_imports = volume["data"]["imports"]
                     imports.update(inherited_imports)
                 elif symbol_type in {SymbolType.PACKAGE, SymbolType.MODULE}:
-                    print(f"found {symbol} and is {symbol_type}.")
+                    logger.info(f"found {symbol} and is {symbol_type}.")
                     if new_symbol in symbols:
-                        print(f"Doing nothing. {new_symbol} already exists, most likely a package.")
+                        logger.info(f"Doing nothing. {new_symbol} already exists, most likely a package.")
                     else:
-                        print(f"adding symbol {new_symbol} shadowing {symbol}")
+                        logger.info(f"adding symbol {new_symbol} shadowing {symbol}")
                         data = dict(type=SymbolType.RELATIVE_IMPORT, data=dict(shadows=symbol))
                         symbols[new_symbol] = data
                 else:
-                    print(f"found {symbol} and is {symbol_type}.")
-                    print(f"adding symbol {new_symbol} shadowing {symbol}")
+                    logger.info(f"found {symbol} and is {symbol_type}.")
+                    logger.info(f"adding symbol {new_symbol} shadowing {symbol}")
                     data = dict(type=SymbolType.RELATIVE_IMPORT, data=dict(shadows=symbol))
                     symbols[new_symbol] = data
         return symbols
