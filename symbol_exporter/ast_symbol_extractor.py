@@ -97,6 +97,7 @@ class SymbolFinder(ast.NodeVisitor):
     def visit_Import(self, node: ast.Import) -> Any:
         self.imported_symbols.extend(k.name for k in node.names)
         for k in node.names:
+            self._add_symbol_to_volume(self._symbol_stack_to_symbol_name(), k.name, lineno=node.lineno)
             if not k.asname:
                 self._add_symbol_to_surface_area(SymbolType.IMPORT, symbol=k.name, shadows=k.name)
         self.generic_visit(node)
@@ -108,9 +109,11 @@ class SymbolFinder(ast.NodeVisitor):
                 module_name = f"{node.module}.{k.name}" if node.module else k.name
                 self.aliases[k.name] = module_name
                 self.imported_symbols.append(module_name)
+                # TODO: clean up if statements with common module_name var between forks
                 if not k.asname:
                     if not relative_import:
                         self._add_symbol_to_surface_area(SymbolType.IMPORT, symbol=k.name, shadows=module_name)
+                    # TODO: handle import in volume for relative imports
                     else:
                         self._add_symbol_to_surface_area(
                             SymbolType.RELATIVE_IMPORT,
@@ -119,15 +122,20 @@ class SymbolFinder(ast.NodeVisitor):
                             level=node.level,
                             module=self._module_name,
                         )
+                if not relative_import:
+                    self._add_symbol_to_volume(self._symbol_stack_to_symbol_name(), module_name, lineno=node.lineno)
             else:
                 if not relative_import:
                     self._add_symbol_to_star_imports(node.module, symbol_type=SymbolType.STAR_IMPORT)
+                # TODO: handle import in volume for relative imports
                 else:
                     self._add_symbol_to_relative_star_imports(
                         node.module,
                         symbol_type=SymbolType.RELATIVE_STAR_IMPORT,
                         level=node.level,
                     )
+                if not relative_import:
+                    self._add_symbol_to_volume(self._symbol_stack_to_symbol_name(), node.module, lineno=node.lineno)
         self._relative_import_stack.append(node.level)
         self.generic_visit(node)
         self._relative_import_stack.pop(-1)
@@ -266,11 +274,11 @@ class SymbolFinder(ast.NodeVisitor):
             return None
 
     def _add_symbol_to_surface_area(self, symbol_type: SymbolType, symbol, **kwargs):
-        full_symbol_name = (
-            f"{self._module_name}.{symbol}"
-            if symbol_type in (SymbolType.IMPORT, SymbolType.RELATIVE_IMPORT)
-            else symbol
-        )
+        imports = (SymbolType.IMPORT, SymbolType.RELATIVE_IMPORT)
+        # imports inside namespaces other than top level aren't on the surface area
+        if symbol_type in imports and len(self.current_symbol_stack) > 1:
+            return
+        full_symbol_name = f"{self._module_name}.{symbol}" if symbol_type in imports else symbol
         self._symbols[full_symbol_name] = dict(type=symbol_type, data=kwargs)
 
     def _add_symbol_to_volume(self, surface_symbol, volume_symbol, lineno):
