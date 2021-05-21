@@ -4,9 +4,9 @@ from symbol_exporter.ast_package_symbol_extractor import DirectorySymbolFinder
 from symbol_exporter.ast_symbol_extractor import SymbolType
 
 expected = {
-    "numpy.version": {"type": SymbolType.MODULE, "data": {}},
+    "numpy.version": {"type": SymbolType.MODULE, "data": {"symbols_in_volume": {"os": {"line number": [1]}}}},
     "numpy.version.get_versions": {"type": SymbolType.FUNCTION, "data": {"lineno": 5}},
-    "numpy": {"type": SymbolType.PACKAGE, "data": {}},
+    "numpy": {"type": SymbolType.PACKAGE, "data": {"symbols_in_volume": {"requests": {"line number": [5]}}}},
     "numpy.numeric": {
         "type": SymbolType.RELATIVE_IMPORT,
         "data": {"shadows": "numpy.core.numeric"},
@@ -47,7 +47,7 @@ expected = {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
         "data": {"imports": ["numpy.core"]},
     },
-    "numpy.core": {"type": SymbolType.PACKAGE, "data": {}},
+    "numpy.core": {"type": SymbolType.PACKAGE, "data": {"symbols_in_volume": {"json": {"line number": [8]}}}},
     "numpy.core.~~RELATIVE~~.*": {
         "type": SymbolType.RELATIVE_STAR_IMPORT,
         "data": {"imports": ["numpy.core.numeric"]},
