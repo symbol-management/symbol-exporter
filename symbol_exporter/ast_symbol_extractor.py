@@ -307,9 +307,9 @@ class SymbolFinder(ast.NodeVisitor):
             volume = v["data"].get("symbols_in_volume")
             if volume:
                 for bad_func_name in set(volume) & set(stripped_names):
-                    symbol_md = volume.pop(bad_func_name)
-                    volume[stripped_names[bad_func_name]] = symbol_md
                     if bad_func_name in self.undeclared_symbols:
+                        symbol_md = volume.pop(bad_func_name)
+                        volume[stripped_names[bad_func_name]] = symbol_md
                         self.undeclared_symbols.remove(bad_func_name)
         return output_symbols
 

@@ -340,7 +340,7 @@ def test_import_adds_symbols():
                 "symbols_in_volume": {
                     "abc.xyz": {"line number": [3]},
                     "ggg.efg": {"line number": [4]},
-                    "mm.ghi": {"line number": [5]},
+                    "ghi": {"line number": [5]},
                     "numpy": {"line number": [2]},
                     "numpy.ones": {"line number": [7]},
                 }
@@ -694,7 +694,7 @@ def test_symbols_in_volume_names():
             "data": {
                 "symbols_in_volume": {
                     "ast.Try": {"line number": [4]},
-                    "mm.ast": {"line number": [2]},
+                    "ast": {"line number": [2]},
                     "mm.z": {"line number": [5]},
                 }
             },
