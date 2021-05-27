@@ -7,7 +7,7 @@ from enum import Enum
 NOT_A_DEFAULT_ARG = "~~NOT_A_DEFAULT~~"
 RELATIVE_IMPORT_IDENTIFIER = "~~RELATIVE~~"
 # Increment when we need the database to be rebuilt (eg adding a new feature)
-version = "4"  # must be an integer
+version = "5"  # must be an integer
 builtin_symbols = set(dir(builtins))
 
 
@@ -307,9 +307,9 @@ class SymbolFinder(ast.NodeVisitor):
             volume = v["data"].get("symbols_in_volume")
             if volume:
                 for bad_func_name in set(volume) & set(stripped_names):
-                    symbol_md = volume.pop(bad_func_name)
-                    volume[stripped_names[bad_func_name]] = symbol_md
                     if bad_func_name in self.undeclared_symbols:
+                        symbol_md = volume.pop(bad_func_name)
+                        volume[stripped_names[bad_func_name]] = symbol_md
                         self.undeclared_symbols.remove(bad_func_name)
         return output_symbols
 
