@@ -66,7 +66,7 @@ def get_all_symbol_names(top_dir):
         symbols_dict.update(symbols)
 
     for file_name in site.rglob("*.so"):
-        module_path = str(file_name.parent).replace(top_dir, "").replace("/", ".")
+        module_path = str(file_name.parent).replace(f"{top_dir}/", "").replace("/", ".")
         sd = single_so_file_extraction(file_name)
         symbols_dict.update({f"{module_path}.{k}": v for k, v in sd.items()})
 
