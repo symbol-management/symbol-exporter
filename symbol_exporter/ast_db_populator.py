@@ -66,8 +66,15 @@ def get_all_symbol_names(top_dir):
         symbols_dict.update(symbols)
 
     for file_name in site.rglob("*.so"):
+        module_path = (str(file_name.parent).replace(f"{top_dir}/", "")
+        .replace('lib-dynload/', '').replace("/", "."))
         sd = single_so_file_extraction(file_name)
-        symbols_dict.update(sd)
+        if module_path:
+            so_symbols = {".".join([module_path, k]): v for k, v in sd.items()}
+        # cpython SOs don't have module_paths, they are all top level
+        else:
+            so_symbols = sd
+        symbols_dict.update(so_symbols)
 
     return symbols_dict
 
