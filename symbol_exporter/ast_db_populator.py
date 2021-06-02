@@ -1,6 +1,7 @@
 """Stores the ast derived symbols in either github or CERN"""
 import io
 import json
+import logging
 import os
 import shutil
 import tarfile
@@ -22,14 +23,13 @@ from symbol_exporter.db_access_model import make_json_friendly, WebDB
 from symbol_exporter.python_so_extractor import (
     CompiledPythonLib,
     c_symbols_to_datamodel,
-    logger,
 )
 from symbol_exporter.tools import diff
 
 ProgressBar().register()
 
-
-logger.setLevel("ERROR")
+logger = logging.getLogger("ast_db_populator")
+logger.setLevel(logging.ERROR)
 
 # TODO: push this into the web only branches so we don't require the secret to be set
 web_interface = WebDB()
