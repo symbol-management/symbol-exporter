@@ -22,18 +22,9 @@ def test_fetch_and_run(tmpdir):
 
 @pytest.mark.parametrize('pkg_path,expected_set', [
     ('conda-forge/linux-64/python-3.9.1-hffdb5ce_0_cpython', {'math', 'math.sin'}),
-    ('conda-forge/linux-64/regex-2020.5.14-py37h8f50634_0.tar.bz2', {
-        "fold_case",
-        "copyright",
-        "has_property_value",
-        "get_expand_on_folding",
-        "compile",
-        "MAGIC",
-        "CODE_SIZE",
-        "get_properties",
-        "get_all_cases",
-        "get_code_size",
-    })
+    ('conda-forge/linux-64/pycosat-0.6.3-py37h8f50634_1004', 
+    {"pycosat.__version__", "pycosat.itersolve", "pycosat.solve"}
+    )
 ])
 def test_harvest(pkg_path, expected_set):
     src_url = f"https://conda.anaconda.org/{pkg_path}.tar.bz2"
