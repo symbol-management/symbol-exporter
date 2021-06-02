@@ -22,8 +22,8 @@ def test_fetch_and_run(tmpdir):
 
 @pytest.mark.parametrize('pkg_path,expected_set', [
     ('conda-forge/linux-64/python-3.9.1-hffdb5ce_0_cpython', {'math', 'math.sin'}),
-    ('conda-forge/linux-64/pycosat-0.6.3-py37h8f50634_1004', 
-    {"pycosat.__version__", "pycosat.itersolve", "pycosat.solve"}
+    ('conda-forge/linux-64/scipy-1.6.3-py39hee8e79c_0', 
+    {"scipy.integrate.lsoda.lsoda"}
     )
 ])
 def test_harvest(pkg_path, expected_set):
