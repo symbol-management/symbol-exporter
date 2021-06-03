@@ -130,7 +130,7 @@ class SymbolFinder(ast.NodeVisitor):
                 # TODO: handle import in volume for relative imports
                 else:
                     self._add_symbol_to_relative_star_imports(
-                        node.module,
+                        node.module or "__init",
                         symbol_type=SymbolType.RELATIVE_STAR_IMPORT,
                         level=node.level,
                     )

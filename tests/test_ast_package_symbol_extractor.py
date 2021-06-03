@@ -133,6 +133,11 @@ expected = {
         "type": SymbolType.RELATIVE_IMPORT,
         "data": {"shadows": "numpy.core.numeric.absolute"},
     },
+    "numpy.core.stars": {"data": {}, "type": SymbolType.MODULE},
+    "numpy.core.stars.~~RELATIVE~~.*": {
+        "data": {"imports": ["numpy.__init__", "numpy.core.__init__"]},
+        "type": SymbolType.RELATIVE_STAR_IMPORT,
+    },
 }
 
 
