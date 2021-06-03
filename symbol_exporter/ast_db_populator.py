@@ -39,9 +39,13 @@ def parse_so(filename):
     return c_symbols_to_datamodel(CompiledPythonLib(filename).find_symbols())
 
 
-def single_so_file_extraction(so_file):
+def single_so_file_extraction(so_file, top_dir):
+    module_path = (str(so_file.parent).replace(f"{top_dir}/", "").replace('lib-dynload', '').replace("/", "."))
     try:
         s = parse_so(so_file)
+        # cpython SOs don't have module_paths, they are all top level, but others do
+        if module_path:
+            s = {".".join([module_path, k]): v for k, v in s.items()}
     except Exception as e:
         try:
             print(so_file, repr(e))
@@ -66,15 +70,8 @@ def get_all_symbol_names(top_dir):
         symbols_dict.update(symbols)
 
     for file_name in site.rglob("*.so"):
-        module_path = (str(file_name.parent).replace(f"{top_dir}/", "")
-        .replace('lib-dynload/', '').replace("/", "."))
-        sd = single_so_file_extraction(file_name)
-        if module_path:
-            so_symbols = {".".join([module_path, k]): v for k, v in sd.items()}
-        # cpython SOs don't have module_paths, they are all top level
-        else:
-            so_symbols = sd
-        symbols_dict.update(so_symbols)
+        sd = single_so_file_extraction(file_name, top_dir=top_dir)
+        symbols_dict.update(sd)
 
     return symbols_dict
 

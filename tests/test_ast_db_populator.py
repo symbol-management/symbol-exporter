@@ -21,9 +21,9 @@ def test_fetch_and_run(tmpdir):
 
 
 @pytest.mark.parametrize('pkg_path,expected_set', [
-    ('conda-forge/linux-64/python-3.9.1-hffdb5ce_0_cpython', {'math', 'math.sin'}),
-    ('conda-forge/linux-64/scipy-1.6.3-py39hee8e79c_0', 
-    {"scipy.integrate.lsoda.lsoda"}
+    ('conda-forge/linux-64/python-3.9.1-hffdb5ce_0_cpython', {'math', 'math.sin', 'os'}),
+    ('conda-forge/linux-64/yt-3.6.1-py39h16ac069_0', 
+    {"yt.analysis_modules.halo_finding.fof.EnzoFOF.RunFOF"}
     )
 ])
 def test_harvest(pkg_path, expected_set):
