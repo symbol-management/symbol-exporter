@@ -458,6 +458,34 @@ def test_relative_star_import():
     }
 
 
+def test_bare_relative_star_import():
+    code = """
+    from . import *
+    from .. import *
+    """
+    z = process_code_str(code)
+    assert z.symbols == {
+        "mm": {"data": {}, "type": SymbolType.MODULE},
+        "mm.~~RELATIVE~~.*": {
+            "type": SymbolType.RELATIVE_STAR_IMPORT,
+            "data": {
+                "imports": [
+                    {
+                        "shadows": "__init__",
+                        "level": 1,
+                        "module": "mm",
+                    },
+                    {
+                        "shadows": "__init__",
+                        "level": 2,
+                        "module": "mm",
+                    },
+                ]
+            },
+        },
+    }
+
+
 def test_undeclared_symbols():
     code = """
     import numpy as np
