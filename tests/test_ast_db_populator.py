@@ -30,4 +30,5 @@ def test_harvest(pkg_path, expected_set):
     src_url = f"https://conda.anaconda.org/{pkg_path}.tar.bz2"
     filelike = fetch_artifact(src_url)
     harvested_data = harvest_imports(filelike)
-    assert expected_set.issubset(set(harvested_data['symbols']))
+    for k in expected_set:
+        assert k in harvested_data['symbols']
