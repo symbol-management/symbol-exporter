@@ -1,9 +1,12 @@
 import json
 import pytest
+import logging
 from pathlib import Path
 
 from symbol_exporter.ast_db_populator import fetch_and_run, fetch_artifact, harvest_imports
+from symbol_exporter.python_so_extractor import logger
 
+logger.setLevel(logging.ERROR)
 
 @pytest.mark.skip(reason="output data model not yet stable")
 def test_fetch_and_run(tmpdir):
