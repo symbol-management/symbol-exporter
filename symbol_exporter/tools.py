@@ -3,6 +3,16 @@ import contextlib
 from concurrent.futures.process import ProcessPoolExecutor
 from concurrent.futures.thread import ThreadPoolExecutor
 
+from collections import defaultdict
+import requests
+import json
+import bz2
+import io
+import os
+import glob
+from xonsh.tools import expand_path
+
+
 """
 BSD 3-clause license
 Copyright (c) 2015-2018, NumFOCUS
@@ -117,3 +127,65 @@ def diff(upstream, local):
         missing_files.update((package, k, v) for k, v in upstream_artifacts.items() if k in missing_artifacts)
 
     return missing_files
+
+channel_list = [
+    "https://conda.anaconda.org/conda-forge/linux-64",
+    "https://conda.anaconda.org/conda-forge/osx-64",
+    "https://conda.anaconda.org/conda-forge/win-64",
+    "https://conda.anaconda.org/conda-forge/noarch",
+    "https://conda.anaconda.org/conda-forge/linux-ppc64le",
+    "https://conda.anaconda.org/conda-forge/linux-aarch64",
+    "https://conda.anaconda.org/conda-forge/osx-arm64",
+]
+
+
+def fetch_arch(arch, conditional=None):
+    # Generate a set a urls to generate for an channel/arch combo
+    print(f"Fetching {arch}")
+    r = requests.get(f"{arch}/repodata.json.bz2")
+    repodata = json.load(bz2.BZ2File(io.BytesIO(r.content)))
+    for p, v in repodata["packages"].items():
+        package_url = f"{arch}/{p}"
+        file_name = package_url.replace("https://conda.anaconda.org/", "").replace(
+            ".tar.bz2", ".json"
+        )
+        if conditional is None or conditional(v):
+            yield v["name"], file_name, package_url
+
+
+def fetch_upstream(conditional=None):
+    package_urls = defaultdict(dict)
+    for channel_arch in channel_list:
+        for package_name, filename, url in fetch_arch(channel_arch, conditional=conditional):
+            package_urls[package_name][filename] = url
+    return package_urls
+
+
+class ReapFailure(Exception):
+    def __init__(self, package, src_url, msg):
+        super(ReapFailure, self).__init__(package, src_url, msg)
+
+
+def recursive_ls(root):
+    packages = os.listdir(root)
+    for p in packages:
+        files = glob.glob(f"{root}/{p}/*/*/*.json")
+        for f in files:
+            yield p, f.replace(f"{root}/{p}/", "")
+
+
+def existing(path, recursive_ls=recursive_ls):
+    existing_dict = defaultdict(set)
+    for pak, path in recursive_ls(path):
+        existing_dict[pak].add(path)
+    return existing_dict
+
+
+def expand_file_and_mkdirs(x):
+    """Expands a variable that represents a file, and ensures that the
+    directory it lives in actually exists.
+    """
+    x = os.path.abspath(expand_path(x))
+    d = os.path.dirname(x)
+    os.makedirs(d, exist_ok=True)
+    return x
