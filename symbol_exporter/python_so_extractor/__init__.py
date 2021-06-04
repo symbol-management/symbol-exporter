@@ -286,7 +286,7 @@ def c_symbols_to_datamodel(symbols):
 
 
 def parse_so(filename, top_dir):
-    module_path = (str(so_file.parent).replace(f"{top_dir}/", "").replace('lib-dynload', '').replace("/", "."))
+    module_path = (str(filename.parent).replace(f"{top_dir}/", "").replace('lib-dynload', '').replace("/", "."))
     s = c_symbols_to_datamodel(CompiledPythonLib(str(filename)).find_symbols())
     # cpython SOs don't have module_paths, they are all top level, but others do
     if module_path:
