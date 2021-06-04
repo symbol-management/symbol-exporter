@@ -128,6 +128,7 @@ def diff(upstream, local):
 
     return missing_files
 
+
 channel_list = [
     "https://conda.anaconda.org/conda-forge/linux-64",
     "https://conda.anaconda.org/conda-forge/osx-64",
