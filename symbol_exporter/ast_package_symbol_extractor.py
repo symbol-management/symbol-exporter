@@ -34,7 +34,7 @@ def parse_code(code: str, module_name: str) -> dict:
 
 
 def parse(module: Path, module_path: str) -> dict:
-    module_name = f"{module_path}.{module.stem}"
+    module_name = f"{module_path}.{module.stem}" if module_path else module.stem
     for encoding in ["utf-8", "utf-8-sig"]:
         try:
             code = module.read_text(encoding=encoding)
