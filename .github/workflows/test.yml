@@ -27,14 +27,14 @@ jobs:
           python -m pip install git+https://github.com/regro/libcflib.git
           python -m pip install --no-deps -e .
 
-      - name: lint
-        shell: bash -l {0}
-        run: |
-          flake8
-
       - name: run tests
         shell: bash -l {0}
         run: |
           # Avoid errors like "Warning: _curses.error: setupterm: could not find terminfo database" when using pwntools
           export TERM=xterm
           pytest -v
+
+      - name: lint
+        shell: bash -l {0}
+        run: |
+          flake8

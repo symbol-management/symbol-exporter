@@ -18,11 +18,16 @@ from tqdm import tqdm
 from symbol_exporter.ast_package_symbol_extractor import DirectorySymbolFinder
 from symbol_exporter.ast_symbol_extractor import version
 from symbol_exporter.db_access_model import make_json_friendly, WebDB
+<<<<<<< HEAD
 from symbol_exporter.python_so_extractor import (
     CompiledPythonLib,
     c_symbols_to_datamodel,
 )
 from symbol_exporter.tools import diff, ReapFailure, fetch_upstream, existing, expand_file_and_mkdirs
+=======
+from symbol_exporter.python_so_extractor import parse_so
+from symbol_exporter.tools import diff
+>>>>>>> f93e73c0e84f648a9ff08e2841ff3cd65f1a1ee3
 
 ProgressBar().register()
 
@@ -33,13 +38,9 @@ logger.setLevel(logging.ERROR)
 web_interface = WebDB()
 
 
-def parse_so(filename):
-    return c_symbols_to_datamodel(CompiledPythonLib(filename).find_symbols())
-
-
-def single_so_file_extraction(so_file):
+def single_so_file_extraction(so_file, top_dir):
     try:
-        s = parse_so(so_file)
+        s = parse_so(so_file, top_dir)
     except Exception as e:
         try:
             print(so_file, repr(e))
@@ -50,7 +51,7 @@ def single_so_file_extraction(so_file):
 
 
 def get_all_symbol_names(top_dir):
-    # Note Jedi seems to pick up things that are protected by a
+    # Note ast seems to pick up things that are protected by a
     # __name__ == '__main__' if statement
     # this could cause some over-reporting of viable imports this
     # shouldn't cause issues with an audit since we don't expect 3rd parties
@@ -64,9 +65,8 @@ def get_all_symbol_names(top_dir):
         symbols_dict.update(symbols)
 
     for file_name in site.rglob("*.so"):
-        module_path = str(file_name.parent).replace(f"{top_dir}/", "").replace("/", ".")
-        sd = single_so_file_extraction(file_name)
-        symbols_dict.update({f"{module_path}.{k}": v for k, v in sd.items()})
+        sd = single_so_file_extraction(file_name, top_dir=top_dir)
+        symbols_dict.update(sd)
 
     return symbols_dict
 
