@@ -283,3 +283,12 @@ def c_symbols_to_datamodel(symbols):
     for object in symbols["objects"]:
         output_data[f"{top_level_import}.{object['name']}"] = dict(type=SymbolType.CONSTANT, data={})
     return output_data
+
+
+def parse_so(filename, top_dir):
+    module_path = (str(filename.parent).replace(f"{top_dir}/", "").replace('lib-dynload', '').replace("/", "."))
+    s = c_symbols_to_datamodel(CompiledPythonLib(str(filename)).find_symbols())
+    # cpython SOs don't have module_paths, they are all top level, but others do
+    if module_path:
+        s = {".".join([module_path, k]): v for k, v in s.items()}
+    return s

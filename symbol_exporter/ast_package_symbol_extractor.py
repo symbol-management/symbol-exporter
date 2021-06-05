@@ -34,7 +34,7 @@ def parse_code(code: str, module_name: str) -> dict:
 
 
 def parse(module: Path, module_path: str) -> dict:
-    module_name = f"{module_path}.{module.stem}"
+    module_name = f"{module_path}.{module.stem}" if module_path else module.stem
     for encoding in ["utf-8", "utf-8-sig"]:
         try:
             code = module.read_text(encoding=encoding)
@@ -169,7 +169,11 @@ class DirectorySymbolFinder:
     def __init__(self, directory_name: Union[str, Path], parent: str = None):
         self._directory = Path(directory_name)
         self._is_package = is_package(self._directory)
-        self._module_path = f"{parent}.{self._directory.name}" if parent else self._directory.name
+        if self._directory.is_dir():
+            self._module_path = f"{parent}.{self._directory.name}" if parent else self._directory.name
+        # python doesn't have module path
+        else:
+            self._module_path = ""
 
     def extract_symbols(self) -> dict:
         package_symbols = self._get_all_symbols_in_package()
@@ -177,7 +181,8 @@ class DirectorySymbolFinder:
         return resolver.resolve()
 
     def _get_all_symbols_in_package(self) -> dict:
-        symbols = [parse(module, self._module_path) for module in self._directory.glob("*.py")]
+        files = self._directory.glob("*.py") if self._directory.is_dir() else [self._directory]
+        symbols = [parse(module, self._module_path) for module in files]
         merged = merge_dicts(*symbols)
         if self._is_package:
             sub_dirs = (d for d in self._directory.iterdir() if d.is_dir())
