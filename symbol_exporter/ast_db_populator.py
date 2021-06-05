@@ -18,16 +18,8 @@ from tqdm import tqdm
 from symbol_exporter.ast_package_symbol_extractor import DirectorySymbolFinder
 from symbol_exporter.ast_symbol_extractor import version
 from symbol_exporter.db_access_model import make_json_friendly, WebDB
-<<<<<<< HEAD
-from symbol_exporter.python_so_extractor import (
-    CompiledPythonLib,
-    c_symbols_to_datamodel,
-)
 from symbol_exporter.tools import diff, ReapFailure, fetch_upstream, existing, expand_file_and_mkdirs
-=======
 from symbol_exporter.python_so_extractor import parse_so
-from symbol_exporter.tools import diff
->>>>>>> f93e73c0e84f648a9ff08e2841ff3cd65f1a1ee3
 
 ProgressBar().register()
 
