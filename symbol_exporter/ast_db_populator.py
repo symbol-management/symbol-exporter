@@ -13,15 +13,13 @@ from tempfile import TemporaryDirectory
 import dask.bag as db
 import requests
 from dask.diagnostics import ProgressBar
-from libcflib.preloader import ReapFailure, fetch_upstream, existing
-from libcflib.tools import expand_file_and_mkdirs
 from tqdm import tqdm
 
 from symbol_exporter.ast_package_symbol_extractor import DirectorySymbolFinder
 from symbol_exporter.ast_symbol_extractor import version
 from symbol_exporter.db_access_model import make_json_friendly, WebDB
+from symbol_exporter.tools import diff, ReapFailure, fetch_upstream, existing, expand_file_and_mkdirs
 from symbol_exporter.python_so_extractor import parse_so
-from symbol_exporter.tools import diff
 
 ProgressBar().register()
 
@@ -153,6 +151,10 @@ sort_arch_ordering = [
 ]
 
 
+def only_python(metadata):
+    return metadata['name'] == "python" or any('python' in k for k in metadata['depends'])
+
+
 def reap(
     path,
     known_bad_packages=(),
@@ -160,7 +162,7 @@ def reap(
     single_thread=False,
     webserver=True,
 ):
-    upstream = fetch_upstream()
+    upstream = fetch_upstream(only_python)
     if not webserver:
         if os.path.exists(os.path.join(path, "_inspection_version.txt")):
             with open(os.path.join(path, "_inspection_version.txt")) as f:
