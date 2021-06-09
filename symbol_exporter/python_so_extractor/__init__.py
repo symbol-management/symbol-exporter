@@ -28,6 +28,8 @@ class CompiledPythonLib:
         self.elf = pwn.ELF(filename)
         self._disassembled_cache = {}
         self._loc_to_symbol = {}
+        self._current_depth = 0
+        self._max_depth = 100
 
         # Find the locations of relaxant functions in the file
         for symbol_name, symbol_loc in self.elf.symbols.items():
@@ -68,6 +70,10 @@ class CompiledPythonLib:
         return self._disassembled_cache[function_name]
 
     def _emulate(self, function_name):
+        self._current_depth += 1
+        if self._current_depth >= self._max_depth:
+            self._current_depth -= 1
+            raise RuntimeError("Maximum emulation depth exceeded")
         registers = self._registers
         instructions = self._disassemble_symbol(function_name)
 
@@ -175,6 +181,7 @@ class CompiledPythonLib:
                     )
                     # TODO Maybe this should be a large negative value instead?
                     registers["rax"] = Tracers.UNKNOWN
+        self._current_depth -= 1
 
     @property
     def _known_symbols(self):
