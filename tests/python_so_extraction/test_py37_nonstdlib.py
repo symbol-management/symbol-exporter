@@ -1278,3 +1278,13 @@ def test_pycosat():
         "lib/python3.7/site-packages/pycosat.cpython-37m-x86_64-linux-gnu.so",
         expected,
     )
+
+
+@pytest.mark.xfail(reason="Gets stuck in an infinite recursion loop")
+def test_infinite_recursion():
+    compare(
+        "https://conda.anaconda.org/conda-forge/linux-64/galsim-2.1.4-py36h2d50403_0.tar.bz2",
+        "07410dd0c6ba8d61ff0d7cd6b94f8443",
+        "lib/python3.6/site-packages/galsim/_galsim.cpython-36m-x86_64-linux-gnu.so",
+        set(),
+    )
