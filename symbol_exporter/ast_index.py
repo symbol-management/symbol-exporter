@@ -62,7 +62,7 @@ def inner_loop(artifact_name):
         symbol_table = symbol_table_with_metadata.get("symbol table", {})
         metadata = symbol_table_with_metadata.get("metadata", {})
         # update the symbol table
-        for k in list(symbols):
+        for k in list(keys):
             symbol_table.setdefault(k, []).append(artifact_name)
         # add artifacts to metadata
         metadata["version"] = version
