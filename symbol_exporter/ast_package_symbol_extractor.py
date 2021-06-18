@@ -67,14 +67,8 @@ class _RelativeImportsResolver:
         self._namespaces = {}
 
     def resolve(self) -> dict:
-        try:
-            self._normalize_and_sort_symbols()
-            return self._resolve_star_imports()
-        # if we can't resolve the cycle don't bother, in future maybe try to break cycle by not attempting to de-reference them
-        # since you shouldn't be trying to import them from that module (rather than their home module) in the first place
-        # or report non cycle symbols but that might require networkx
-        except CycleError:
-            return {}
+        self._normalize_and_sort_symbols()
+        return self._resolve_star_imports()
 
     def _normalize_and_sort_symbols(self):
         """Removes __init__.py from symbols and returns dict sorted by symbol type"""
