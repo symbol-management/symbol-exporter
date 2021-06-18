@@ -59,8 +59,10 @@ def inner_loop(artifact_name):
             continue
         # download the existing symbol table
         symbol_table_with_metadata = web_interface.get_symbol_table(top_level_name)
-        symbol_table = symbol_table_with_metadata.get("symbol table", {})
         metadata = symbol_table_with_metadata.get("metadata", {})
+        if artifact_name in metadata.get("indexed artifacts", []):
+            continue
+        symbol_table = symbol_table_with_metadata.get("symbol table", {})
         # update the symbol table
         for k in list(keys):
             symbol_table.setdefault(k, []).append(artifact_name)

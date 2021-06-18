@@ -1,7 +1,7 @@
 import ast
 import logging
 from collections import defaultdict
-from graphlib import TopologicalSorter
+from graphlib import TopologicalSorter, CycleError
 from pathlib import Path
 from typing import Union
 
@@ -67,8 +67,14 @@ class _RelativeImportsResolver:
         self._namespaces = {}
 
     def resolve(self) -> dict:
-        self._normalize_and_sort_symbols()
-        return self._resolve_star_imports()
+        try:
+            self._normalize_and_sort_symbols()
+            return self._resolve_star_imports()
+        # if we can't resolve the cycle don't bother, in future maybe try to break cycle by not attempting to de-reference them
+        # since you shouldn't be trying to import them from that module (rather than their home module) in the first place
+        # or report non cycle symbols but that might require networkx
+        except CycleError:
+            return {}
 
     def _normalize_and_sort_symbols(self):
         """Removes __init__.py from symbols and returns dict sorted by symbol type"""
@@ -101,9 +107,12 @@ class _RelativeImportsResolver:
                 if get_symbol_type(v) not in {SymbolType.PACKAGE, SymbolType.MODULE}:
                     namespace = new_symbol.rpartition(".")[0]
                     namespaces[namespace].append(new_symbol)
-        for rel_import in topological_sorter.static_order():
-            if rel_import in relative_star_imports_volume:
-                tmp_sorted[rel_import] = relative_star_imports_volume[rel_import]
+        try:
+            for rel_import in topological_sorter.static_order():
+                if rel_import in relative_star_imports_volume:
+                    tmp_sorted[rel_import] = relative_star_imports_volume[rel_import]
+        except graphlib.CycleError:
+            pass
         self._sorted_symbols = tmp_sorted
         self._namespaces = namespaces
 
