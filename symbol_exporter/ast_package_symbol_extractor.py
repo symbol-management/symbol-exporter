@@ -105,7 +105,7 @@ class _RelativeImportsResolver:
             for rel_import in topological_sorter.static_order():
                 if rel_import in relative_star_imports_volume:
                     tmp_sorted[rel_import] = relative_star_imports_volume[rel_import]
-        except graphlib.CycleError:
+        except CycleError:
             pass
         self._sorted_symbols = tmp_sorted
         self._namespaces = namespaces
