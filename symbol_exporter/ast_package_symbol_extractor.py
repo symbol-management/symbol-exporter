@@ -1,7 +1,7 @@
 import ast
 import logging
 from collections import defaultdict
-from graphlib import TopologicalSorter
+from graphlib import TopologicalSorter, CycleError
 from pathlib import Path
 from typing import Union
 
@@ -101,9 +101,12 @@ class _RelativeImportsResolver:
                 if get_symbol_type(v) not in {SymbolType.PACKAGE, SymbolType.MODULE}:
                     namespace = new_symbol.rpartition(".")[0]
                     namespaces[namespace].append(new_symbol)
-        for rel_import in topological_sorter.static_order():
-            if rel_import in relative_star_imports_volume:
-                tmp_sorted[rel_import] = relative_star_imports_volume[rel_import]
+        try:
+            for rel_import in topological_sorter.static_order():
+                if rel_import in relative_star_imports_volume:
+                    tmp_sorted[rel_import] = relative_star_imports_volume[rel_import]
+        except CycleError:
+            pass
         self._sorted_symbols = tmp_sorted
         self._namespaces = namespaces
 
