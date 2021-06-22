@@ -30,7 +30,7 @@ SAMPLE_TABLE = {
 
 
 def get_symbol_table_dummy_func(x):
-return {'symbol table': SAMPLE_TABLE, 'metadata': {}}
+    return {'symbol table': SAMPLE_TABLE, 'metadata': {}}
 
 
 def test_find_supplying_version_set():
