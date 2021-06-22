@@ -12,7 +12,7 @@ web_interface = WebDB()
 def get_supply(top_level_import, v_symbols, get_symbol_table_func=web_interface.get_symbol_table):
     supplies = None
     bad_symbols = set()
-    symbol_table = get_symbol_table_func(top_level_import)
+    symbol_table = get_symbol_table_func(top_level_import).get('symbol table', {})
     # TODO: handle star imports recursion here?
     for v_symbol in v_symbols:
         supply = symbol_table.get(v_symbol)
