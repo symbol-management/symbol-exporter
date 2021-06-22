@@ -15,7 +15,7 @@ from symbol_exporter.ast_db_populator import make_json_friendly
 from symbol_exporter.ast_symbol_extractor import version
 from symbol_exporter.db_access_model import WebDB
 
-audit_version = "2.0"
+audit_version = "2.1"
 
 complete_version = f"{version}_{audit_version}"
 
