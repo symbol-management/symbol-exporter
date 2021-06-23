@@ -66,7 +66,7 @@ class WebDB:
         return all_indexted_pkgs
 
     def get_symbol_table(self, top_level_name):
-        symbol_table_url = f"/api/v{version}/symbol_table/{top_level_name}"
+        symbol_table_url = f"/api/v{version}/symbol_table/{top_level_name.lower()}"
         try:
             return requests.get(f"{self.host}{symbol_table_url}").json()
         except (
