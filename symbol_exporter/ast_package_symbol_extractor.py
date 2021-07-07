@@ -108,7 +108,7 @@ class _RelativeImportsResolver:
         except CycleError:
             pass
 
-        shadows_by_in_module_symbol = {k: v["data"]["shadows"] for k, v in tmp_sorted.items() 
+        shadows_by_in_module_symbol = {k: v["data"]["shadows"] for k, v in tmp_sorted.items()
                                        if "shadows" in v["data"] and v["type"] == SymbolType.RELATIVE_IMPORT}
         for k, v in tmp_sorted.items():
             volume = v['data'].get('symbols_in_volume', {})
