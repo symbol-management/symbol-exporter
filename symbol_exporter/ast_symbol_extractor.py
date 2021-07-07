@@ -312,9 +312,9 @@ class SymbolFinder(ast.NodeVisitor):
                         symbol_md = volume.pop(bad_func_name)
                         volume[stripped_names[bad_func_name]] = symbol_md
                         self.undeclared_symbols.remove(bad_func_name)
-            for volume_symbol in list(volume):
-                if volume_symbol in in_module_symbol_by_shadows:
-                    volume[in_module_symbol_by_shadows[volume_symbol]] = volume.pop(volume_symbol)
+                for volume_symbol in list(volume):
+                    if volume_symbol in in_module_symbol_by_shadows:
+                        volume[in_module_symbol_by_shadows[volume_symbol]] = volume.pop(volume_symbol)
         return output_symbols
 
     def _create_args_kwargs_dict(self, arguments: ast.arguments):
