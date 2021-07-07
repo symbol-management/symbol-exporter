@@ -107,6 +107,13 @@ class _RelativeImportsResolver:
                     tmp_sorted[rel_import] = relative_star_imports_volume[rel_import]
         except CycleError:
             pass
+
+        shadows_by_in_module_symbol = {k: v["data"]["shadows"] for k, v in tmp_sorted.items() if "shadows" in v["data"] and v["type"] == SymbolType.RELATIVE_IMPORT}
+        for k, v in tmp_sorted.items():
+            for volume_symbol in v.get('symbols_in_volume', {}):
+                if volume_symbol in shadows_by_in_module_symbol:
+                    volume[shadows_by_in_module_symbol[volume_symbol]] = volume.pop(volume_symbol)
+
         self._sorted_symbols = tmp_sorted
         self._namespaces = namespaces
 
