@@ -303,7 +303,8 @@ class SymbolFinder(ast.NodeVisitor):
             k.split(f"{self._module_name}.")[1]: k for k in self._symbols if k != self._module_name and "*" not in k
         }
         output_symbols = self._symbols
-        in_module_symbol_by_shadows = {v["data"]["shadows"]: k for k, v in output_symbols.items() if "shadows" in v["data"] and v["type"] == SymbolType.RELATIVE_IMPORT}
+        in_module_symbol_by_shadows = {v["data"]["shadows"]: k for k, v in output_symbols.items() 
+                                       if "shadows" in v["data"] and v["type"] == SymbolType.RELATIVE_IMPORT}
         for k, v in output_symbols.items():
             volume = v["data"].get("symbols_in_volume")
             if volume:
