@@ -23,7 +23,7 @@ class WebDB:
 
     def _dumps(self, data):
         return json.dumps(data, default=make_json_friendly, sort_keys=True)
-    
+
     def _push(self, data, url):
         dumped_data = self._dumps(data)
         dumped_metadata = self._dumps(data['metadata'])
@@ -84,7 +84,7 @@ class WebDB:
             json.decoder.JSONDecodeError,
         ):
             return {}
-    
+
     def get_symbol_table_metadata(self, top_level_name):
         symbol_table_url = f"/api/v{version}/symbol_table/{top_level_name.lower()}/metadata"
         try:
@@ -99,7 +99,7 @@ class WebDB:
     def get_artifact_metadata(self, artifact_name):
         artifact_symbols_url = f"/api/v{version}/symbols/{artifact_name}/metadata"
         result = requests.get(f"{self.host}{artifact_symbols_url}").json()
-        return result.get("metadata", {}) if result else {}
+        return result or {}
 
     def get_top_level_symbols(self, artifact_name):
         artifact_symbols_url = f"/api/v{version}/symbols/{artifact_name}/metadata"
