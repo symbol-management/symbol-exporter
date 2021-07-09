@@ -21,7 +21,21 @@ class WebDB:
             print("No token only pulls allowed")
         self.secret_token = raw_token.encode("utf-8")
 
-    def _setup_headers(self, dumped_data, url):
+    def _dumps(self, data):
+        return json.dumps(data, default=make_json_friendly, sort_keys=True)
+    
+    def _push(self, data, url):
+        dumped_data = self._dumps(data)
+        dumped_metadata = self._dumps(data['metadata'])
+        r = requests.put(
+            f"{self.host}{url}",
+            data=dumped_data,
+            headers=self._setup_headers(dumped_data, url=url, dumped_metadata=dumped_metadata),
+            params=dict(metadata=dumped_metadata)
+        )
+        r.raise_for_status()
+
+    def _setup_headers(self, dumped_data, url, dumped_metadata):
         headers = {
             "X-Signature-Timestamp": datetime.utcnow().isoformat(),
             "X-Body-Signature": hmac.new(self.secret_token, dumped_data.encode(), hashlib.sha256).hexdigest(),
@@ -33,6 +47,7 @@ class WebDB:
                     url.encode(),
                     headers["X-Signature-Timestamp"].encode(),
                     headers["X-Body-Signature"].encode(),
+                    dumped_metadata.encode()
                 ]
             ),
             hashlib.sha256,
@@ -41,13 +56,7 @@ class WebDB:
 
     def push_symbol_table(self, top_level_name, symbol_table):
         url = f"/api/v{version}/symbol_table/{top_level_name}"
-        dumped_data = json.dumps(symbol_table, default=make_json_friendly, sort_keys=True)
-        r = requests.put(
-            f"{self.host}{url}",
-            data=dumped_data,
-            headers=self._setup_headers(dumped_data, url=url),
-        )
-        r.raise_for_status()
+        self._push(symbol_table, url)
 
     def get_current_symbol_table_artifacts_by_top_level(self):
         all_indexted_pkgs = {}
@@ -135,16 +144,8 @@ class WebDB:
             data = None
 
         url = f"/api/v{version}/symbols/{package}/{dst_path}".replace(".json", "")
-        # Generate the signature
-        dumped_data = json.dumps(data, default=make_json_friendly, sort_keys=True)
-
         # Upload the data
-        r = requests.put(
-            f"{self.host}{url}",
-            data=dumped_data,
-            headers=self._setup_headers(dumped_data, url),
-        )
-        r.raise_for_status()
+        self._push(data, url)
 
 
 def make_json_friendly(data):
