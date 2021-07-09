@@ -67,8 +67,8 @@ class WebDB:
                 for k, v in zip(
                     extracted_symbols,
                     db.from_sequence(extracted_symbols)
-                    .map(self.get_symbol_table)
-                    .map(lambda x: x.get("metadata", {}).get("indexed artifacts", {}))
+                    .map(self.get_symbol_table_metadata)
+                    .map(lambda x: x.get("indexed artifacts", {}))
                     .compute(),
                 )
             ]
@@ -84,20 +84,29 @@ class WebDB:
             json.decoder.JSONDecodeError,
         ):
             return {}
+    
+    def get_symbol_table_metadata(self, top_level_name):
+        symbol_table_url = f"/api/v{version}/symbol_table/{top_level_name.lower()}/metadata"
+        try:
+            return requests.get(f"{self.host}{symbol_table_url}").json()
+        except (
+            requests.exceptions.ConnectionError,
+            ChunkedEncodingError,
+            json.decoder.JSONDecodeError,
+        ):
+            return {}
 
     def get_artifact_metadata(self, artifact_name):
-        artifact_symbols_url = f"/api/v{version}/symbols/{artifact_name}"
+        artifact_symbols_url = f"/api/v{version}/symbols/{artifact_name}/metadata"
         result = requests.get(f"{self.host}{artifact_symbols_url}").json()
         return result.get("metadata", {}) if result else {}
 
     def get_top_level_symbols(self, artifact_name):
-        artifact_symbols_url = f"/api/v{version}/symbols/{artifact_name}"
+        artifact_symbols_url = f"/api/v{version}/symbols/{artifact_name}/metadata"
         result = requests.get(f"{self.host}{artifact_symbols_url}").json()
         if not result:
             return set()
-        return result.get("metadata", {}).get("top level symbols") or {
-            kk.partition(".")[0] for kk in result.get("symbols", {})
-        }
+        return result.get("top level symbols")
 
     def get_artifact_symbols(self, artifact_name):
         artifact_symbols_url = f"/api/v{version}/symbols/{artifact_name}"
