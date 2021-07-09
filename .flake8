@@ -9,7 +9,7 @@ exclude =
 ignore =
     *.py I100 W503
     ./libcflib/__init__.py E402
-    tests/numpy/*.py F401 F403
+    tests/numpy/*.py F401 F403 F841 
 per-file-ignores =
     ./tests/python_so_extraction/test_py37_nonstdlib.py:E501
     ./tests/python_so_extraction/test_py37_stdlib.py:E501

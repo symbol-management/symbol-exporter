@@ -5,7 +5,10 @@ from symbol_exporter.ast_symbol_extractor import SymbolType
 
 expected = {
     "numpy.version": {"type": SymbolType.MODULE, "data": {"symbols_in_volume": {"os": {"line number": [1]}}}},
-    "numpy.version.get_versions": {"type": SymbolType.FUNCTION, "data": {"lineno": 5}},
+    "numpy.version.get_versions": {
+        "type": SymbolType.FUNCTION,
+        "data": {"lineno": 5, "symbols_in_volume": {"numpy.core.numeric": {"line number": [6]}}}
+    },
     "numpy": {"type": SymbolType.PACKAGE, "data": {"symbols_in_volume": {"requests": {"line number": [5]}}}},
     "numpy.numeric": {
         "type": SymbolType.RELATIVE_IMPORT,
