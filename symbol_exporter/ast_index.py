@@ -57,11 +57,12 @@ def inner_loop(artifact_name):
         # carve out for star imports which don't have dots
         if top_level_name == "*":
             continue
-        # download the existing symbol table
-        symbol_table_with_metadata = web_interface.get_symbol_table(top_level_name)
-        metadata = symbol_table_with_metadata.get("metadata", {})
+        # download the existing symbol table metadata
+        metadata = web_interface.get_symbol_table_metadata(top_level_name=top_level_name)
         if artifact_name in metadata.get("indexed artifacts", []):
             continue
+        # download the existing symbol table
+        symbol_table_with_metadata = web_interface.get_symbol_table(top_level_name)
         symbol_table = symbol_table_with_metadata.get("symbol table", {})
         # update the symbol table
         for k in list(keys):
@@ -87,7 +88,6 @@ if __name__ == "__main__":
     web_interface = WebDB()
     indexed_artifacts_by_top_symbol = web_interface.get_current_symbol_table_artifacts_by_top_level()
     all_artifacts = web_interface.get_current_extracted_pkgs().values()
-    # TODO: parallel run
     with Client(threads_per_worker=100):
         compute = db.from_sequence(all_artifacts).map(web_interface.get_top_level_symbols).compute()
     all_symbols_by_artifact = {k: v for k, v in zip(all_artifacts, compute)}
