@@ -88,9 +88,8 @@ expected = {
     "numpy.core.*": {"type": SymbolType.STAR_IMPORT, "data": {"imports": {"json"}}},
     "numpy.*": {"type": SymbolType.STAR_IMPORT, "data": {"imports": {"requests", "json"}}},
     "numpy.xyz": {
-        "lineno": 8,
         "type": SymbolType.FUNCTION,
-        "data": {"symbols_in_volume": {"numpy.version.get_versions": {"line number": [9]}}},
+        "data": {"lineno": 8,"symbols_in_volume": {"numpy.version.get_versions": {"line number": [9]}}},
     },
     "numpy.version.*": {
         "type": SymbolType.STAR_IMPORT,
