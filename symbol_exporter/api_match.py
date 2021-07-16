@@ -9,41 +9,48 @@ from symbol_exporter.db_access_model import WebDB
 web_interface = WebDB()
 
 
-def get_supply(top_level_import, v_symbols, get_symbol_table_func=web_interface.get_symbol_table):
-    supplies = None
-    bad_symbols = set()
-    symbol_table = get_symbol_table_func(top_level_import).get('symbol table', {})
-    # TODO: handle star imports recursion here?
-    for v_symbol in v_symbols:
-        supply = symbol_table.get(v_symbol)
-        if not supply:
-            bad_symbols.add(v_symbol)
-            continue
-        if supplies is None:
-            supplies = set(supply)
+def recursive_get_from_table(symbol, get_symbol_table_func=web_interface.get_symbol_table):
+    output_supply = {}
+    parent_symbol = symbol
+    children_symbols = []
+    symbol_table = get_symbol_table_func(parent_symbol.partition(".")[0])
+    while parent_symbol:
+        supply = symbol_table.get("symbol table", {}).get(parent_symbol)
+        if supply is None:
+            if "." not in parent_symbol:
+                break
+            parent_symbol, _, child_symbol = parent_symbol.rpartition(".")
+            children_symbols.append(child_symbol)
         else:
-            supplies &= set(supply)
-    return supplies or set(), bad_symbols
+            for suplier in supply:
+                shadow = suplier.get("shadows")
+                if shadow:
+                    new_symbol = ".".join([shadow] + list(reversed(children_symbols)))
+                    rescursive_search_results = recursive_get_from_table(new_symbol, get_symbol_table_func)
+                    if rescursive_search_results:
+                        output_supply.setdefault(parent_symbol, []).append(suplier["artifact name"])
+                        output_supply.update(rescursive_search_results)
+                # If not a shadows then we must have the full symbol
+                elif not children_symbols:
+                    output_supply.setdefault(parent_symbol, []).append(suplier["artifact name"])
+            break
+
+    return output_supply
 
 
 def find_supplying_version_set(volume, get_symbol_table_func=web_interface.get_symbol_table):
-    supplying_versions = {}
-
     effective_volume = sorted(volume - builtin_symbols)
-    symbol_by_top_level = groupby(effective_volume, key=lambda x: x.partition(".")[0])
+    supplies = {}
     bad_symbols = set()
-
-    with ThreadPoolExecutor() as pool:
-        futures = {
-            pool.submit(get_supply, top_level_import, list(v_symbols), get_symbol_table_func): top_level_import
-            for top_level_import, v_symbols in symbol_by_top_level
-        }
-    for future in as_completed(futures):
-        top_level_import = futures[future]
-        supplies, bad = future.result()
-        supplying_versions[top_level_import] = supplies
-        bad_symbols.update(bad)
-    # TODO: handle the case where multiple pkgs export the same symbols?
-    #  In that case we may want to merge those together somehow
-    # TODO: handle case where no pkg supports the symbol?
-    return supplying_versions, bad_symbols
+    for v_symbol in effective_volume:
+        supply = recursive_get_from_table(v_symbol, get_symbol_table_func)
+        if not supply:
+            bad_symbols.add(v_symbol)
+            continue
+        for symbol, artifacts in supply.items():
+            top_level_symbol = symbol.partition(".")[0]
+            if top_level_symbol not in supplies:
+                supplies[top_level_symbol] = set(artifacts)
+            else:
+                supplies[top_level_symbol] &= set(artifacts)
+    return supplies or set(), bad_symbols
