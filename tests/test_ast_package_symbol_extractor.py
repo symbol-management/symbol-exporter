@@ -7,7 +7,7 @@ expected = {
     "numpy.version": {"type": SymbolType.MODULE, "data": {"symbols_in_volume": {"os": {"line number": [1]}}}},
     "numpy.version.get_versions": {
         "type": SymbolType.FUNCTION,
-        "data": {"lineno": 5, "symbols_in_volume": {"numpy.core.numeric": {"line number": [6]}}}
+        "data": {"lineno": 5, "symbols_in_volume": {"numpy.core.numeric": {"line number": [6]}}},
     },
     "numpy": {"type": SymbolType.PACKAGE, "data": {"symbols_in_volume": {"requests": {"line number": [5]}}}},
     "numpy.numeric": {
@@ -87,6 +87,10 @@ expected = {
     },
     "numpy.core.*": {"type": SymbolType.STAR_IMPORT, "data": {"imports": {"json"}}},
     "numpy.*": {"type": SymbolType.STAR_IMPORT, "data": {"imports": {"requests", "json"}}},
+    "numpy.xyz": {
+        "type": SymbolType.FUNCTION,
+        "data": {"lineno": 8, "symbols_in_volume": {"numpy.version.get_versions": {"line number": [9]}}},
+    },
     "numpy.version.*": {
         "type": SymbolType.STAR_IMPORT,
         "data": {"imports": {"os"}},
@@ -135,6 +139,10 @@ expected = {
     "numpy.c2.triple.absolute": {
         "type": SymbolType.RELATIVE_IMPORT,
         "data": {"shadows": "numpy.core.numeric.absolute"},
+    },
+    "numpy.c2.triple.xyz": {
+        "type": SymbolType.RELATIVE_IMPORT,
+        "data": {"shadows": "numpy.xyz"},
     },
     "numpy.core.stars": {"data": {}, "type": SymbolType.MODULE},
     "numpy.core.stars.~~RELATIVE~~.*": {
