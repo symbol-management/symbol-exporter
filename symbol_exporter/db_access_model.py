@@ -26,7 +26,7 @@ class WebDB:
 
     def _push(self, data, url):
         dumped_data = self._dumps(data)
-        dumped_metadata = self._dumps(data['metadata'])
+        dumped_metadata = self._dumps(data['metadata'] if data else None)
         r = requests.put(
             f"{self.host}{url}",
             data=dumped_data,
