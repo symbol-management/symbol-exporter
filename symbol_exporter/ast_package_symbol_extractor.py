@@ -14,7 +14,7 @@ from symbol_exporter.ast_symbol_extractor import (
 )
 
 logger = logging.getLogger("package_symbol_extractor")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.ERROR)
 
 
 def get_symbol_type(symbol) -> SymbolType:
