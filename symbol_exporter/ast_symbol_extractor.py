@@ -9,7 +9,7 @@ import sys
 NOT_A_DEFAULT_ARG = "~~NOT_A_DEFAULT~~"
 RELATIVE_IMPORT_IDENTIFIER = "~~RELATIVE~~"
 # Increment when we need the database to be rebuilt (eg adding a new feature)
-version = "9"  # must be an integer
+version = "10"  # must be an integer
 builtin_symbols = set(dir(builtins)) | set.union(
     *[
         set(f"{module_name}.{symbol}" for symbol in dir(importlib.import_module(module_name)))
