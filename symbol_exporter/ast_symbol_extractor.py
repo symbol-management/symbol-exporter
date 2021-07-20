@@ -3,12 +3,19 @@ import ast
 import builtins
 from typing import Any
 from enum import Enum
+import importlib
+import sys
 
 NOT_A_DEFAULT_ARG = "~~NOT_A_DEFAULT~~"
 RELATIVE_IMPORT_IDENTIFIER = "~~RELATIVE~~"
 # Increment when we need the database to be rebuilt (eg adding a new feature)
 version = "10"  # must be an integer
-builtin_symbols = set(dir(builtins))
+builtin_symbols = set(dir(builtins)) | set.union(
+    *[
+        set(f"{module_name}.{symbol}" for symbol in dir(importlib.import_module(module_name)))
+        for module_name in sys.builtin_module_names
+    ]
+)
 
 
 def is_relative_import(symbol) -> bool:

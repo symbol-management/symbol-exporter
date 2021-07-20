@@ -14,7 +14,7 @@ from symbol_exporter.ast_symbol_extractor import (
 )
 
 logger = logging.getLogger("package_symbol_extractor")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.ERROR)
 
 
 def get_symbol_type(symbol) -> SymbolType:
@@ -113,8 +113,10 @@ class _RelativeImportsResolver:
         for k, v in tmp_sorted.items():
             volume = v['data'].get('symbols_in_volume', {})
             for volume_symbol in list(volume):
-                if volume_symbol in shadows_by_in_module_symbol:
-                    volume[shadows_by_in_module_symbol[volume_symbol]] = volume.pop(volume_symbol)
+                no_init_volume_symbol = volume_symbol.replace(".__init__", "")
+                if no_init_volume_symbol in shadows_by_in_module_symbol:
+                    new_volume_symbol = shadows_by_in_module_symbol[no_init_volume_symbol]
+                    volume[new_volume_symbol] = volume.pop(volume_symbol)
 
         self._sorted_symbols = tmp_sorted
         self._namespaces = namespaces
