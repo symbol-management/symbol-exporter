@@ -21,8 +21,6 @@ from .utils import (
 )
 from ..ast_symbol_extractor import SymbolType
 
-logger.setLevel(logging.ERROR)
-
 
 class CompiledPythonLib:
     def __init__(self, filename):
