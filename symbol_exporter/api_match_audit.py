@@ -6,6 +6,8 @@ import shutil
 from concurrent.futures._base import as_completed
 from concurrent.futures.thread import ThreadPoolExecutor
 from random import shuffle
+from distributed.client import Client
+import dask.bag as db
 
 import requests
 from tqdm import tqdm
@@ -48,7 +50,7 @@ def inner_loop_and_write(artifact):
         json.dump(output, f, indent=1, sort_keys=True, default=make_json_friendly)
 
 
-def main(n_to_pull=1000):
+def main(n_to_pull=100):
     path = "audit"
 
     if os.path.exists(os.path.join(path, "_inspection_version.txt")):
@@ -73,13 +75,8 @@ def main(n_to_pull=1000):
     # Don't have the artifacts in alphabetical order
     shuffle(artifacts)
 
-    with ThreadPoolExecutor() as pool:
-        futures = [pool.submit(inner_loop_and_write, artifact) for artifact in artifacts[:n_to_pull]]
-        for future in tqdm(as_completed(futures), total=n_to_pull):
-            try:
-                future.result()
-            except requests.exceptions.ConnectionError:
-                pass
+    with Client(threads_per_worker=100):
+        db.from_sequence(artifacts[:n_to_pull]).map(inner_loop_and_write).compute()
 
 
 if __name__ == "__main__":

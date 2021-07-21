@@ -1,3 +1,4 @@
+from functools import lru_cache
 import hashlib
 import hmac
 import json
@@ -74,6 +75,7 @@ class WebDB:
             ]
         return all_indexted_pkgs
 
+    @lru_cache(256)
     def get_symbol_table(self, top_level_name):
         symbol_table_url = f"/api/v{version}/symbol_table/{top_level_name.lower()}"
         try:
