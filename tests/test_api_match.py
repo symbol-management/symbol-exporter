@@ -40,6 +40,12 @@ SAMPLE_TABLE = {
             {"artifact name": "shadow_academic-0.0.2", "shadows": "academic"},
         ]
     },
+    "cchardet": {
+        "cchardet": [{"artifact name": "cchardet/conda-forge/linux-64/cchardet-2.1.1-py27_0"}],
+        "cchardet._cchardet": [
+            {"artifact name": "cchardet/conda-forge/linux-64/cchardet-2.1.1-py27_0", "shadows": "cchardet._cchardet"}
+        ],
+    },
 }
 
 
@@ -152,6 +158,13 @@ def test_bad_symbol():
 
 def test_bad_symbol_shadows():
     volume = {"shadow_academic.cli.zippy"}
+
+    intersection, bad = find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table_dummy_func)
+    assert intersection == set()
+    assert bad == volume
+
+def test_symbol_doesnt_exist_recursion_error():
+    volume = {"cchardet._cchardet.detect_with_confidence"}
 
     intersection, bad = find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table_dummy_func)
     assert intersection == set()
