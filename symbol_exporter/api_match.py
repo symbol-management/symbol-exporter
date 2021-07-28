@@ -25,6 +25,10 @@ def recursive_get_from_table(symbol, get_symbol_table_func=web_interface.get_sym
             for suplier in supply:
                 shadow = suplier.get("shadows")
                 if shadow:
+                    # if shadow and parent are same then we could have recursion error
+                    # see cchardet._cchardet as of v10
+                    if shadow == parent_symbol:
+                        continue
                     new_symbol = ".".join([shadow] + list(reversed(children_symbols)))
                     rescursive_search_results = recursive_get_from_table(new_symbol, get_symbol_table_func)
                     if rescursive_search_results:
