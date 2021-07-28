@@ -163,6 +163,7 @@ def test_bad_symbol_shadows():
     assert intersection == set()
     assert bad == volume
 
+
 def test_symbol_doesnt_exist_recursion_error():
     volume = {"cchardet._cchardet.detect_with_confidence"}
 
