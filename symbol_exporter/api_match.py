@@ -9,10 +9,11 @@ from symbol_exporter.db_access_model import WebDB
 web_interface = WebDB()
 
 
-def recursive_get_from_table(symbol, get_symbol_table_func=web_interface.get_symbol_table):
+def recursive_get_from_table(symbol, get_symbol_table_func=web_interface.get_symbol_table, seen_symbols=set()):
     output_supply = {}
     parent_symbol = symbol
     children_symbols = []
+    seen_symbols = seen_symbols.union({symbol})
     symbol_table = get_symbol_table_func(parent_symbol.partition(".")[0])
     while parent_symbol:
         supply = symbol_table.get("symbol table", {}).get(parent_symbol)
@@ -25,12 +26,13 @@ def recursive_get_from_table(symbol, get_symbol_table_func=web_interface.get_sym
             for suplier in supply:
                 shadow = suplier.get("shadows")
                 if shadow:
-                    # if shadow and parent are same then we could have recursion error
-                    # see cchardet._cchardet as of v10
-                    if shadow == parent_symbol:
-                        continue
                     new_symbol = ".".join([shadow] + list(reversed(children_symbols)))
-                    rescursive_search_results = recursive_get_from_table(new_symbol, get_symbol_table_func)
+                    # TODO: handle this in a special manner since this is a grey area, it could hide deps we don't see
+                    #  but nominally would be covered by the dependency's own dependency spec
+                    if new_symbol in seen_symbols:
+                        output_supply.setdefault(parent_symbol, []).append(suplier["artifact name"])
+                        continue
+                    rescursive_search_results = recursive_get_from_table(new_symbol, get_symbol_table_func, seen_symbols)
                     if rescursive_search_results:
                         output_supply.setdefault(parent_symbol, []).append(suplier["artifact name"])
                         output_supply.update(rescursive_search_results)
