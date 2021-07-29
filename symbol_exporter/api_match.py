@@ -32,8 +32,9 @@ def recursive_get_from_table(symbol, get_symbol_table_func=web_interface.get_sym
                     if new_symbol in seen_symbols:
                         output_supply.setdefault(parent_symbol, []).append(suplier["artifact name"])
                         continue
-                    rescursive_search_results = recursive_get_from_table(new_symbol, get_symbol_table_func, 
-                                                                                                         seen_symbols)
+                    rescursive_search_results = recursive_get_from_table(
+                        new_symbol, get_symbol_table_func, seen_symbols
+                    )
                     if rescursive_search_results:
                         output_supply.setdefault(parent_symbol, []).append(suplier["artifact name"])
                         output_supply.update(rescursive_search_results)
