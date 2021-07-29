@@ -46,12 +46,6 @@ SAMPLE_TABLE = {
             {"artifact name": "cchardet/conda-forge/linux-64/cchardet-2.1.1-py27_0", "shadows": "cchardet._cchardet"}
         ],
     },
-        "cchardet": {
-        "cchardet": [{"artifact name": "cchardet/conda-forge/linux-64/cchardet-2.1.1-py27_0"}],
-        "cchardet._cchardet": [
-            {"artifact name": "cchardet/conda-forge/linux-64/cchardet-2.1.1-py27_0", "shadows": "cchardet._cchardet"}
-        ],
-    },
     "astropy": {
         "astropy.A": [
             {"artifact name": "cchardet/conda-forge/linux-64/cchardet-2.1.1-py27_0", "shadows": "astropy.B"}
