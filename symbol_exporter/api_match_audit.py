@@ -14,10 +14,10 @@ from tqdm import tqdm
 
 from symbol_exporter.api_match import find_supplying_version_set
 from symbol_exporter.ast_db_populator import make_json_friendly
-from symbol_exporter.ast_symbol_extractor import version
+from symbol_exporter.ast_symbol_extractor import version, builtin_symbols
 from symbol_exporter.db_access_model import WebDB
 
-audit_version = "2.2"
+audit_version = "2.3"
 
 complete_version = f"{version}_{audit_version}"
 
@@ -33,6 +33,7 @@ def inner_loop(artifact):
         volume.update(v.get("data", {}).get("symbols_in_volume", set()))
     # pull out self symbols, since we assume those are gotten locally and self consistent
     volume -= set(symbols)
+    volume -= set(builtin_symbols)
     deps, bad = find_supplying_version_set(volume)
     return deps, bad
 
