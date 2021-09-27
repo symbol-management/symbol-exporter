@@ -1,5 +1,7 @@
 """Audit to derived the expected dependencies and version ranges for all extracted packages"""
+import bz2
 import glob
+import io
 import json
 import os
 import shutil
@@ -12,16 +14,25 @@ import dask.bag as db
 import requests
 from tqdm import tqdm
 
-from symbol_exporter.api_match import find_supplying_version_set
+from symbol_exporter.api_match import extract_artifacts_from_deps, find_supplying_version_set
 from symbol_exporter.ast_db_populator import make_json_friendly
 from symbol_exporter.ast_symbol_extractor import version, builtin_symbols
 from symbol_exporter.db_access_model import WebDB
+from symbol_exporter.tools import channel_list, find_version_ranges
 
 audit_version = "2.3"
 
 complete_version = f"{version}_{audit_version}"
 
 web_interface = WebDB()
+
+
+existing_versions_by_package = {}
+for channel in channel_list:
+    r = requests.get(f"{channel}/repodata.json.bz2")
+    repodata = json.load(bz2.BZ2File(io.BytesIO(r.content)))
+    for p, v in repodata["packages"].items():
+        existing_versions_by_package.setdefault(v['name'], set()).add(v['version'])
 
 
 def inner_loop(artifact):
@@ -44,7 +55,15 @@ def inner_loop_and_write(artifact):
         output = None
     else:
         dep_sets, bad = result
-        output = {"deps": dep_sets, "bad": list(sorted(bad))}
+        versions_by_package = extract_artifacts_from_deps(dep_sets)
+        version_ranges_by_package = {}
+        missing_versions_by_package = {}
+        for package, versions in versions_by_package.items():
+            version_ranges_by_package[package] = find_version_ranges(existing_versions_by_package[package], versions)
+            missing_versions_by_package[package] = set(existing_versions_by_package[package]) - set(versions)
+        output = {"deps": dep_sets, "bad": list(sorted(bad)), 
+        'version_ranges': [f'{package} {version_range}' for package, version_range in version_ranges_by_package.items()], 
+        'missing_versions': missing_versions_by_package}
     outname = os.path.join("audit", artifact)
     os.makedirs(os.path.dirname(outname), exist_ok=True)
     with open(outname, "w") as f:
