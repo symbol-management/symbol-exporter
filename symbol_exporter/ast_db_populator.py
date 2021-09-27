@@ -5,6 +5,7 @@ import logging
 import os
 import shutil
 import tarfile
+import http
 from functools import partial
 from pathlib import Path
 from random import shuffle
@@ -103,6 +104,8 @@ def reap_symbols_send_to_webserver(package, dst_path, src_url, filelike, progres
         harvested_data = harvest_imports(filelike)
         web_interface.send_to_webserver(harvested_data, package, dst_path)
         del harvested_data
+    except (http.client.RemoteDisconnected, requests.exceptions.RequestException) as e:
+        print(f"Failure: {package}, {src_url}, {str(e)}")
     except Exception as e:
         raise ReapFailure(package, src_url, str(e))
 
