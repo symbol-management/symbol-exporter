@@ -203,7 +203,7 @@ def find_version_ranges(all_versions, acceptable_versions):
     _acceptable_versions = sorted(map(normalized_version, acceptable_versions))
     range_endpoints = []
     current_range = []
-    # TODO: speed up this loop by only going over acceptable versions, 
+    # TODO: speed up this loop by only going over acceptable versions,
     # and asking if current version is same as previous version index +1 in all versions
     for version in _all_versions:
         if version in _acceptable_versions:
