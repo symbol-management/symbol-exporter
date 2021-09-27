@@ -27,12 +27,12 @@ class WebDB:
 
     def _push(self, data, url):
         dumped_data = self._dumps(data)
-        dumped_metadata = self._dumps(data['metadata'] if data else None)
+        dumped_metadata = self._dumps(data["metadata"] if data else None)
         r = requests.put(
             f"{self.host}{url}",
             data=dumped_data,
             headers=self._setup_headers(dumped_data, url=url, dumped_metadata=dumped_metadata),
-            params=dict(metadata=dumped_metadata)
+            params=dict(metadata=dumped_metadata),
         )
         r.raise_for_status()
 
@@ -48,7 +48,7 @@ class WebDB:
                     url.encode(),
                     headers["X-Signature-Timestamp"].encode(),
                     headers["X-Body-Signature"].encode(),
-                    dumped_metadata.encode()
+                    dumped_metadata.encode(),
                 ]
             ),
             hashlib.sha256,

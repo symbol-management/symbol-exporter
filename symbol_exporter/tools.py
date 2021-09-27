@@ -11,12 +11,15 @@ import io
 import os
 import glob
 from xonsh.tools import expand_path
+
 try:
     from conda.models.version import normalized_version
 except:
     from packaging import version
+
     def normalized_version(x):
         return version.parse(x)
+
 
 """
 BSD 3-clause license
@@ -152,9 +155,7 @@ def fetch_arch(arch, conditional=None):
     repodata = json.load(bz2.BZ2File(io.BytesIO(r.content)))
     for p, v in repodata["packages"].items():
         package_url = f"{arch}/{p}"
-        file_name = package_url.replace("https://conda.anaconda.org/", "").replace(
-            ".tar.bz2", ".json"
-        )
+        file_name = package_url.replace("https://conda.anaconda.org/", "").replace(".tar.bz2", ".json")
         if conditional is None or conditional(v):
             yield v["name"], file_name, package_url
 
@@ -219,4 +220,4 @@ def find_version_ranges(all_versions, acceptable_versions):
             ranges.append(f">={lower},<={higher}")
         else:
             ranges.append(str(lower))
-    return ','.join(ranges)
+    return ",".join(ranges)

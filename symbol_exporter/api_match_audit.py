@@ -32,7 +32,7 @@ for channel in channel_list:
     r = requests.get(f"{channel}/repodata.json.bz2")
     repodata = json.load(bz2.BZ2File(io.BytesIO(r.content)))
     for p, v in repodata["packages"].items():
-        existing_versions_by_package.setdefault(v['name'], set()).add(v['version'])
+        existing_versions_by_package.setdefault(v["name"], set()).add(v["version"])
 
 
 def inner_loop(artifact):
@@ -61,9 +61,14 @@ def inner_loop_and_write(artifact):
         for package, versions in versions_by_package.items():
             version_ranges_by_package[package] = find_version_ranges(existing_versions_by_package[package], versions)
             missing_versions_by_package[package] = set(existing_versions_by_package[package]) - set(versions)
-        output = {"deps": dep_sets, "bad": list(sorted(bad)), 
-        'version_ranges': [f'{package} {version_range}' for package, version_range in version_ranges_by_package.items()], 
-        'missing_versions': missing_versions_by_package}
+        output = {
+            "deps": dep_sets,
+            "bad": list(sorted(bad)),
+            "version_ranges": [
+                f"{package} {version_range}" for package, version_range in version_ranges_by_package.items()
+            ],
+            "missing_versions": missing_versions_by_package,
+        }
     outname = os.path.join("audit", artifact)
     os.makedirs(os.path.dirname(outname), exist_ok=True)
     with open(outname, "w") as f:
@@ -88,7 +93,7 @@ def main(n_to_pull=100):
 
     all_extracted_artifacts = web_interface.get_current_extracted_pkgs().values()
     existing_artifacts = glob.glob(f"{path}/**/*.json", recursive=True)
-    existing_artifact_names = {k.partition("/")[2].replace('.json', '') for k in existing_artifacts}
+    existing_artifact_names = {k.partition("/")[2].replace(".json", "") for k in existing_artifacts}
 
     artifacts = sorted(list(set(all_extracted_artifacts) - set(existing_artifact_names)))
 
