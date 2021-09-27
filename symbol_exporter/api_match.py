@@ -65,7 +65,8 @@ def find_supplying_version_set(volume, get_symbol_table_func=web_interface.get_s
 
 
 def extract_artifacts_from_deps(deps):
-    # TODO: places where multiple artifacts from different packages satisfy (eg backport pkgs, google-requests error, etc)
+    # TODO: places where multiple artifacts from different packages 
+    # satisfy (eg backport pkgs, google-requests error, etc)
     versions_by_package = {}
     for import_name, artifacts in deps.items():
         version_set = set()

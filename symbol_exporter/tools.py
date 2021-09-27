@@ -14,11 +14,11 @@ from xonsh.tools import expand_path
 
 try:
     from conda.models.version import normalized_version
-except:
-    from packaging import version
+except ImportError:
+    from packaging import version as packaging_version
 
     def normalized_version(x):
-        return version.parse(x)
+        return packaging_version.parse(x)
 
 
 """
@@ -203,7 +203,8 @@ def find_version_ranges(all_versions, acceptable_versions):
     _acceptable_versions = sorted(map(normalized_version, acceptable_versions))
     range_endpoints = []
     current_range = []
-    # TODO: speed up this loop by only going over acceptable versions, and asking if current version is same as previous version index +1 in all versions
+    # TODO: speed up this loop by only going over acceptable versions, 
+    # and asking if current version is same as previous version index +1 in all versions
     for version in _all_versions:
         if version in _acceptable_versions:
             if not current_range:
