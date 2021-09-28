@@ -1,4 +1,11 @@
+from packaging.specifiers import SpecifierSet
+
 from symbol_exporter.tools import find_version_ranges
+
+
+def check_result(specifier, all_versions, acceptable_versions):
+    specifier = SpecifierSet(specifier)
+    assert set(specifier.filter(all_versions)) == set(acceptable_versions)
 
 
 def test_all_versions_acceptable():
@@ -21,7 +28,7 @@ def test_versions_acceptable_with_two_ranges():
         find_version_ranges(
             ["1.0", "1.1", "1.1.1", "1.1.2", "1.1.3", "1.1.4"], ["1.0", "1.1", "1.1.1", "1.1.3", "1.1.4"]
         )
-        == ">=1.0,<=1.1.1,>=1.1.3,<=1.1.4"
+        == ">=1.0,<=1.1.1|>=1.1.3,<=1.1.4"
     )
 
 
