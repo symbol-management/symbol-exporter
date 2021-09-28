@@ -77,5 +77,5 @@ def extract_artifacts_from_deps(deps):
         if package_name not in versions_by_package:
             versions_by_package[package_name] = version_set
         else:
-            versions_by_package[package_name] = version_set & versions_by_package[package_name]
+            versions_by_package[package_name] &= versions_by_package[package_name]
     return versions_by_package
