@@ -20,7 +20,7 @@ from symbol_exporter.ast_symbol_extractor import version, builtin_symbols
 from symbol_exporter.db_access_model import WebDB
 from symbol_exporter.tools import channel_list, find_version_ranges
 
-audit_version = "2.3"
+audit_version = "2.4"
 
 complete_version = f"{version}_{audit_version}"
 

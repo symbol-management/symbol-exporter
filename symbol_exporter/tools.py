@@ -221,4 +221,4 @@ def find_version_ranges(all_versions, acceptable_versions):
             ranges.append(f">={lower},<={higher}")
         else:
             ranges.append(str(lower))
-    return ",".join(ranges)
+    return "|".join(ranges)
