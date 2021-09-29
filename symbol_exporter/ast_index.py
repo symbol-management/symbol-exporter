@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
     artifacts_to_index = set()
     for symbol, artifacts_set in all_artifacts_by_symbol.items():
-        artifacts_to_index.update(artifacts_set - indexed_artifacts_by_top_symbol.get(symbol, set()))
+        artifacts_to_index.update(artifacts_set - indexed_artifacts_by_top_symbol.get(symbol.lower(), set()))
     artifacts_to_index = list(artifacts_to_index)
     print(f"Number of artifacts to index: {len(artifacts_to_index)}")
 
