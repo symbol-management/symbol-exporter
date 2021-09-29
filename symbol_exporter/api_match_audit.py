@@ -67,7 +67,7 @@ def main(n_to_pull=100):
     with open(os.path.join(path, "_inspection_version.txt"), "w") as f:
         f.write(complete_version)
 
-    all_extracted_artifacts = web_interface.get_current_extracted_pkgs().values()
+    all_extracted_artifacts = web_interface.get_all_extracted_artifacts()
     existing_artifacts = glob.glob(f"{path}/**/*.json", recursive=True)
     existing_artifact_names = {k.partition("/")[2].replace('.json', '') for k in existing_artifacts}
 

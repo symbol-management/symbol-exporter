@@ -91,7 +91,7 @@ def invert_dict(d: dict):
 if __name__ == "__main__":
     web_interface = WebDB()
     indexed_artifacts_by_top_symbol = web_interface.get_current_symbol_table_artifacts_by_top_level()
-    all_artifacts = web_interface.get_current_extracted_pkgs().values()
+    all_artifacts = web_interface.get_all_extracted_artifacts()
     with Client(threads_per_worker=100):
         compute = db.from_sequence(all_artifacts).map(web_interface.get_top_level_symbols).compute()
     all_symbols_by_artifact = {k: v for k, v in zip(all_artifacts, compute)}
