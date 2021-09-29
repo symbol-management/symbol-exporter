@@ -5,6 +5,7 @@ import json
 import os
 from datetime import datetime
 from enum import Enum
+from collections import defaultdict
 
 import dask.bag as db
 from dask.distributed import Client
@@ -118,8 +119,16 @@ class WebDB:
     def get_current_extracted_pkgs(self):
         url = f"/api/v{version}/symbols"
         paths = requests.get(f"{self.host}{url}").json()
-        path_by_pkg = {path.split("/")[0]: path for path in paths}
+        path_by_pkg = defaultdict(set)
+        for path in paths:
+            pkg = path.split("/")[0]
+            path_by_pkg[pkg].add(path)
         return path_by_pkg
+
+    def get_all_extracted_artifacts(self):
+        url = f"/api/v{version}/symbols"
+        paths = requests.get(f"{self.host}{url}").json()
+        return paths
 
     def send_to_webserver(self, data, package, dst_path):
         # BSD 3-Clause License
