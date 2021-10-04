@@ -62,3 +62,20 @@ def find_supplying_version_set(volume, get_symbol_table_func=web_interface.get_s
             else:
                 supplies[top_level_symbol] &= set(artifacts)
     return supplies or set(), bad_symbols
+
+
+def extract_artifacts_from_deps(deps):
+    # TODO: places where multiple artifacts from different packages
+    # satisfy (eg backport pkgs, google-requests error, etc)
+    versions_by_package = {}
+    for import_name, artifacts in deps.items():
+        version_set = set()
+        for artifact_path in artifacts:
+            package_name, channel, arch, artifact = artifact_path.split("/")
+            artifact_name, version, build_string = artifact.split("-")
+            version_set.add(version)
+        if package_name not in versions_by_package:
+            versions_by_package[package_name] = version_set
+        else:
+            versions_by_package[package_name] &= versions_by_package[package_name]
+    return versions_by_package

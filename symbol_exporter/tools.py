@@ -12,6 +12,14 @@ import os
 import glob
 from xonsh.tools import expand_path
 
+try:
+    from conda.models.version import normalized_version
+except ImportError:
+    from packaging import version as packaging_version
+
+    def normalized_version(x):
+        return packaging_version.parse(x)
+
 
 """
 BSD 3-clause license
@@ -131,12 +139,12 @@ def diff(upstream, local):
 
 channel_list = [
     "https://conda.anaconda.org/conda-forge/linux-64",
-    "https://conda.anaconda.org/conda-forge/osx-64",
-    "https://conda.anaconda.org/conda-forge/win-64",
     "https://conda.anaconda.org/conda-forge/noarch",
-    "https://conda.anaconda.org/conda-forge/linux-ppc64le",
-    "https://conda.anaconda.org/conda-forge/linux-aarch64",
-    "https://conda.anaconda.org/conda-forge/osx-arm64",
+    # "https://conda.anaconda.org/conda-forge/osx-64",
+    # "https://conda.anaconda.org/conda-forge/win-64",
+    # "https://conda.anaconda.org/conda-forge/linux-ppc64le",
+    # "https://conda.anaconda.org/conda-forge/linux-aarch64",
+    # "https://conda.anaconda.org/conda-forge/osx-arm64",
 ]
 
 
@@ -147,9 +155,7 @@ def fetch_arch(arch, conditional=None):
     repodata = json.load(bz2.BZ2File(io.BytesIO(r.content)))
     for p, v in repodata["packages"].items():
         package_url = f"{arch}/{p}"
-        file_name = package_url.replace("https://conda.anaconda.org/", "").replace(
-            ".tar.bz2", ".json"
-        )
+        file_name = package_url.replace("https://conda.anaconda.org/", "").replace(".tar.bz2", ".json")
         if conditional is None or conditional(v):
             yield v["name"], file_name, package_url
 
@@ -190,3 +196,31 @@ def expand_file_and_mkdirs(x):
     d = os.path.dirname(x)
     os.makedirs(d, exist_ok=True)
     return x
+
+
+def find_version_ranges(all_versions, acceptable_versions):
+    _all_versions = sorted(map(normalized_version, all_versions))
+    _acceptable_versions = sorted(map(normalized_version, acceptable_versions))
+    range_endpoints = []
+    current_range = []
+    # TODO: speed up this loop by only going over acceptable versions,
+    # and asking if current version is same as previous version index +1 in all versions
+    for version in _all_versions:
+        if version in _acceptable_versions:
+            if not current_range:
+                current_range = [version, version]
+            current_range[-1] = version
+        else:
+            range_endpoints.append(tuple(current_range))
+            current_range = []
+    if current_range:
+        range_endpoints.append(tuple(current_range))
+    ranges = []
+    for lower, higher in filter(bool, range_endpoints):
+        if higher == _all_versions[-1]:
+            ranges.append(f">={lower}")
+        elif lower != higher:
+            ranges.append(f">={lower},<={higher}")
+        else:
+            ranges.append(f"{lower}")
+    return "|".join(ranges)

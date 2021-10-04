@@ -47,13 +47,9 @@ SAMPLE_TABLE = {
         ],
     },
     "astropy": {
-        "astropy.A": [
-            {"artifact name": "cchardet/conda-forge/linux-64/cchardet-2.1.1-py27_0", "shadows": "astropy.B"}
-        ],
-        "astropy.B": [
-            {"artifact name": "cchardet/conda-forge/linux-64/cchardet-2.1.1-py27_0", "shadows": "astropy.A"}
-        ],
-    }
+        "astropy.A": [{"artifact name": "cchardet/conda-forge/linux-64/cchardet-2.1.1-py27_0", "shadows": "astropy.B"}],
+        "astropy.B": [{"artifact name": "cchardet/conda-forge/linux-64/cchardet-2.1.1-py27_0", "shadows": "astropy.A"}],
+    },
 }
 
 
@@ -176,11 +172,11 @@ def test_symbol_doesnt_exist_recursion_error():
     volume = {"cchardet._cchardet.detect_with_confidence"}
 
     intersection, bad = find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table_dummy_func)
-    assert intersection == {'cchardet': {'cchardet/conda-forge/linux-64/cchardet-2.1.1-py27_0'}}
+    assert intersection == {"cchardet": {"cchardet/conda-forge/linux-64/cchardet-2.1.1-py27_0"}}
 
 
 def test_cycle():
     volume = {"astropy.A"}
 
     intersection, bad = find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table_dummy_func)
-    assert intersection == {'astropy': {'cchardet/conda-forge/linux-64/cchardet-2.1.1-py27_0'}}
+    assert intersection == {"astropy": {"cchardet/conda-forge/linux-64/cchardet-2.1.1-py27_0"}}

@@ -155,7 +155,7 @@ sort_arch_ordering = [
 
 
 def only_python(metadata):
-    return metadata['name'] == "python" or any('python' in k for k in metadata['depends'])
+    return metadata["name"] == "python" or any("python" in k for k in metadata["depends"])
 
 
 def reap(
