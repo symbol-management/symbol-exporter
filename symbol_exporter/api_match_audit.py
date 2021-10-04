@@ -59,7 +59,9 @@ def inner_loop_and_write(artifact):
         version_ranges_by_package = {}
         missing_versions_by_package = {}
         for package, versions in versions_by_package.items():
-            version_ranges_by_package[package] = find_version_ranges(existing_versions_by_package.get(package, set()), versions)
+            version_ranges_by_package[package] = find_version_ranges(
+                existing_versions_by_package.get(package, set()), versions
+            )
             missing_versions_by_package[package] = set(existing_versions_by_package.get(package, set())) - set(versions)
         output = {
             "deps": dep_sets,
