@@ -217,8 +217,10 @@ def find_version_ranges(all_versions, acceptable_versions):
         range_endpoints.append(tuple(current_range))
     ranges = []
     for lower, higher in filter(bool, range_endpoints):
-        if lower != higher:
+        if higher == _all_versions[-1]:
+            ranges.append(f">={lower}")
+        elif lower != higher:
             ranges.append(f">={lower},<={higher}")
         else:
-            ranges.append(str(lower))
+            ranges.append(f"{lower}")
     return "|".join(ranges)
