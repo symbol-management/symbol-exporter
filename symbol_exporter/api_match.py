@@ -61,7 +61,7 @@ def find_supplying_version_set(volume, get_symbol_table_func=web_interface.get_s
                 supplies[top_level_symbol] = set(artifacts)
             else:
                 supplies[top_level_symbol] &= set(artifacts)
-    return supplies or set(), bad_symbols
+    return supplies or {}, bad_symbols
 
 
 def extract_artifacts_from_deps(deps):
@@ -72,7 +72,7 @@ def extract_artifacts_from_deps(deps):
         version_set = set()
         for artifact_path in artifacts:
             package_name, channel, arch, artifact = artifact_path.split("/")
-            artifact_name, version, build_string = artifact.split("-")
+            artifact_name, version, build_string = artifact.rsplit("-", 3)
             version_set.add(version)
         if package_name not in versions_by_package:
             versions_by_package[package_name] = version_set
