@@ -156,7 +156,7 @@ def test_bad_symbol():
     volume = {"academic.cli.zippy"}
 
     intersection, bad = find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table_dummy_func)
-    assert intersection == set()
+    assert intersection == {}
     assert bad == volume
 
 
@@ -164,7 +164,7 @@ def test_bad_symbol_shadows():
     volume = {"shadow_academic.cli.zippy"}
 
     intersection, bad = find_supplying_version_set(volume, get_symbol_table_func=get_symbol_table_dummy_func)
-    assert intersection == set()
+    assert intersection == {}
     assert bad == volume
 
 
