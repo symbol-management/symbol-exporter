@@ -74,7 +74,7 @@ def extract_artifacts_from_deps(deps):
             continue
         for artifact_path in artifacts:
             package_name, channel, arch, artifact = artifact_path.split("/")
-            artifact_name, version, build_string = artifact.rsplit("-", 3)
+            artifact_name, version, build_string = artifact.rsplit("-", 2)
             version_set.add(version)
         if package_name not in versions_by_package:
             versions_by_package[package_name] = version_set
