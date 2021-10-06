@@ -185,7 +185,9 @@ def reap(
         existing_pkg_dict = web_interface.get_current_extracted_pkgs()
         fetch_and_run_function = fetch_and_run_web
 
-    hubs_auths = requests.get('https://raw.githubusercontent.com/regro/cf-graph-countyfair/master/ranked_hubs_authorities.json').json()
+    hubs_auths = requests.get(
+        "https://raw.githubusercontent.com/regro/cf-graph-countyfair/master/ranked_hubs_authorities.json"
+    ).json()
     # Pull up and partial this out existing_pkgs
     def diff_sort(val):
         package, dst, src_url = val
