@@ -4,6 +4,8 @@ that provide them from AST derived symbols.
 """
 from collections import defaultdict
 
+import requests
+
 """
 BSD 3-Clause License
 
@@ -75,7 +77,10 @@ def inner_loop(artifact_name):
         metadata["version"] = version
         metadata.setdefault("indexed artifacts", []).append(artifact_name)
         # push back to server
-        web_interface.push_symbol_table(top_level_name, {"symbol table": symbol_table, "metadata": metadata})
+        try:
+            web_interface.push_symbol_table(top_level_name, {"symbol table": symbol_table, "metadata": metadata})
+        except requests.RequestException as e:
+            print(e)
         all_symbol_tables[top_level_name] = symbol_table
     return all_symbol_tables
 
